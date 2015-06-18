@@ -48,11 +48,16 @@ function handler (req, res) {
     }
     
     
+    var cb = function() {
+      res.writeHead(302, {
+        'Location': '/thank-you.html'
+      })
+      res.end()
+    }
+    
     add('amcform', post, cb)
     
-    res.redirect("/thank-you.html")
-    
-  }
+  })
 }
 
 
