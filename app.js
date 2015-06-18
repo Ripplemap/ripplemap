@@ -50,7 +50,7 @@ function handler (req, res) {
     
     var cb = function() {
       res.writeHead(302, {
-        'Location': '/thank-you.html'
+        'Location': 'http://ripplemap.io/thank-you.html'
       })
       res.end()
     }
