@@ -1,0 +1,145 @@
+<html>
+  <head>
+    <title>RippleMap Blog</title>
+    <style>
+    </style>
+    <script src="daimio_composite.js"></script>
+  </head>
+  <body>
+    <h1>Ripplemap Blog</h1>
+
+    <div id="main">
+      <div id="show-all-articles">
+        <script data-daimio-template="show-all-articles" type="text/daimio">
+          <div id="articles">
+            <h2>Article list</h2>
+            {begin divs | merge data __in}
+            <div class="article">
+              <h2>{_title}</h2>
+              <p><a href="" class="link" data-value="{_id}">link</a></p>
+              <div class="body">{_body}</div>
+            </div>
+            {end divs}
+          </div>
+        </script> <!-- end show-articles template -->
+      </div>
+    </div>
+
+    <script id="control" type="text/daml" class="spaceseeds">
+      outer
+
+        $articles {}
+        $current-article-id
+
+        // GET ARTICLES
+        @init from-js
+        // @xhr ripplemap.com/api/articles
+        @server-read
+
+        // @init -> {article find | list reverse | >$articles}
+        // reader {"ripplemap.com/api/articles" | external server-read | list from-json}
+        reader {"articles.json" | external server-read | list from-json}
+        reader.server-read* -> @server-read
+
+        // ROUTING
+        store-articles {__ | list reverse | >$articles}
+        change-article {__ | >$current-article-id}
+
+        @init -> reader -> store-articles -> show-all-articles -> @set-articles
+        change-article  -> show-article   -> @set-article
+
+        // OUTPUTS
+        @set-articles dom-set-html show-all-articles
+        show-article
+        show-all-articles
+
+        // INPUTS
+        @link dom-on-click .link
+        @link -> change-article
+
+
+    </script>
+
+    <script type="text/javascript">
+
+    document.addEventListener('DOMContentLoaded', function() {
+      //// Do all this on load.
+
+      // D.Etc.socket = io.connect('/') // Leave this, it's for multiplayer
+      OuterSpace = D.make_me_a_space_as_fast_as_you_can()
+
+      // activate init port
+      var game_id = window.location.pathname.replace(/\/$/, '').split('/')[1]
+      D.send_value_to_js_port(OuterSpace, 'init', game_id)
+
+      setTimeout(function() { D.send_value_to_js_port(OuterSpace, 'autoswitch', 0) }, 300)
+    })
+
+
+    D.import_models({
+      string: {
+        methods: {
+          markdown: {
+            desc: 'Convert markdown to html',
+            params: [
+              {
+                key: 'value',
+                desc: 'A markdown string',
+                type: 'string',
+                required: true
+              },
+            ],
+            fun: function(value) {
+              return markdown.toHTML(value)
+            }
+          },
+        }
+      }
+    })
+
+    D.import_models({
+      external: {
+        desc: 'Commands that reach outside our universe',
+        methods: {
+          "server-read": {
+            desc: 'Get JSON over an XHR connection to the server',
+            port: 'server-read',
+            params: [
+              {
+                key: 'url',
+                desc: 'A url on the server',
+                type: 'string',
+                required: true
+              },
+            ],
+            fun: function(url, port, prior_starter) {
+              port.sync(url, prior_starter)
+              return NaN
+            }
+          }
+        }
+      }
+    })
+
+    D.import_port_flavour('server-read', {
+      dir: 'down',
+      outside_exit: function(ship, callback) {
+        xhr_get(ship, callback)
+      }
+    })
+
+    // load daimio file
+    function xhr_get(target, callback) {
+      var xhr = new XMLHttpRequest()
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          callback(xhr.responseText)
+        }
+      }
+      xhr.open('GET', target, true)
+      xhr.send(null)
+    }
+
+  </script>
+  </body>
+</html>
