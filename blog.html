@@ -9,10 +9,20 @@
     <h1>Ripplemap Blog</h1>
 
     <div id="main">
-      <div id="show-all-articles">
-        <script data-daimio-template="show-all-articles" type="text/daimio">
-          <div id="articles">
-            <h2>Article list</h2>
+      <div id="show-list">
+        <script data-daimio-template="show-article-list" type="text/daimio">
+          <p>Article list</p>
+          {begin divs | merge data {__in | list reverse}}
+            <li class="article">
+              <a href="" class="link" data-value="{_id}">{_title}</a>
+            </li>
+          {end divs}
+        </script>
+      </div>
+
+      <div id="show-something">
+         <script data-daimio-template="show-article" type="text/daimio">
+          <div id="article">
             {begin divs | merge data __in}
             <div class="article">
               <h2>{_title}</h2>
@@ -21,17 +31,33 @@
             </div>
             {end divs}
           </div>
-        </script> <!-- end show-articles template -->
+        </script> <!-- end show-article template -->
+
+        <script data-daimio-template="show-all-articles" type="text/daimio">
+          <div id="articles">
+            <h2>All articles</h2>
+            {begin divs | merge data {__in | list reverse}}
+            <div class="article">
+              <h2>{_title}</h2>
+              <p><a href="" class="link" data-value="{_id}">link</a></p>
+              <div class="body">{_body}</div>
+            </div>
+            {end divs}
+          </div>
+        </script> <!-- end show-all-articles template -->
       </div>
     </div>
 
     <script id="control" type="text/daml" class="spaceseeds">
       outer
 
+        // STATE
+
         $articles {}
         $current-article-id
 
-        // GET ARTICLES
+        // INIT: GET ARTICLES
+
         @init from-js
         // @xhr ripplemap.com/api/articles
         @server-read
@@ -41,17 +67,26 @@
         reader {"articles.json" | external server-read | list from-json}
         reader.server-read* -> @server-read
 
-        // ROUTING
-        store-articles {__ | list reverse | >$articles}
-        change-article {__ | >$current-article-id}
+        // TEMPLATES
 
-        @init -> reader -> store-articles -> show-all-articles -> @set-articles
-        change-article  -> show-article   -> @set-article
-
-        // OUTPUTS
-        @set-articles dom-set-html show-all-articles
         show-article
         show-all-articles
+        show-article-list
+
+        store-articles {__ | list rekey by :id | >$articles}
+        change-article {__ | >$current-article-id}
+        get-article    {__ | $articles.{__} | (__)}
+
+        // ROUTING
+
+        @init -> reader -> store-articles -> show-all-articles -> @set-something
+                           store-articles -> show-article-list -> @set-list
+        change-article  -> get-article    -> show-article      -> @set-something
+
+        // OUTPUTS
+
+        @set-something dom-set-html show-something
+        @set-list      dom-set-html show-list
 
         // INPUTS
         @link dom-on-click .link
