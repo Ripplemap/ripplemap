@@ -57,7 +57,7 @@ var nodes = [ {"name":"Cayden Mak","type":"person","_id":1}
             , {"name":"Panel on Net Neutrality & racial Justice","type":"event","_id":56}
             , {"name":"Net Neutrality & Social Movements History","type":"event","_id":57}]
 
-g.addVertices(nodes)
+g.addVertices(clone(nodes))
 
 // EDGES
 
@@ -145,8 +145,23 @@ var edges = [ {"_in":1,"_out":1,"verb":"involved","year":"2008","month":""}
             , {"_in":54,"_out":50,"verb":"organized","year":2014,"month":"October"}
             , {"_in":54,"_out":49,"verb":"spoke at","year":2014,"month":"Feb"}]
 
-g.addEdges(edges)
+g.addEdges(clone(edges))
 
+// HELPERS
+
+function prop (attr) {return function(obj) {return obj[attr]}}
+
+function eq(attr, val) {return function(obj) {return obj[attr] == val}}
+
+function unique(v, k, list) {return list.indexOf(v) == k}
+
+function strip(attr) {return function(obj) { delete obj[attr]; return obj }}
+
+function cp_prop(from_attr, to_attr) {return function(obj) {obj[to_attr] = obj[from_attr]; return obj}}
+
+function comp(f, g) {return function() { var args = [].slice.call(arguments); return f(g.apply(null, args)) }}
+
+function clone(obj) {return JSON.parse(JSON.stringify(obj))}
 
 // SHOW IT
 
@@ -179,6 +194,10 @@ jQuery(function(){
         graph: graph
       });
 });
+
+// WEBCOLA IT
+
+
 
 // EDIT IT
 
