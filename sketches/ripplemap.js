@@ -1,4 +1,4 @@
-var g = Dagoba.graph()
+var G = Dagoba.graph()
 
 // VERTICES
 
@@ -55,13 +55,15 @@ var nodes = [ {"name":"Cayden Mak","type":"person","_id":1}
             , {"name":"Internet Slowdown Day","type":"event","_id":51}
             , {"name":"a track?","type":"event","_id":55}
             , {"name":"Panel on Net Neutrality & racial Justice","type":"event","_id":56}
-            , {"name":"Net Neutrality & Social Movements History","type":"event","_id":57}]
+            , {"name":"Net Neutrality & Social Movements History","type":"event","_id":57}
+            , {"name":"free & open communities","type":"event","_id":58}
+            ]
 
-g.addVertices(clone(nodes))
+G.addVertices(clone(nodes))
 
 // EDGES
 
-var edges = [ {"_in":1,"_out":1,"verb":"involved","year":"2008","month":""}
+var edges = [ {"_in":1,"_out":58,"verb":"involved in","year":"2008","month":""}
             , {"_in":1,"_out":3,"verb":"attended","year":"2010","month":""}
             , {"_in":1,"_out":4,"verb":"connected","year":"2010","month":""}
             , {"_in":1,"_out":5,"verb":"met","year":"2010","month":""}
@@ -145,7 +147,7 @@ var edges = [ {"_in":1,"_out":1,"verb":"involved","year":"2008","month":""}
             , {"_in":54,"_out":50,"verb":"organized","year":2014,"month":"October"}
             , {"_in":54,"_out":49,"verb":"spoke at","year":2014,"month":"Feb"}]
 
-g.addEdges(clone(edges))
+G.addEdges(clone(edges))
 
 // HELPERS
 
@@ -169,17 +171,39 @@ var el = document.getElementById.bind(document)
 var qs = document.querySelectorAll.bind(document)
 
 var el_graph = el('graph')
+var el_nodes = el('nodes_ta')
+var el_edges = el('edges_ta')
+var el_save = el('save')
+
+el_save.addEventListener('click', function() {
+  var nodes_text = el_nodes.value
+  var edges_text = el_edges.value
+  G = Dagoba.graph(JSON.parse(nodes_text), JSON.parse(edges_text))
+  Dagoba.persist(G, 'ripplemap')
+
+  // TODO: add depersist as default
+  // TODO: make renderers accept a graph
+  // TODO: add new node structure for data model
+})
 
 function show_graph() {
   var text = ''
 
-  g.v().run().reverse().forEach(function(node) {
+  G.v().run().reverse().forEach(function(node) {
     text += '\n\n' + JSON.stringify(node, Dagoba.cleanVertex)
     text += '\n  in: ' + JSON.stringify(node._in, Dagoba.cleanEdge)
     text += '\n  out: ' + JSON.stringify(node._out, Dagoba.cleanEdge)
   })
 
   el_graph.innerText = text
+
+  var json = Dagoba.jsonify(G)
+  var obj = JSON.parse(json)
+  var nodes_text = JSON.stringify(obj.V)
+  var edges_text = JSON.stringify(obj.E)
+
+  el_nodes.value = nodes_text
+  el_edges.value = edges_text
 }
 
 // SPRINGY IT
@@ -208,16 +232,13 @@ function webcola_it() {
   for(var i = 0; i < node_count; i++) {
     if(!new_nodes[i]) new_nodes[i] = {name: '___'}
   }
-  
-  d3.text("/~dann/vendor/WebCola/WebCola/examples/ripplemap.json", function(f) {graph_it(parse_it(f))})
-  // graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')), []])
+
+  // d3.text("/~dann/vendor/WebCola/WebCola/examples/ripplemap.json", function(f) {graph_it(parse_it(f))})
+  graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')), []])
 }
 
 // EDIT IT
 
-// TODO: make lots of git commits
-
-// TODO: add form for editing nodes and edges
 
 // INIT
 
