@@ -1,5 +1,3 @@
-var G = Dagoba.graph()
-
 // VERTICES
 
 var nodes = [ {"name":"Cayden Mak","type":"person","_id":1}
@@ -58,8 +56,6 @@ var nodes = [ {"name":"Cayden Mak","type":"person","_id":1}
             , {"name":"Net Neutrality & Social Movements History","type":"event","_id":57}
             , {"name":"free & open communities","type":"event","_id":58}
             ]
-
-G.addVertices(clone(nodes))
 
 // EDGES
 
@@ -147,7 +143,24 @@ var edges = [ {"_in":1,"_out":58,"verb":"involved in","year":"2008","month":""}
             , {"_in":54,"_out":50,"verb":"organized","year":2014,"month":"October"}
             , {"_in":54,"_out":49,"verb":"spoke at","year":2014,"month":"Feb"}]
 
-G.addEdges(clone(edges))
+
+// GRAPH
+
+var G
+function build_graph() {
+  G = Dagoba.depersist('ripplemap')
+
+  if(G) return G
+
+  G = Dagoba.graph()
+
+  G.addVertices(clone(nodes))
+
+  G.addEdges(clone(edges))
+
+  return G
+}
+
 
 // HELPERS
 
@@ -181,15 +194,17 @@ el_save.addEventListener('click', function() {
   G = Dagoba.graph(JSON.parse(nodes_text), JSON.parse(edges_text))
   Dagoba.persist(G, 'ripplemap')
 
+  init()
+
   // TODO: add depersist as default
   // TODO: make renderers accept a graph
   // TODO: add new node structure for data model
 })
 
-function show_graph() {
+function show_graph(graph) {
   var text = ''
 
-  G.v().run().reverse().forEach(function(node) {
+  graph.v().run().reverse().forEach(function(node) {
     text += '\n\n' + JSON.stringify(node, Dagoba.cleanVertex)
     text += '\n  in: ' + JSON.stringify(node._in, Dagoba.cleanEdge)
     text += '\n  out: ' + JSON.stringify(node._out, Dagoba.cleanEdge)
@@ -197,7 +212,7 @@ function show_graph() {
 
   el_graph.innerText = text
 
-  var json = Dagoba.jsonify(G)
+  var json = Dagoba.jsonify(graph)
   var obj = JSON.parse(json)
   var nodes_text = JSON.stringify(obj.V)
   var edges_text = JSON.stringify(obj.E)
@@ -208,7 +223,7 @@ function show_graph() {
 
 // SPRINGY IT
 
-function springy_it() {
+function springy_it(graph) {
   var graphJSON = {nodes: nodes.map(prop('_id')), edges: edges.map(function(edge) {return [edge._in, edge._out]})}
 
   jQuery(function(){
@@ -223,7 +238,7 @@ function springy_it() {
 
 // WEBCOLA IT
 
-function webcola_it() {
+function webcola_it(graph) {
   var node_count = 60
   var new_nodes = Array(node_count)
   nodes.forEach(function(node) {
@@ -243,9 +258,10 @@ function webcola_it() {
 // INIT
 
 function init() {
-  show_graph()
-  springy_it()
-  webcola_it()
+  var graph = build_graph()
+  show_graph(graph)
+  springy_it(graph)
+  webcola_it(graph)
 }
 
 init()
