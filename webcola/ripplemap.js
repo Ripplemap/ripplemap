@@ -33,7 +33,7 @@ outer.append('svg:defs').append('svg:marker')
     'stroke-width': '0px',
     fill: '#000'});
 
-d3.text("ripplemap.json", function (f) {
+function parse_it(f) {
   var digraph = JSON.parse(f)
   var graph = digraph.primary.concat(digraph.extended)
 
@@ -113,6 +113,14 @@ d3.text("ripplemap.json", function (f) {
   groups = nodes.reduce(function(acc, node) {
     acc[node.type] = acc[node.type] ? acc[node.type].concat(node.index) : [node.index]; return acc }, {} )
   groups = Object.keys(groups).map(function(prop) { return {leaves: groups[prop]} })
+
+  return [nodes, edges, groups]
+}
+
+function graph_it(graph) {
+  var nodes = graph[0]
+  var edges = graph[1]
+  var groups = graph[2]
 
   d3cola
     .avoidOverlaps(true)
@@ -194,7 +202,8 @@ d3.text("ripplemap.json", function (f) {
       .attr("y", function (d) { return d.y + (margin + pad) / 2 });
 
   }).on("end", routeEdges);
-});
+};
+
 function isIE() { return ((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec(navigator.userAgent) != null))); }
 
 
