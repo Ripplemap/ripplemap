@@ -188,7 +188,9 @@ var el_nodes = el('nodes_ta')
 var el_edges = el('edges_ta')
 var el_save = el('save')
 
-el_save.addEventListener('click', function() {
+el_save.addEventListener('click', save_button)
+
+function save_button() {
   var nodes_text = el_nodes.value
   var edges_text = el_edges.value
   G = Dagoba.graph(JSON.parse(nodes_text), JSON.parse(edges_text))
@@ -196,10 +198,9 @@ el_save.addEventListener('click', function() {
 
   init()
 
-  // TODO: add depersist as default
   // TODO: make renderers accept a graph
   // TODO: add new node structure for data model
-})
+}
 
 function show_graph(graph) {
   var text = ''
@@ -231,7 +232,8 @@ function springy_it(graph) {
     graph.loadJSON(graphJSON);
 
     var springy = jQuery('#springydemo').springy({
-          graph: graph
+          graph: graph,
+          damping: 0.1
         });
   });
 }
@@ -239,6 +241,9 @@ function springy_it(graph) {
 // WEBCOLA IT
 
 function webcola_it(graph) {
+  var new_graph = clone(JSON.parse(Dagoba.jsonify(graph)))
+  var nodes = new_graph.V
+  var edges = new_graph.E
   var node_count = 60
   var new_nodes = Array(node_count)
   nodes.forEach(function(node) {
