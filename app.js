@@ -21,6 +21,8 @@ function wrapper(req, res) {
 
 function handler (req, res) {
   var body = ''
+  var appjson = {'Content-Type': 'application/json'}
+  var status = function(str) {return JSON.stringify({'status': str})}
 
   log('req.url: ', req.url)
 
@@ -31,32 +33,32 @@ function handler (req, res) {
 
   req.on('end', function() {
     if(req.method == 'GET') {
-      res.writeHead(200, "OK", {'Content-Type': 'application/json'})
-      res.end(JSON.stringify({ "status": "ok" }))
+      res.writeHead(200, 'OK', appjson)
+      res.end(status('ok'))
       return false
     }
-    
+
     var post = qs.parse(body)
-    
+
     log('post', post)
-    
+
     if(!post) {
       onError('Invalid request', post)
-      res.writeHead(400, "OK", {'Content-Type': 'application/json'})
-      res.end(JSON.stringify({ "status": "Invalid POST request" }))
+      res.writeHead(400, 'OK', appjson)
+      res.end(status('Invalid POST request'))
       return false
     }
-    
-    
+
+
     var cb = function() {
       res.writeHead(302, {
         'Location': 'http://ripplemap.io/thank-you.html'
       })
       res.end()
     }
-    
+
     add('amcform', post, cb)
-    
+
   })
 }
 
@@ -76,7 +78,7 @@ function add(collection, item, cb) {
       c.save(item)
 
       return cb(item)
-      
+
     })
   } catch (err) {
     onError('Insertion error', err)
@@ -97,9 +99,9 @@ function log() {
 }
 
 db.open(function(err, db) {
-  if(err) 
+  if(err)
     return onError('DB refused to open', err)
-    
+
   if(config.mongo.username) {
     db.authenticate(config.mongo.username, config.mongo.password, function(err, result) {
       app.listen(config.port)
