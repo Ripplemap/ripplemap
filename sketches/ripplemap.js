@@ -184,20 +184,34 @@ function show_graph() {
 
 // SPRINGY IT
 
-var graphJSON = {nodes: nodes.map(prop('_id')), edges: edges.map(function(edge) {return [edge._in, edge._out]})}
+function springy_it() {
+  var graphJSON = {nodes: nodes.map(prop('_id')), edges: edges.map(function(edge) {return [edge._in, edge._out]})}
 
-jQuery(function(){
-  var graph = new Springy.Graph();
-  graph.loadJSON(graphJSON);
+  jQuery(function(){
+    var graph = new Springy.Graph();
+    graph.loadJSON(graphJSON);
 
-  var springy = jQuery('#springydemo').springy({
-        graph: graph
-      });
-});
+    var springy = jQuery('#springydemo').springy({
+          graph: graph
+        });
+  });
+}
 
 // WEBCOLA IT
 
-
+function webcola_it() {
+  var node_count = 60
+  var new_nodes = Array(node_count)
+  nodes.forEach(function(node) {
+    new_nodes[node['_id']] = node
+  })
+  for(var i = 0; i < node_count; i++) {
+    if(!new_nodes[i]) new_nodes[i] = {name: '___'}
+  }
+  
+  d3.text("/~dann/vendor/WebCola/WebCola/examples/ripplemap.json", function(f) {graph_it(parse_it(f))})
+  // graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')), []])
+}
 
 // EDIT IT
 
@@ -209,6 +223,8 @@ jQuery(function(){
 
 function init() {
   show_graph()
+  springy_it()
+  webcola_it()
 }
 
 init()
