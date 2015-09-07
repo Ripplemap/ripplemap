@@ -1,0 +1,52 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Ripplemap Net Neutrality</title>
+    <style>
+      @import url(../style.css);
+      .background {
+      stroke: white;
+      stroke-width: 1px;
+      fill: white;
+      }
+
+      .node {
+      stroke: black;
+      stroke-width: 1.5px;
+      cursor: move;
+      fill: lightcoral;
+      }
+
+      .link {
+      fill: none;
+      stroke: #000;
+      stroke-width: 3px;
+      opacity: 0.7;
+      marker-end: url(#end-arrow);
+      }
+
+      .label {
+      fill: black;
+      font-family: Verdana;
+      font-size: 25px;
+      text-anchor: middle;
+      cursor: move;
+      }
+    </style >
+  </head >
+  <body >
+    <h1>Ripplemap Net Neutrality</h1>
+    <h2>A very rough draft of layout engine</h2>
+    <script src="../extern/d3.v3.js"></script>
+    <script src="../cola.js"></script>
+    <link rel="stylesheet" href="../extern/hljs/styles/github.css">
+    <script src="../extern/hljs/highlight.pack.js"></script>
+
+    <script src="ripplemap.js"></script>
+
+    <script>
+      d3.text("ripplemap.json", function(f) {graph_it(parse_it(f))})
+    </script>
+
+  </body>
+</html>
