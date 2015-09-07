@@ -84,8 +84,8 @@ var edges = [ {"_in":1,"_out":58,"verb":"involved in","year":"2008","month":""}
             , {"_in":18,"_out":3,"verb":"appeared at","year":"2013","month":""}
             , {"_in":1,"_out":19,"verb":"met","year":"2013","month":""}
             , {"_in":1,"_out":20,"verb":"met","year":"2013","month":""}
-            , {"_in":12,"_out":21,"verb":"","year":"2013","month":""}
-            , {"_in":18,"_out":22,"verb":"","year":"2013","month":""}
+            , {"_in":12,"_out":21,"verb":"verbs","year":"2013","month":""}
+            , {"_in":18,"_out":22,"verb":"verbs","year":"2013","month":""}
             , {"_in":1,"_out":23,"verb":"attends","year":"2013","month":""}
             , {"_in":1,"_out":24,"verb":"needs verb: attended, started?","year":"2013","month":""}
             , {"_in":1,"_out":25,"verb":"met","year":"2014","month":""}
@@ -115,7 +115,7 @@ var edges = [ {"_in":1,"_out":58,"verb":"involved in","year":"2008","month":""}
             , {"_in":1,"_out":7,"verb":"met","year":2010,"month":""}
             , {"_in":7,"_out":41,"verb":"led","year":2012,"month":"June"}
             , {"_in":1,"_out":42,"verb":"attended","year":2012,"month":"June"}
-            , {"_in":1,"_out":7,"verb":"","year":2013,"month":"June"}
+            , {"_in":1,"_out":7,"verb":"verbs","year":2013,"month":"June"}
             , {"_in":1,"_out":43,"verb":"attended","year":2014,"month":"January"}
             , {"_in":7,"_out":44,"verb":"led?","year":2014,"month":"June"}
             , {"_in":7,"_out":45,"verb":"hosted","year":2015,"month":"January"}
@@ -225,7 +225,7 @@ function show_graph(graph) {
 // SPRINGY IT
 
 function springy_it(graph) {
-  var graphJSON = {nodes: nodes.map(prop('_id')), edges: edges.map(function(edge) {return [edge._in, edge._out]})}
+  var graphJSON = {nodes: graph.vertices.map(prop('_id')), edges: graph.edges.map(function(edge) {return [edge._in._id, edge._out._id]})}
 
   jQuery(function(){
     var graph = new Springy.Graph();
