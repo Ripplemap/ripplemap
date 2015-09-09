@@ -120,16 +120,16 @@ function parse_it(f) {
 function graph_it(graph) {
   var nodes = graph[0]
   var edges = graph[1]
-  var groups = graph[2]
+  // var groups = graph[2]
 
   d3cola
     .avoidOverlaps(true)
     // .convergenceThreshold(0.1)
-    .flowLayout('x', 350)
+    .flowLayout('x', 650)
     .size([width, height])
     .nodes(nodes)
     .links(edges)
-    .groups(groups)
+    // .groups(groups)
     // .jaccardLinkLengths(250)
 
   var link = vis.selectAll(".link")
