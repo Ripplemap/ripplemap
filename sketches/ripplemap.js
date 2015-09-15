@@ -57,89 +57,89 @@ var nodes = [ {"name": "Cayden Makk", "type": "person", "_id": 1}
             , {"name": "Panel on Net Neutrality & racial Justice", "type": "event", "_id": 139}
             , {"name": "Net Neutrality & Social Movements History", "type": "event", "_id": 140}
             , {"name": "free & open communities", "type": "event", "_id": 141}
-            , {"type": "happening", "time": 1199163600000, "name": "involved in", "_id": 55}
-            , {"type": "happening", "time": 1262322000000, "name": "attended", "_id": 56}
-            , {"type": "happening", "time": 1262322000000, "name": "connected", "_id": 57}
-            , {"type": "happening", "time": 1262322000000, "name": "met", "_id": 58}
-            , {"type": "happening", "time": 1276574400000, "name": "talked with", "_id": 59}
-            , {"type": "happening", "time": 1276574400000, "name": "talked with", "_id": 60}
-            , {"type": "happening", "time": 1276574400000, "name": "talked with", "_id": 61}
-            , {"type": "happening", "time": 1276574400000, "name": "talked with", "_id": 62}
-            , {"type": "happening", "time": 1292389200000, "name": "creates", "_id": 63}
-            , {"type": "happening", "time": 1292389200000, "name": "verbs", "_id": 64}
-            , {"type": "happening", "time": 1292389200000, "name": "verbs", "_id": 65}
-            , {"type": "happening", "time": 1292389200000, "name": "verbs", "_id": 66}
-            , {"type": "happening", "time": 1293858000000, "name": "coordinates", "_id": 67}
-            , {"type": "happening", "time": 1293858000000, "name": "attended", "_id": 68}
-            , {"type": "happening", "time": 1293858000000, "name": "connected", "_id": 69}
-            , {"type": "happening", "time": 1293858000000, "name": "connected", "_id": 70}
-            , {"type": "happening", "time": 1293858000000, "name": "met", "_id": 71}
-            , {"type": "happening", "time": 1293858000000, "name": "met", "_id": 72}
-            , {"type": "happening", "time": 1293858000000, "name": "met", "_id": 73}
-            , {"type": "happening", "time": 1293858000000, "name": "met", "_id": 74}
-            , {"type": "happening", "time": 1325394000000, "name": "co-founded", "_id": 75}
-            , {"type": "happening", "time": 1325394000000, "name": "carried", "_id": 76}
-            , {"type": "happening", "time": 1357016400000, "name": "appeared at", "_id": 77}
-            , {"type": "happening", "time": 1357016400000, "name": "met", "_id": 78}
-            , {"type": "happening", "time": 1357016400000, "name": "met", "_id": 79}
-            , {"type": "happening", "time": 1357016400000, "name": "", "_id": 80}
-            , {"type": "happening", "time": 1357016400000, "name": "", "_id": 81}
-            , {"type": "happening", "time": 1357016400000, "name": "attends", "_id": 82}
-            , {"type": "happening", "time": 1357016400000, "name": "needs verb: attended, started?", "_id": 83}
-            , {"type": "happening", "time": 1388552400000, "name": "met", "_id": 84}
-            , {"type": "happening", "time": 1389762000000, "name": "vacates", "_id": 85}
-            , {"type": "happening", "time": 1388552400000, "name": "leads?", "_id": 86}
-            , {"type": "happening", "time": 1388552400000, "name": "needs verb: attended, started?", "_id": 87}
-            , {"type": "happening", "time": 1416027600000, "name": "attends", "_id": 88}
-            , {"type": "happening", "time": 1420088400000, "name": "co-presented", "_id": 89}
-            , {"type": "happening", "time": 1423976400000, "name": "approves", "_id": 90}
-            , {"type": "happening", "time": 978325200000, "name": "met", "_id": 91}
-            , {"type": "happening", "time": 978325200000, "name": "met", "_id": 92}
-            , {"type": "happening", "time": 978325200000, "name": "met", "_id": 93}
-            , {"type": "happening", "time": 1262322000000, "name": "met", "_id": 94}
-            , {"type": "happening", "time": 1262322000000, "name": "works at", "_id": 95}
-            , {"type": "happening", "time": 1262322000000, "name": "met", "_id": 96}
-            , {"type": "happening", "time": 1325394000000, "name": "met", "_id": 97}
-            , {"type": "happening", "time": 1357016400000, "name": "met", "_id": 98}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 99}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 100}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 101}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 102}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 103}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 104}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 105}
-            , {"type": "happening", "time": 978325200000, "name": "works at", "_id": 106}
-            , {"type": "happening", "time": 1326603600000, "name": "attended", "_id": 107}
-            , {"type": "happening", "time": 1262322000000, "name": "met", "_id": 108}
-            , {"type": "happening", "time": 1339732800000, "name": "led", "_id": 109}
-            , {"type": "happening", "time": 1339732800000, "name": "attended", "_id": 110}
-            , {"type": "happening", "time": 1371268800000, "name": "", "_id": 111}
-            , {"type": "happening", "time": 1389762000000, "name": "attended", "_id": 112}
-            , {"type": "happening", "time": 1402804800000, "name": "led?", "_id": 113}
-            , {"type": "happening", "time": 1421298000000, "name": "hosted", "_id": 114}
-            , {"type": "happening", "time": 1418619600000, "name": "worked", "_id": 115}
-            , {"type": "happening", "time": 1434340800000, "name": "moved to", "_id": 116}
-            , {"type": "happening", "time": 1426392000000, "name": "phoned", "_id": 117}
-            , {"type": "happening", "time": 1389762000000, "name": "met", "_id": 118}
-            , {"type": "happening", "time": 1389762000000, "name": "attended", "_id": 119}
-            , {"type": "happening", "time": 1389762000000, "name": "attended", "_id": 120}
-            , {"type": "happening", "time": 1402804800000, "name": "coordinated", "_id": 121}
-            , {"type": "happening", "time": 1423976400000, "name": "spoke at", "_id": 122}
-            , {"type": "happening", "time": 1423976400000, "name": "hosted", "_id": 123}
-            , {"type": "happening", "time": 1413345600000, "name": "spoke at", "_id": 124}
-            , {"type": "happening", "time": 1413345600000, "name": "organized", "_id": 125}
-            , {"type": "happening", "time": 1410753600000, "name": "organized", "_id": 126}
-            , {"type": "happening", "time": 1410753600000, "name": "found funding", "_id": 127}
-            , {"type": "happening", "time": 1371268800000, "name": "met", "_id": 128}
-            , {"type": "happening", "time": 1402804800000, "name": "coordinated", "_id": 129}
-            , {"type": "happening", "time": 1429070400000, "name": "spoke at", "_id": 130}
-            , {"type": "happening", "time": 1429070400000, "name": "spoke at", "_id": 131}
-            , {"type": "happening", "time": 1434340800000, "name": "coordinated", "_id": 132}
-            , {"type": "happening", "time": 1434340800000, "name": "coordinated", "_id": 133}
-            , {"type": "happening", "time": 1434340800000, "name": "coordinated", "_id": 134}
-            , {"type": "happening", "time": 1434340800000, "name": "coordinated", "_id": 135}
-            , {"type": "happening", "time": 1413345600000, "name": "organized", "_id": 136}
-            , {"type": "happening", "time": 1392440400000, "name": "spoke at", "_id": 137}
+            , {"cat": "action", "time": 1199163600000, "type": "assist", "_id": 55}
+            , {"cat": "happening", "time": 1262322000000, "type": "attend", "_id": 56}
+            , {"cat": "effect", "time": 1262322000000, "type": "introduce", "_id": 57}
+            , {"cat": "effect", "time": 1262322000000, "type": "meet", "_id": 58}
+            , {"cat": "happening", "time": 1276574400000, "type": "conversation", "_id": 59}
+            , {"cat": "happening", "time": 1276574400000, "type": "conversation", "_id": 60}
+            , {"cat": "happening", "time": 1276574400000, "type": "conversation", "_id": 61}
+            , {"cat": "happening", "time": 1276574400000, "type": "conversation", "_id": 62}
+            , {"cat": "action", "time": 1292389200000, "type": "create", "_id": 63}
+            , {"cat": "action", "time": 1292389200000, "type": "leave", "_id": 64}
+            , {"cat": "action", "time": 1292389200000, "type": "leave", "_id": 65}
+            , {"cat": "action", "time": 1292389200000, "type": "leave", "_id": 66}
+            , {"cat": "action", "time": 1293858000000, "type": "manage", "_id": 67}
+            , {"cat": "happening", "time": 1293858000000, "type": "attend", "_id": 68}
+            , {"cat": "effect", "time": 1293858000000, "type": "introduce", "_id": 69}
+            , {"cat": "effect", "time": 1293858000000, "type": "introduce", "_id": 70}
+            , {"cat": "effect", "time": 1293858000000, "type": "meet", "_id": 71}
+            , {"cat": "effect", "time": 1293858000000, "type": "meet", "_id": 72}
+            , {"cat": "effect", "time": 1293858000000, "type": "meet", "_id": 73}
+            , {"cat": "effect", "time": 1293858000000, "type": "meet", "_id": 74}
+            , {"cat": "action", "time": 1325394000000, "type": "create", "_id": 75}
+            , {"cat": "action", "time": 1325394000000, "type": "manage", "_id": 76}
+            , {"cat": "happening", "time": 1357016400000, "type": "attend", "_id": 77}
+            , {"cat": "effect", "time": 1357016400000, "type": "meet", "_id": 78}
+            , {"cat": "effect", "time": 1357016400000, "type": "meet", "_id": 79}
+            , {"cat": "action", "time": 1357016400000, "type": "leave", "_id": 80}
+            , {"cat": "action", "time": 1357016400000, "type": "leave", "_id": 81}
+            , {"cat": "happening", "time": 1357016400000, "type": "attend", "_id": 82}
+            , {"cat": "happening", "time": 1357016400000, "type": "attend", "_id": 83}
+            , {"cat": "effect", "time": 1388552400000, "type": "meet", "_id": 84}
+            , {"cat": "action", "time": 1389762000000, "type": "leave", "_id": 85, "note": "a real leave, not fake"}
+            , {"cat": "action", "time": 1388552400000, "type": "manage", "_id": 86}
+            , {"cat": "happening", "time": 1388552400000, "type": "attend", "_id": 87}
+            , {"cat": "happening", "time": 1416027600000, "type": "attend", "_id": 88}
+            , {"cat": "action", "time": 1420088400000, "type": "present", "_id": 89}
+            , {"cat": "action", "time": 1423976400000, "type": "pass", "_id": 90}
+            , {"cat": "effect", "time": 978325200000, "type": "meet", "_id": 91}
+            , {"cat": "effect", "time": 978325200000, "type": "meet", "_id": 92}
+            , {"cat": "effect", "time": 978325200000, "type": "meet", "_id": 93}
+            , {"cat": "effect", "time": 1262322000000, "type": "meet", "_id": 94}
+            , {"cat": "action", "time": 1262322000000, "type": "join", "_id": 95}
+            , {"cat": "effect", "time": 1262322000000, "type": "meet", "_id": 96}
+            , {"cat": "effect", "time": 1325394000000, "type": "meet", "_id": 97}
+            , {"cat": "effect", "time": 1357016400000, "type": "meet", "_id": 98}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 99}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 100}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 101}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 102}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 103}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 104}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 105}
+            , {"cat": "action", "time": 978325200000, "type": "join", "_id": 106}
+            , {"cat": "action", "time": 1326603600000, "type": "attend", "_id": 107}
+            , {"cat": "effect", "time": 1262322000000, "type": "meet", "_id": 108}
+            , {"cat": "action", "time": 1339732800000, "type": "manage", "_id": 109}
+            , {"cat": "happening", "time": 1339732800000, "type": "attend", "_id": 110}
+            , {"cat": "action", "time": 1371268800000, "type": "leave", "_id": 111}
+            , {"cat": "happening", "time": 1389762000000, "type": "attend", "_id": 112}
+            , {"cat": "action", "time": 1402804800000, "type": "manage", "_id": 113}
+            , {"cat": "action", "time": 1421298000000, "type": "host", "_id": 114}
+            , {"cat": "action", "time": 1418619600000, "type": "join", "_id": 115}
+            // , {"cat": "happening", "time": 1434340800000, "type": "moved to", "_id": 116}
+            , {"cat": "happening", "time": 1426392000000, "type": "conversation", "_id": 117}
+            , {"cat": "effect", "time": 1389762000000, "type": "meet", "_id": 118}
+            , {"cat": "happening", "time": 1389762000000, "type": "attend", "_id": 119}
+            , {"cat": "happening", "time": 1389762000000, "type": "attend", "_id": 120}
+            , {"cat": "action", "time": 1402804800000, "type": "manage", "_id": 121}
+            , {"cat": "action", "time": 1423976400000, "type": "present", "_id": 122}
+            , {"cat": "action", "time": 1423976400000, "type": "host", "_id": 123}
+            , {"cat": "action", "time": 1413345600000, "type": "present", "_id": 124}
+            , {"cat": "action", "time": 1413345600000, "type": "manage", "_id": 125}
+            , {"cat": "action", "time": 1410753600000, "type": "manage", "_id": 126}
+            , {"cat": "action", "time": 1410753600000, "type": "fund", "_id": 127}
+            , {"cat": "effect", "time": 1371268800000, "type": "meet", "_id": 128}
+            , {"cat": "action", "time": 1402804800000, "type": "manage", "_id": 129}
+            , {"cat": "action", "time": 1429070400000, "type": "present", "_id": 130}
+            , {"cat": "action", "time": 1429070400000, "type": "present", "_id": 131}
+            , {"cat": "action", "time": 1434340800000, "type": "manage", "_id": 132}
+            , {"cat": "action", "time": 1434340800000, "type": "manage", "_id": 133}
+            , {"cat": "action", "time": 1434340800000, "type": "manage", "_id": 134}
+            , {"cat": "action", "time": 1434340800000, "type": "manage", "_id": 135}
+            , {"cat": "action", "time": 1413345600000, "type": "manage", "_id": 136}
+            , {"cat": "action", "time": 1392440400000, "type": "present", "_id": 137}
             ]
 
 
@@ -468,8 +468,10 @@ RM.dats.effects = {}
 RM.dats.happenings = {}
 
 function add_alias(cat, type, alias) {
+  // TODO: check alias
+
   // add an alias to anything
-  var catcat = RM.cats[cat]
+  var catcat = RM.cats[cat] || RM.cats[cat + 's'] // FIXME: oh dear goodness gravy
   if(!catcat)
     return err('Invalid cat', cat)
 
@@ -479,6 +481,12 @@ function add_alias(cat, type, alias) {
 
   // add alias
   cattype.aliases.push(alias)
+
+  // add data slot
+  RM.dats[cat + 's'][alias]= [] // FIXME: this is horrible help help
+
+  // add to catcat type list
+  catcat[alias] = cattype
 
   // THINK: alias rules?
 }
@@ -494,7 +502,7 @@ function convert_props(props) {
 }
 
 
-function add_thing(type, name, props) {
+function add_thing(type, props) {
   var node = convert_props(props)
 
   // check type against list of thing types
@@ -504,8 +512,8 @@ function add_thing(type, name, props) {
 
   // check props again the thing's type's property list
 
-  // todo: check name
-  node.name = name
+  // TODO: check name
+  // node.name = name
   node.type = type
 
   node.priority = 1 // bbq???
@@ -518,7 +526,19 @@ function add_thing(type, name, props) {
 }
 
 function add_action(type, props) {
-  var node = {}
+  var node = convert_props(props)
+
+  // check type against list of action types
+  var cattype = RM.cats.actions[type]
+  if(!cattype)
+    return err('that is not a valid action type', type)
+
+  node.type = type
+
+  node.priority = 1 // bbq???
+
+  // add to RM actions
+  RM.dats.actions[type].push(node)
 
   // check type against list of action types
   // check props against type
@@ -527,7 +547,19 @@ function add_action(type, props) {
 }
 
 function add_effect(type, props) {
-  var node = {}
+  var node = convert_props(props)
+
+  // check type against list of effect types
+  var cattype = RM.cats.effects[type]
+  if(!cattype)
+    return err('that is not a valid effect type', type)
+
+  node.type = type
+
+  node.priority = 0.5 // bbq???
+
+  // add to RM effects
+  RM.dats.effects[type].push(node)
 
   // check type against list of effect types
   // check props against type
@@ -536,7 +568,19 @@ function add_effect(type, props) {
 }
 
 function add_happening(type, props) {
-  var node = {}
+  var node = convert_props(props)
+
+  // check type against list of happening types
+  var cattype = RM.cats.happenings[type]
+  if(!cattype)
+    return err('that is not a valid happening type', type)
+
+  node.type = type
+
+  node.priority = 0.2 // bbq???
+
+  // add to RM happenings
+  RM.dats.happenings[type].push(node)
 
   // check type against list of happening types
   // check props
@@ -564,12 +608,10 @@ function new_thing_type(type, properties) {
   // manually create
   // THINK: should we copy properties here?
   cattype = {type: type}
+  cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // add properties.cc
   cattype.cc = properties.cc || {}
-
-  // add properties.aliases
-  cattype.aliases = properties.aliases || {}
 
   // add default props for all things
   cattype.props = {} // THINK: get props from properties.props?
@@ -584,6 +626,13 @@ function new_thing_type(type, properties) {
 
   // put in place
   RM.cats.things[type] = cattype
+
+  // add properties.aliases
+  if(properties.aliases) {
+    properties.aliases.forEach(function(alias) {
+      add_alias('thing', type, alias)
+    })
+  }
 }
 
 function new_action_type(type, properties) {
@@ -598,9 +647,6 @@ function new_action_type(type, properties) {
   // THINK: should we copy properties here?
   cattype = {type: type}
 
-  // add properties.aliases
-  cattype.aliases = properties.aliases || {}
-
   // add properties.edges and default edges
   cattype.edges = properties.edges || {}
   cattype.edges.did = {dir: 'in',  plural: 0, label: 'did', types: ['person'], aliases: []}
@@ -609,6 +655,7 @@ function new_action_type(type, properties) {
 
   // add default props for all actions
   cattype.props = {} // THINK: get props from properties.props?
+  cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
 
@@ -617,6 +664,13 @@ function new_action_type(type, properties) {
 
   // put in place
   RM.cats.actions[type] = cattype
+
+  // add properties.aliases
+  if(properties.aliases) {
+    properties.aliases.forEach(function(alias) {
+      add_alias('action', type, alias)
+    })
+  }
 }
 
 function new_effect_type(type, properties) {
@@ -631,9 +685,6 @@ function new_effect_type(type, properties) {
   // THINK: should we copy properties here?
   cattype = {type: type}
 
-  // add properties.aliases
-  cattype.aliases = properties.aliases || {}
-
   // add properties.edges and default edges
   cattype.edges = properties.edges || {}
   cattype.edges.to     = {dir: 'out', plural: 0, label: 'to',     types: ['action'],    aliases: []}
@@ -643,6 +694,7 @@ function new_effect_type(type, properties) {
 
   // add default props for all effects
   cattype.props = {} // THINK: get props from properties.props?
+  cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
 
@@ -651,6 +703,13 @@ function new_effect_type(type, properties) {
 
   // put in place
   RM.cats.effects[type] = cattype
+
+  // add properties.aliases
+  if(properties.aliases) {
+    properties.aliases.forEach(function(alias) {
+      add_alias('effect', type, alias)
+    })
+  }
 }
 
 function new_happening_type(type, properties) {
@@ -668,9 +727,6 @@ function new_happening_type(type, properties) {
   // THINK: should we copy properties here?
   cattype = {type: type}
 
-  // add properties.aliases
-  cattype.aliases = properties.aliases || {}
-
   // add properties.edges and default edges
   cattype.edges = properties.edges || {}
   cattype.edges.at     = {dir: 'out', plural: 0, label: 'at',     types: ['place',   'event'], aliases: []}
@@ -680,6 +736,7 @@ function new_happening_type(type, properties) {
 
   // add default props for all happenings
   cattype.props = {} // THINK: get props from properties.props?
+  cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
 
@@ -688,6 +745,13 @@ function new_happening_type(type, properties) {
 
   // put in place
   RM.cats.happenings[type] = cattype
+
+  // add properties.aliases
+  if(properties.aliases) {
+    properties.aliases.forEach(function(alias) {
+      add_alias('happening', type, alias)
+    })
+  }
 }
 
 function new_edge_type(type, properties) {
@@ -727,18 +791,21 @@ new_thing_type('place',   {cc: ['place', 'event']})
 new_thing_type('event',   {cc: ['event', 'outcome'], timerange: true}) // already has start and end, so... ?
 new_thing_type('outcome', {cc: ['outcome'], aliases: ['artwork', 'session']}) // local vs ubiquitous outcomes -- they're structurally different
 
+new_action_type('pass',      {aliases: []})
 new_action_type('join',      {aliases: []})
 new_action_type('leave',     {aliases: []})
 new_action_type('create',    {aliases: []})
-new_action_type('manage',    {aliases: ['run']})
-new_action_type('assist',    {aliases: ['help']})
+new_action_type('attend',    {aliases: []})
+new_action_type('manage',    {aliases: ['run', 'lead']})
+new_action_type('assist',    {aliases: ['help', 'host', 'fund']})
+new_action_type('present',   {aliases: []})
 new_action_type('represent', {aliases: []})
 
 new_effect_type('inspire',   {aliases: ['influenced']})
 new_effect_type('convince',  {aliases: ['ask']})
 new_effect_type('introduce', {aliases: ['meet']})
 
-new_happening_type('conversation', {})
+new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
 // ADD SOME DATA
@@ -750,17 +817,24 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 function add_data( ) {
   nodes.forEach(function(node) {
-    if(node.type === 'happening')
-      return false
+    var cat = node.cat || 'thing'
 
-    add_thing(node.type, node.name, {id: node._id})
+    var fun = window['add_' + cat] // FIXME: ugh erk yuck poo
+
+    if(!fun) return false
+
+    // fun(node.type, node.name, {_id: node._id})
+    fun(node.type, node)
   })
 }
 
 
 function init() {
-  var graph = build_graph()
+  // var graph = build_graph()
+  G = Dagoba.graph()
+
   add_data()
+
   // show_graph(graph)
   // springy_it(graph)
   // webcola_it(graph)
