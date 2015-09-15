@@ -426,7 +426,205 @@ function webcola_it(graph) {
   graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')) ])
 }
 
-// EDIT IT
+/* INTERFACES FOR RIPPLE MODEL
+ *
+ * There are four categories: Thing, Action, Effect, and Happening
+ *
+ * Each category has multiple types associated with it. Each node has a category and type.
+ *
+ * Each node also tracks its cron, the adding user, and some type of 'confidence interval' (later)
+ *
+ * Each edge has a type, which is its label. Nodes expect edges of certain types.
+ *
+ */
+
+function publish(type, item) {
+  if(type === 'node') {
+    G.addVertex(item)
+    // TODO: persist somewhere
+  }
+
+  if(type === 'edge') {
+    G.addEdge(item)
+    // TODO: persist somewhere
+  }
+}
+
+var RM = {}
+RM.cats = {} // ripplemap categories
+RM.cats.things = {}
+RM.cats.actions = {}
+RM.cats.effects = {}
+RM.cats.happenings = {}
+
+function add_alias(cat, type, alias) {
+  // add an alias to anything
+  var catcat = RM.cats[cat]
+  if(!catcat)
+    return err('Invalid cat', cat)
+
+  var cattype = catcat[type]
+  if(!cattype)
+    return err('That is not a valid thing type', type)
+
+  // add alias
+  cattype.aliases.push(alias)
+
+  // THINK: alias rules?
+}
+
+function convert_props(props) {
+  if(typeof props != 'object')
+    return {}
+
+  if(Array.isArray(props))
+    return {}
+
+  return clone(props)
+}
+
+
+function add_thing(name, type, props) {
+  var node = convert_props(props)
+
+  // check type against list of thing types
+  var cattype = RM.cats.things[type]
+  if(!cattype)
+    return err('That is not a valid thing type', type)
+
+  // check props again the thing's type's property list
+
+  // TODO: check name
+  node.name = name
+  node.type = type
+
+  node.priority = 1 // BBQ???
+
+  // publish in dagoba + persist
+  publish('node', node)
+}
+
+function add_action(type, props) {
+  var node = {}
+
+  // check type against list of action types
+  // check props against type
+  // publish in dagoba + persist
+  publish('node', node)
+}
+
+function add_effect(type, props) {
+  var node = {}
+
+  // check type against list of effect types
+  // check props against type
+  // publish in dagoba + persist
+  publish('node', node)
+}
+
+function add_happening(type, props) {
+  var node = {}
+
+  // check type against list of happening types
+  // check props
+  // publish in dagoba + persist
+  publish('node', node)
+}
+
+function add_edge(type, from, to, props) {
+  var edge = {}
+
+  // check from and to
+  // check type against from and to interfaces
+  // publish in dagoba + persist
+  publish('edge', edge)
+}
+
+function new_thing_type(type, props) {
+  // valid type?
+
+  // does this type exist already?
+  var cattype = RM.cats.things[type]
+  if(cattype)
+    return err('That thing type already exists', type)
+
+  cattype = {type: type}
+
+  // add props.cc
+
+  // add props.aliases
+
+  // add default props:
+  cattype.props.name = {}
+  cattype.props.start = {}
+  cattype.props.end = {}
+
+  // add questions
+
+  // put in place
+  RM.cats.things[type] = cattype
+}
+
+function new_action_type(type, properties) {
+  // ...
+}
+
+function new_effect_type(type, properties) {
+  // ...
+}
+
+function new_happening_type(type, properties, in_edge_types, out_edge_types) {
+  // what properties do happenings have?
+  // an edge type can have an alias for storytelling purposes
+}
+
+function new_edge_type(type, properties) {
+  // what properties do edges have?
+}
+
+function import_graph(V, E) {
+  // add V things
+  // add V happenings
+  // add edges
+}
+
+function extract_story(V, E) {
+  // given a subgraph, extract a "story"
+}
+
+function reset_graph() {
+  G = Dagoba.graph()
+}
+
+function story_to_text(story) {
+  // what is a story?
+  // how do we turn it into text?
+}
+
+
+// SET UP CATEGORIES AND EDGES
+
+new_thing_type('person',  {})
+new_thing_type('org',     {cc: ['org']})
+new_thing_type('place',   {cc: ['place', 'event']})
+new_thing_type('event',   {cc: ['event', 'outcome'], timerange: true}) // already has start and end, so... ?
+new_thing_type('outcome', {cc: ['outcome'], aliases: ['artwork', 'session']}) // local vs ubiquitous outcomes -- they're structurally different
+
+new_action_type('join',      {aliases: []})
+new_action_type('leave',     {aliases: []})
+new_action_type('create',    {aliases: []})
+new_action_type('manage',    {aliases: ['run']})
+new_action_type('assist',    {aliases: ['help']})
+new_action_type('represent', {aliases: []})
+
+new_effect_type('inspire',   {aliases: ['influenced']})
+new_effect_type('convince',  {aliases: ['ask']})
+new_effect_type('introduce', {aliases: ['meet']})
+
+new_happening_type('conversation', {})
+new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
+
+// ADD SOME ITEMS
 
 
 // INIT
@@ -439,3 +637,9 @@ function init() {
 }
 
 init()
+
+// OTHER HELPERS
+
+function err(mess) {
+  console.log(arguments)
+}
