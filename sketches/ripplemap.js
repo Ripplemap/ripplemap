@@ -328,6 +328,9 @@ function cp_prop(from_attr, to_attr) {return function(obj) {obj[to_attr] = obj[f
 
 function clone(obj) {return JSON.parse(JSON.stringify(obj))}
 
+function err(mess) {
+  console.log(arguments, mess)
+}
 
 // GRAPH
 
@@ -451,11 +454,18 @@ function publish(type, item) {
 }
 
 var RM = {}
+
 RM.cats = {} // ripplemap categories
 RM.cats.things = {}
 RM.cats.actions = {}
 RM.cats.effects = {}
 RM.cats.happenings = {}
+
+RM.dats = {} // ripplemap data, per cat
+RM.dats.things = {}
+RM.dats.actions = {}
+RM.dats.effects = {}
+RM.dats.happenings = {}
 
 function add_alias(cat, type, alias) {
   // add an alias to anything
@@ -488,17 +498,17 @@ function add_thing(name, type, props) {
   var node = convert_props(props)
 
   // check type against list of thing types
-  var cattype = RM.cats.things[type]
+  var cattype = rm.cats.things[type]
   if(!cattype)
-    return err('That is not a valid thing type', type)
+    return err('that is not a valid thing type', type)
 
   // check props again the thing's type's property list
 
-  // TODO: check name
+  // todo: check name
   node.name = name
   node.type = type
 
-  node.priority = 1 // BBQ???
+  node.priority = 1 // bbq???
 
   // publish in dagoba + persist
   publish('node', node)
@@ -540,42 +550,129 @@ function add_edge(type, from, to, props) {
   publish('edge', edge)
 }
 
-function new_thing_type(type, props) {
-  // valid type?
+function new_thing_type(type, properties) {
+  // TODO: valid type?
 
   // does this type exist already?
   var cattype = RM.cats.things[type]
   if(cattype)
     return err('That thing type already exists', type)
 
+  // manually create
+  // THINK: should we copy properties here?
   cattype = {type: type}
 
-  // add props.cc
+  // add properties.cc
+  cattype.cc = properties.cc || {}
 
-  // add props.aliases
+  // add properties.aliases
+  cattype.aliases = properties.aliases || {}
 
-  // add default props:
+  // add default props for all things
+  cattype.props = {} // THINK: get props from properties.props?
   cattype.props.name = {}
-  cattype.props.start = {}
+  cattype.props.start = {} // THINK: these have both fuzziness and confidence issues (how sure is the user of the time, how sure are we of the user)
   cattype.props.end = {}
 
-  // add questions
+  // TODO: add questions
 
   // put in place
   RM.cats.things[type] = cattype
 }
 
 function new_action_type(type, properties) {
-  // ...
+  // TODO: valid type?
+
+  // does this type exist already?
+  var cattype = RM.cats.actions[type]
+  if(cattype)
+    return err('That action type already exists', type)
+
+  // manually create
+  // THINK: should we copy properties here?
+  cattype = {type: type}
+
+  // add properties.aliases
+  cattype.aliases = properties.aliases || {}
+
+  // add properties.edges and default edges
+  cattype.edges = properties.edges || {}
+  cattype.edges.did = {dir: 'in',  plural: 0, label: 'did', types: ['person'], aliases: []}
+  cattype.edges.to  = {dir: 'in',  plural: 0, label: 'to',  types: ['effect'], aliases: []}
+  cattype.edges.the = {dir: 'out', plural: 0, label: 'the', types: ['thing'],  aliases: []}
+
+  // add default props for all actions
+  cattype.props = {} // THINK: get props from properties.props?
+
+  // TODO: add questions
+
+  // put in place
+  RM.cats.actions[type] = cattype
 }
 
 function new_effect_type(type, properties) {
-  // ...
+  // TODO: valid type?
+
+  // does this type exist already?
+  var cattype = RM.cats.effects[type]
+  if(cattype)
+    return err('That effect type already exists', type)
+
+  // manually create
+  // THINK: should we copy properties here?
+  cattype = {type: type}
+
+  // add properties.aliases
+  cattype.aliases = properties.aliases || {}
+
+  // add properties.edges and default edges
+  cattype.edges = properties.edges || {}
+  cattype.edges.to     = {dir: 'out', plural: 0, label: 'to',     types: ['action'],    aliases: []}
+  cattype.edges.by     = {dir: 'in',  plural: 1, label: 'by',     types: ['thing'],     aliases: []}
+  cattype.edges.was    = {dir: 'in',  plural: 1, label: 'was',    types: ['person'],    aliases: []}
+  cattype.edges.during = {dir: 'out', plural: 0, label: 'during', types: ['happening'], aliases: []}
+
+  // add default props for all effects
+  cattype.props = {} // THINK: get props from properties.props?
+
+  // TODO: add questions
+
+  // put in place
+  RM.cats.effects[type] = cattype
 }
 
-function new_happening_type(type, properties, in_edge_types, out_edge_types) {
+function new_happening_type(type, properties) {
   // what properties do happenings have?
   // an edge type can have an alias for storytelling purposes
+
+  // TODO: valid type?
+
+  // does this type exist already?
+  var cattype = RM.cats.happenings[type]
+  if(cattype)
+    return err('That happening type already exists', type)
+
+  // manually create
+  // THINK: should we copy properties here?
+  cattype = {type: type}
+
+  // add properties.aliases
+  cattype.aliases = properties.aliases || {}
+
+  // add properties.edges and default edges
+  cattype.edges = properties.edges || {}
+  cattype.edges.at     = {dir: 'out', plural: 0, label: 'at',     types: ['place',   'event'], aliases: []}
+  cattype.edges.the    = {dir: 'out', plural: 1, label: 'the',    types: ['outcome', 'event'], aliases: []}
+  cattype.edges.did    = {dir: 'in',  plural: 1, label: 'did',    types: ['person'],           aliases: []}
+  cattype.edges.during = {dir: 'in',  plural: 0, label: 'during', types: ['effect'],           aliases: []}
+
+  // add default props for all happenings
+  cattype.props = {} // THINK: get props from properties.props?
+
+  // TODO: add questions
+
+  // put in place
+  RM.cats.happenings[type] = cattype
 }
 
 function new_edge_type(type, properties) {
@@ -600,6 +697,11 @@ function story_to_text(story) {
   // what is a story?
   // how do we turn it into text?
 }
+
+function subgraph_of(thing1, thing2) {
+  // find all the paths between them, and their attached bits
+}
+
 
 
 // SET UP CATEGORIES AND EDGES
@@ -631,15 +733,9 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 function init() {
   var graph = build_graph()
-  show_graph(graph)
+  // show_graph(graph)
   // springy_it(graph)
-  webcola_it(graph)
+  // webcola_it(graph)
 }
 
 init()
-
-// OTHER HELPERS
-
-function err(mess) {
-  console.log(arguments)
-}
