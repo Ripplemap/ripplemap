@@ -494,11 +494,11 @@ function convert_props(props) {
 }
 
 
-function add_thing(name, type, props) {
+function add_thing(type, name, props) {
   var node = convert_props(props)
 
   // check type against list of thing types
-  var cattype = rm.cats.things[type]
+  var cattype = RM.cats.things[type]
   if(!cattype)
     return err('that is not a valid thing type', type)
 
@@ -509,6 +509,9 @@ function add_thing(name, type, props) {
   node.type = type
 
   node.priority = 1 // bbq???
+
+  // add to RM things
+  RM.dats.things[type].push(node)
 
   // publish in dagoba + persist
   publish('node', node)
@@ -576,6 +579,9 @@ function new_thing_type(type, properties) {
 
   // TODO: add questions
 
+  // add data slot
+  RM.dats.things[type] = []
+
   // put in place
   RM.cats.things[type] = cattype
 }
@@ -605,6 +611,9 @@ function new_action_type(type, properties) {
   cattype.props = {} // THINK: get props from properties.props?
 
   // TODO: add questions
+
+  // add data slot
+  RM.dats.actions[type] = []
 
   // put in place
   RM.cats.actions[type] = cattype
@@ -636,6 +645,9 @@ function new_effect_type(type, properties) {
   cattype.props = {} // THINK: get props from properties.props?
 
   // TODO: add questions
+
+  // add data slot
+  RM.dats.effects[type] = []
 
   // put in place
   RM.cats.effects[type] = cattype
@@ -670,6 +682,9 @@ function new_happening_type(type, properties) {
   cattype.props = {} // THINK: get props from properties.props?
 
   // TODO: add questions
+
+  // add data slot
+  RM.dats.happenings[type] = []
 
   // put in place
   RM.cats.happenings[type] = cattype
@@ -726,13 +741,26 @@ new_effect_type('introduce', {aliases: ['meet']})
 new_happening_type('conversation', {})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
-// ADD SOME ITEMS
+// ADD SOME DATA
+
+
 
 
 // INIT
 
+function add_data( ) {
+  nodes.forEach(function(node) {
+    if(node.type === 'happening')
+      return false
+
+    add_thing(node.type, node.name, {id: node._id})
+  })
+}
+
+
 function init() {
   var graph = build_graph()
+  add_data()
   // show_graph(graph)
   // springy_it(graph)
   // webcola_it(graph)
