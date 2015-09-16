@@ -425,6 +425,7 @@ function webcola_it(graph) {
   new_nodes[2] = {name: '___'}
   new_nodes[52] = {name: '___'}
   new_nodes[53] = {name: '___'}
+  new_nodes[116] = {name: '___'}
 
   graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')) ])
 }
@@ -534,6 +535,7 @@ function add_action(type, props) {
     return err('that is not a valid action type', type)
 
   node.type = type
+  node.name = type // TODO: remove
 
   node.priority = 1 // bbq???
 
@@ -555,6 +557,7 @@ function add_effect(type, props) {
     return err('that is not a valid effect type', type)
 
   node.type = type
+  node.name = type // TODO: remove
 
   node.priority = 0.5 // bbq???
 
@@ -576,6 +579,7 @@ function add_happening(type, props) {
     return err('that is not a valid happening type', type)
 
   node.type = type
+  node.name = type // TODO: remove
 
   node.priority = 0.2 // bbq???
 
@@ -586,15 +590,6 @@ function add_happening(type, props) {
   // check props
   // publish in dagoba + persist
   publish('node', node)
-}
-
-function add_edge(type, from, to, props) {
-  var edge = {}
-
-  // check from and to
-  // check type against from and to interfaces
-  // publish in dagoba + persist
-  publish('edge', edge)
 }
 
 function new_thing_type(type, properties) {
@@ -758,6 +753,22 @@ function new_edge_type(type, properties) {
   // what properties do edges have?
 }
 
+function add_edge(type, from, to, props) {
+  var edge = {}
+
+  // check from and to
+  // check type against from and to interfaces
+  // publish in dagoba + persist
+
+  edge = convert_props(props)
+  edge._in = to
+  edge._out = from
+  edge.type = type
+  edge.label = type
+
+  publish('edge', edge)
+}
+
 function import_graph(V, E) {
   // add V things
   // add V happenings
@@ -808,7 +819,6 @@ new_effect_type('introduce', {aliases: ['meet']})
 new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
-// ADD SOME DATA
 
 
 
@@ -826,6 +836,11 @@ function add_data( ) {
     // fun(node.type, node.name, {_id: node._id})
     fun(node.type, node)
   })
+
+  edges.forEach(function(edge) {
+    add_edge(edge.type, edge._out, edge._in, edge)
+  }
+)
 }
 
 
@@ -838,6 +853,7 @@ function init() {
   // show_graph(graph)
   // springy_it(graph)
   // webcola_it(graph)
+  webcola_it(G)
 }
 
 init()
