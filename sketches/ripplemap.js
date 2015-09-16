@@ -420,12 +420,26 @@ function webcola_it(graph) {
   nodes.forEach(function(node) {
     new_nodes[node['_id']] = node
   })
+
+  // add fake nodes where needed (sigh)
+  // var ids = new_nodes.map(prop('_id')).sort(function(a, b) {return a - b})
+  // var max = ids[ids.length-1]
+  // for(var i = 0; i < max; i++) {
+  //   if(!~ids.indexOf(i))
+  //     new_nodes[i] = {name: '___'}
+  // }
+  var max = new_nodes.length
+  for(var i = 0; i < max; i++) {
+    if(!new_nodes[i])
+      new_nodes[i] = {name: '___'}
+  }
+
   // shouldn't need this fix it blargh
-  new_nodes[0] = {name: '___'}
-  new_nodes[2] = {name: '___'}
-  new_nodes[52] = {name: '___'}
-  new_nodes[53] = {name: '___'}
-  new_nodes[116] = {name: '___'}
+  // new_nodes[0] = {name: '___'}
+  // new_nodes[2] = {name: '___'}
+  // new_nodes[52] = {name: '___'}
+  // new_nodes[53] = {name: '___'}
+  // new_nodes[116] = {name: '___'}
 
   graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')) ])
 }
@@ -839,8 +853,7 @@ function add_data( ) {
 
   edges.forEach(function(edge) {
     add_edge(edge.type, edge._out, edge._in, edge)
-  }
-)
+  })
 }
 
 
