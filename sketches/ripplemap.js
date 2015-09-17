@@ -328,6 +328,36 @@ function cp_prop(from_attr, to_attr) {return function(obj) {obj[to_attr] = obj[f
 
 function clone(obj) {return JSON.parse(JSON.stringify(obj))}
 
+function pipe() {
+  var all_funs = [].slice.call(arguments)
+
+  function magic_pipe(data) {
+    var funs = all_funs.slice()
+    var fun
+
+    function inner() {
+      while(fun = funs.shift()) {
+        if(fun.async) {              // fun is async
+          return fun.async(data, cb)
+        } else {                     // fun is a function
+          data = fun(data)
+        }
+      }
+    }
+
+    function cb(new_data) {
+      data = new_data
+      inner()
+    }
+
+    // TODO: this should return a promise for data
+    inner()
+    return true
+  }
+
+  return magic_pipe
+}
+
 function err(mess) {
   console.log(arguments, mess)
 }
@@ -937,6 +967,13 @@ new_effect_type('introduce', {aliases: ['meet']})
 
 new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
+
+
+
+// RENDER PIPELINE
+
+
+
 
 
 
