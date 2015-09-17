@@ -483,13 +483,12 @@ RM.ballsize = 20
 RM.ringmul = 3
 RM.ringspots = 12
 var tau = Math.PI*2
+var ctx = el_ripples.getContext('2d')
 
 function ripple_it(graph) {
   var new_graph = clone(JSON.parse(Dagoba.jsonify(graph)))
   var nodes = new_graph.V
   var edges = new_graph.E
-
-  ctx = el_ripples.getContext('2d')
 
   // draw_circle(ctx, 100, 100, 30)
 
@@ -573,10 +572,10 @@ function draw_line(ctx, fromx, fromy, tox, toy) {
 function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
   ctx.beginPath()
   ctx.arc(x, y, radius, 0, tau, false)
-  ctx.fillStyle = fill_color || 'green'
+  ctx.fillStyle = fill_color || '#444444'
   ctx.fill()
   ctx.lineWidth = line_width || 2
-  ctx.strokeStyle = stroke_color || 'blue'
+  ctx.strokeStyle = stroke_color || '#eef'
   ctx.stroke()
 }
 
@@ -972,6 +971,85 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 // RENDER PIPELINE
 
+var wrapper = {data: [], params: {}}
+var pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, assign_xy, add_rings, draw_it )
+
+function wrap(env, prop) {
+  return function(data) {
+    var foo = clone(env)
+    foo[prop] = data
+    return foo
+  }
+}
+
+function get_years(env) {
+  var minyear = Infinity
+  var maxyear = 0
+
+  env.data.V = env.data.V.map(function(node) {
+
+    if(node.time < 1199161600000) return node // HACK: remove me!!!
+
+    var year = (new Date(node.time)).getYear()
+    if(year < minyear) minyear = year // effectful :(
+    if(year > maxyear) maxyear = year // effectful :(
+
+    node.year = year // mutation :(
+    return node
+  })
+
+  env.params.minyear = minyear
+  env.params.maxyear = maxyear
+
+  return env
+}
+
+function assign_years(env) {
+  var graph = G // FIXME: this is silly, but so is spinning up a new instance...
+  env.data.V = env.data.V.map(function(node) {
+    if(node.year) return node
+    var neighbors = graph.v(node._id).out().run() // TODO: both. also add more distance, of the right kind...
+    var minyear = neighbors.map(prop('year')).sort().reverse()[0]
+    if(minyear)
+      node.year = minyear
+    return node
+  })
+
+  return env
+}
+
+function assign_xy(env) {
+  env.data.V.map(function(node) {
+    if(node.x) return node
+
+    var radius = (node.year - 107) * 30 // HACK: remove this!
+    var deg = Math.random() * 360
+    var cx = 0 + radius*Math.cos(deg) // 0 instead of a non-origin x and y -- we'll take care of that later
+    var cy = 0 + radius*Math.sin(deg)
+
+    node.shape = 'circle'
+    node.x = cx
+    node.y = cy
+    node.r = 8 + Math.floor(Math.random()*5)
+
+    return node
+  })
+
+  return env
+}
+
+function add_rings(env) {
+  return env
+}
+
+function draw_it(env) {
+  var cx = 400
+  var cy = 400
+  env.data.V.forEach(function(node) {
+    draw_circle(ctx, cx + node.x, cy + node.y, node.r)
+  })
+}
+
 
 
 
@@ -1007,10 +1085,11 @@ function init() {
   // springy_it(graph)
   // webcola_it(graph)
 
-  show_graph(G)
-  ripple_it(G)
-  springy_it(G)
-  webcola_it(G)
+  // show_graph(G)
+  // ripple_it(G)
+  // springy_it(G)
+  // webcola_it(G)
+  pipeline(G)
 }
 
 init()
