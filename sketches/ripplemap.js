@@ -554,6 +554,18 @@ function draw_edges(ctx, points, stroke, line) {
   })
 }
 
+
+
+// different kind of drawing /oy
+
+function draw_text(ctx, x, y, str, font) {
+  font = font || "12p sans-serif"
+  x = x || 0
+  y = y || 0
+  ctx.fillText(str, x, y)
+}
+
+
 function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
   // ctx.beginPath()
   // ctx.moveTo(fromx, fromy)
@@ -973,8 +985,30 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 // RENDER PIPELINE
 
+document.addEventListener('keypress', function(ev) {
+  var key = ev.keyCode || ev.which
+  var n = 110
+  var p = 112
+  if(key === n) {
+    maxyear++
+    pipeline(G)
+  }
+
+  if(key === p) {
+    maxyear--
+    pipeline(G)
+  }
+})
+
+var maxyear = 115
+var minyear = 108
 var wrapper = {data: [], params: {}, shapes: []}
-var pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, assign_xy, add_rings, copy_edges, copy_nodes, draw_it )
+var pipeline = build_pipeline()
+
+function build_pipeline() {
+  pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, draw_it )
+}
+
 
 function wrap(env, prop) {
   return function(data) {
@@ -1012,7 +1046,7 @@ function assign_years(env) {
   env.data.V = env.data.V.map(function(node) {
     if(node.year) return node
     var neighbors = graph.v(node._id).in().run() // TODO: both. also add more distance, of the right kind...
-    var minyear = neighbors.map(prop('year')).filter(Boolean).sort().reverse()[0]
+    var minyear = neighbors.map(prop('year')).filter(Boolean).sort()[0]
     if(minyear)
       node.year = minyear
     return node
@@ -1021,6 +1055,23 @@ function assign_years(env) {
   return env
 }
 
+function filter_years(max, min) {
+  max = max || Infinity
+  min = min || 0
+
+  return function(env) {
+    // TODO: do this in Dagoba so we can erase edges automatically
+    env.data.V = env.data.V.filter(function(node) {
+      if(node.year > max) return false
+      if(node.year < min) return false
+      return true
+    }
+)
+    return env
+  }
+}
+
+
 function assign_xy(env) {
   var degs = {}
 
@@ -1028,7 +1079,7 @@ function assign_xy(env) {
     if(node.x) return node
 
     var offset = node.year - 107
-    var radius = offset * 40 // HACK: remove this!
+    var radius = offset * 50 // HACK: remove this!
 
     // var deg = Math.random() * 360
     var denom = 12 + offset
@@ -1037,7 +1088,7 @@ function assign_xy(env) {
     if(!degs[offset])
       degs[offset] = Math.random() * 7
 
-    degs[offset] += (1.5*Math.PI/denom) || 0
+    degs[offset] += ((1.2*Math.PI/denom) || 0) + (Math.random()/(2*denom))
     if(offset < 2)
       degs[offset] += 5 // special case for inner circle :(
     var deg = degs[offset]
@@ -1059,7 +1110,7 @@ function assign_xy(env) {
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
     var color = 'black'
-    var radius = 40 * (i - 107)
+    var radius = 50 * (i - 107)
     env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white'})
   }
   return env
@@ -1078,6 +1129,20 @@ function copy_edges(env) {
   return env
 }
 
+function add_labels(env) {
+  var labels = []
+
+  env.shapes.forEach(function(shape) {
+    if(!shape.name) return false
+    var label = {shape: 'text', str: shape.name, x: shape.x + 10, y: shape.y + 5}
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+
 
 function draw_it(env) {
   env.shapes.forEach(function(node) {
@@ -1086,14 +1151,17 @@ function draw_it(env) {
 }
 
 function draw_shape(ctx, node) {
-  var cx = 400
-  var cy = 400
+  var cx = 450
+  var cy = 450
 
   if(node.shape === 'circle')
     draw_circle(ctx, cx + node.x, cy + node.y, node.r, node.stroke, node.fill, node.line)
 
   if(node.shape === 'line')
     draw_line(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.stroke, node.line)
+
+  if(node.shape === 'text')
+    draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font)
 }
 
 
