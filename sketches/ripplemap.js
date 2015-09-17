@@ -314,6 +314,8 @@ var edges = [ {"type": "did", "_in": 1, "_out": 55}
 
 // HELPERS
 
+function noop() {}
+
 function eq(attr, val) {return function(obj) {return obj[attr] === val}}
 
 function unique(v, k, list) {return list.indexOf(v) === k}
@@ -989,24 +991,41 @@ document.addEventListener('keypress', function(ev) {
   var key = ev.keyCode || ev.which
   var n = 110
   var p = 112
+  var a = 97
+  var s = 115
+
   if(key === n) {
     maxyear++
+    build_pipeline()
     pipeline(G)
   }
 
   if(key === p) {
     maxyear--
+    build_pipeline()
+    pipeline(G)
+  }
+
+  if(key === a) {
+    all_edges = true
+    pipeline(G)
+  }
+
+  if(key === s) {
+    all_edges = false
     pipeline(G)
   }
 })
 
+var all_edges = true // awkward... :(
 var maxyear = 115
 var minyear = 108
 var wrapper = {data: [], params: {}, shapes: []}
-var pipeline = build_pipeline()
+var pipeline = noop
+build_pipeline()
 
 function build_pipeline() {
-  pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, draw_it )
+  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, draw_it )
 }
 
 
@@ -1123,6 +1142,9 @@ function copy_nodes(env) {
 
 function copy_edges(env) {
   env.data.E.forEach(function(edge) {
+    if(!all_edges && edge._out.year !== maxyear) // HACK: remove this
+      return false
+
     var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: '#f77'}
     env.shapes.push(line)
   })
