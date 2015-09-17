@@ -554,7 +554,7 @@ function draw_edges(ctx, points, stroke, line) {
   })
 }
 
-function draw_line(ctx, fromx, fromy, tox, toy) {
+function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
   // ctx.beginPath()
   // ctx.moveTo(fromx, fromy)
   // ctx.lineTo(tox, toy)
@@ -563,6 +563,8 @@ function draw_line(ctx, fromx, fromy, tox, toy) {
   var path=new Path2D()
   path.moveTo(fromx, fromy)
   path.lineTo(tox, toy)
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.lineWidth = line_width || 0.5
   ctx.stroke(path)
 }
 
@@ -971,8 +973,8 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 // RENDER PIPELINE
 
-var wrapper = {data: [], params: {}}
-var pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, assign_xy, add_rings, draw_it )
+var wrapper = {data: [], params: {}, shapes: []}
+var pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, assign_xy, add_rings, copy_edges, copy_nodes, draw_it )
 
 function wrap(env, prop) {
   return function(data) {
@@ -1005,11 +1007,12 @@ function get_years(env) {
 }
 
 function assign_years(env) {
-  var graph = G // FIXME: this is silly, but so is spinning up a new instance...
+  // var graph = G // FIXME: this is silly, but so is spinning up a new instance...
+  var graph = Dagoba.graph(env.data.V, env.data.E)
   env.data.V = env.data.V.map(function(node) {
     if(node.year) return node
-    var neighbors = graph.v(node._id).out().run() // TODO: both. also add more distance, of the right kind...
-    var minyear = neighbors.map(prop('year')).sort().reverse()[0]
+    var neighbors = graph.v(node._id).in().run() // TODO: both. also add more distance, of the right kind...
+    var minyear = neighbors.map(prop('year')).filter(Boolean).sort().reverse()[0]
     if(minyear)
       node.year = minyear
     return node
@@ -1019,13 +1022,28 @@ function assign_years(env) {
 }
 
 function assign_xy(env) {
+  var degs = {}
+
   env.data.V.map(function(node) {
     if(node.x) return node
 
-    var radius = (node.year - 107) * 30 // HACK: remove this!
-    var deg = Math.random() * 360
-    var cx = 0 + radius*Math.cos(deg) // 0 instead of a non-origin x and y -- we'll take care of that later
-    var cy = 0 + radius*Math.sin(deg)
+    var offset = node.year - 107
+    var radius = offset * 40 // HACK: remove this!
+
+    // var deg = Math.random() * 360
+    var denom = 12 + offset
+    // denom /= 2
+
+    if(!degs[offset])
+      degs[offset] = Math.random() * 7
+
+    degs[offset] += (1.5*Math.PI/denom) || 0
+    if(offset < 2)
+      degs[offset] += 5 // special case for inner circle :(
+    var deg = degs[offset]
+
+    var cx = 0 + radius*Math.cos(deg) // 0 instead of a non-origin x and y
+    var cy = 0 + radius*Math.sin(deg) // we'll take care of that later
 
     node.shape = 'circle'
     node.x = cx
@@ -1039,15 +1057,43 @@ function assign_xy(env) {
 }
 
 function add_rings(env) {
+  for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
+    var color = 'black'
+    var radius = 40 * (i - 107)
+    env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white'})
+  }
   return env
 }
 
+function copy_nodes(env) {
+  env.shapes = env.shapes.concat(env.data.V)
+  return env
+}
+
+function copy_edges(env) {
+  env.data.E.forEach(function(edge) {
+    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: '#f77'}
+    env.shapes.push(line)
+  })
+  return env
+}
+
+
 function draw_it(env) {
+  env.shapes.forEach(function(node) {
+    draw_shape(ctx, node)
+  })
+}
+
+function draw_shape(ctx, node) {
   var cx = 400
   var cy = 400
-  env.data.V.forEach(function(node) {
-    draw_circle(ctx, cx + node.x, cy + node.y, node.r)
-  })
+
+  if(node.shape === 'circle')
+    draw_circle(ctx, cx + node.x, cy + node.y, node.r, node.stroke, node.fill, node.line)
+
+  if(node.shape === 'line')
+    draw_line(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.stroke, node.line)
 }
 
 
