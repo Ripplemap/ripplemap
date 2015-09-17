@@ -352,6 +352,8 @@ function build_graph() {
 
 // SHOW IT
 
+var RM = {}
+
 var el = document.getElementById.bind(document)
 // var qs = document.querySelectorAll.bind(document)
 
@@ -359,6 +361,7 @@ var el_graph = el('graph')
 var el_nodes = el('nodes_ta')
 var el_edges = el('edges_ta')
 var el_save = el('save')
+var el_ripples = el('ripples')
 
 el_save.addEventListener('click', save_button)
 
@@ -400,14 +403,14 @@ function springy_it(graph) {
   var graphJSON = {nodes: graph.vertices.map(prop('_id')), edges: graph.edges.map(function(edge) {return [edge._in._id, edge._out._id]})}
 
   jQuery(function(){
-    var graph = new Springy.Graph();
-    graph.loadJSON(graphJSON);
+    var graph = new Springy.Graph()
+    graph.loadJSON(graphJSON)
 
     var springy = jQuery('#springydemo').springy({
           graph: graph,
           damping: 0.1
-        });
-  });
+        })
+  })
 }
 
 // WEBCOLA IT
@@ -444,6 +447,110 @@ function webcola_it(graph) {
   graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')) ])
 }
 
+// RIPPLE IT
+
+RM.ballsize = 20
+RM.ringmul = 3
+RM.ringspots = 12
+var tau = Math.PI*2
+
+function ripple_it(graph) {
+  var new_graph = clone(JSON.parse(Dagoba.jsonify(graph)))
+  var nodes = new_graph.V
+  var edges = new_graph.E
+
+  ctx = el_ripples.getContext('2d')
+
+  // draw_circle(ctx, 100, 100, 30)
+
+  var circles = [{stroke: 'blue', fill: 'orange', line: 5}, {stroke: 'red', line: 8, radius: 40}, {fill: 'black'}]
+
+  circles = circles.concat(clone(circles), clone(circles), clone(circles), clone(circles))
+
+  // draw_on_ring(ctx, 300, 300, 200, circles) // mutates
+
+  // draw_edges(ctx, circles)
+
+  // group nodes by timestamp
+  // nodes.map(prop('time')).filter(Boolean).map(function(x) {return (new Date(x)).getYear()}).sort()
+  var timed_nodes = nodes.filter(function(y) {return y.time > 1199161600000})
+
+  var chunks = timed_nodes.reduce(function(acc, node) {
+        var year = (new Date(node.time)).getYear()
+        if(!acc[year])
+          acc[year] = {year: year, nodes: []}
+        acc[year].nodes.push(node)
+        return acc
+      }, {})
+
+  Object.keys(chunks).forEach(function(year) {
+    var poo = chunks[year]
+    var radius = (year - 107) * 30
+    draw_on_ring(ctx, 400, 400, radius, poo.nodes)
+    draw_edges(ctx, poo.nodes)
+  })
+
+  var nnn = Object.keys(chunks).reduce(function(acc, key) {return acc.concat(chunks[key].nodes)}, [])
+
+  // draw_edges(ctx, nnn)
+
+}
+
+function draw_on_ring(ctx, x, y, radius, circles) {
+  circles.forEach(function(circle) {
+    // pick a point on the ring
+    var deg = Math.random() * 360
+    var cx = x + radius*Math.cos(deg)
+    var cy = y + radius*Math.sin(deg)
+    var size = circle.size || RM.ballsize
+    var stroke = circle.stroke || null
+    var fill = circle.fill || null
+    var line = circle.line || null
+
+    circle.x = cx
+    circle.y = cy
+
+    draw_circle(ctx, cx, cy, size, stroke, fill, line)
+  })
+}
+
+function draw_edges(ctx, points, stroke, line) {
+  ctx.lineWidth = line || 2
+  ctx.strokeStyle = stroke || 'red'
+
+  points.forEach(function(point1) {
+    points.forEach(function(point2) {
+      draw_line(ctx, point1.x, point1.y, point2.x, point2.y)
+    })
+  })
+}
+
+function draw_line(ctx, fromx, fromy, tox, toy) {
+  // ctx.beginPath()
+  // ctx.moveTo(fromx, fromy)
+  // ctx.lineTo(tox, toy)
+  // ctx.stroke()
+
+  var path=new Path2D()
+  path.moveTo(fromx, fromy)
+  path.lineTo(tox, toy)
+  ctx.stroke(path)
+}
+
+
+
+
+function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, tau, false)
+  ctx.fillStyle = fill_color || 'green'
+  ctx.fill()
+  ctx.lineWidth = line_width || 2
+  ctx.strokeStyle = stroke_color || 'blue'
+  ctx.stroke()
+}
+
+
 /* INTERFACES FOR RIPPLE MODEL
  *
  * There are four categories: Thing, Action, Effect, and Happening
@@ -467,8 +574,6 @@ function publish(type, item) {
     // TODO: persist somewhere
   }
 }
-
-var RM = {}
 
 RM.cats = {} // ripplemap categories
 RM.cats.things = {}
@@ -507,7 +612,7 @@ function add_alias(cat, type, alias) {
 }
 
 function convert_props(props) {
-  if(typeof props != 'object')
+  if(typeof props !== 'object')
     return {}
 
   if(Array.isArray(props))
@@ -835,8 +940,6 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 
 
-
-
 // INIT
 
 function add_data( ) {
@@ -866,7 +969,21 @@ function init() {
   // show_graph(graph)
   // springy_it(graph)
   // webcola_it(graph)
+
+  show_graph(G)
+  ripple_it(G)
+  springy_it(G)
   webcola_it(G)
 }
 
 init()
+
+
+// INTERFACE FOR DATA...
+
+// make a form for a thing, an action, and another thing
+// name
+// type
+// name
+
+// then make a form that asks questions about other things
