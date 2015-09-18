@@ -1025,7 +1025,7 @@ var pipeline = noop
 build_pipeline()
 
 function build_pipeline() {
-  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, draw_it )
+  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, clear_it, draw_it )
 }
 
 
@@ -1164,6 +1164,11 @@ function add_labels(env) {
   return env
 }
 
+
+function clear_it(env) {
+  ctx.clearRect(0, 0, 1000, 1000)
+  return env
+}
 
 
 function draw_it(env) {
