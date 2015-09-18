@@ -1105,9 +1105,9 @@ function assign_xy(env) {
     // denom /= 2
 
     if(!degs[offset])
-      degs[offset] = Math.random() * 7
+      degs[offset] = offset // Math.random() * 7
 
-    degs[offset] += ((1.2*Math.PI/denom) || 0) + (Math.random()/(2*denom))
+    degs[offset] += ((1.2*Math.PI/denom) || 0) // + (Math.random()/(2*denom))
     if(offset < 2)
       degs[offset] += 5 // special case for inner circle :(
     var deg = degs[offset]
