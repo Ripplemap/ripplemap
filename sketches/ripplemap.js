@@ -1140,7 +1140,7 @@ function assign_xy(env) {
 
     // var deg = Math.random() * 360
     var denom = 12 + offset
-    // denom /= 2
+    denom /= 2
 
     if(!degs[offset])
       degs[offset] = offset // Math.random() * 7
@@ -1180,7 +1180,7 @@ function copy_nodes(env) {
 
 function copy_edges(env) {
   env.data.E.forEach(function(edge) {
-    if(!all_edges && edge._out.year !== maxyear) // HACK: remove this
+    if(!all_edges && !(edge._out.year === maxyear || edge._in.year === maxyear)) // HACK: remove this
       return false
 
     var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: '#f77'}
