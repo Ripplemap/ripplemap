@@ -1,7 +1,5 @@
 /*global Dagoba */
 
-// VERTICES
-
 var nodes = [ {"name": "Cayden Makk", "type": "person", "_id": 1}
             , {"name": "Andy Gunn", "type": "person", "_id": 4}
             , {"name": "Sasha Costanzachock", "type": "person", "_id": 5}
@@ -27,7 +25,7 @@ var nodes = [ {"name": "Cayden Makk", "type": "person", "_id": 1}
             , {"name": "Free Press", "type": "org", "_id": 33}
             , {"name": "OTI", "type": "org", "_id": 36}
             , {"name": "Media Mobilizing Project", "type": "org", "_id": 37}
-            , {"name": "Magnet", "type": "org", "_id": 38}
+            , {"name": "MAG-Net", "type": "org", "_id": 38}
             , {"name": "DDJC", "type": "org", "_id": 39}
             , {"name": "CMJ", "type": "org", "_id": 40}
             , {"name": "18 MR", "type": "org", "_id": 46}
@@ -57,6 +55,21 @@ var nodes = [ {"name": "Cayden Makk", "type": "person", "_id": 1}
             , {"name": "Panel on Net Neutrality & racial Justice", "type": "event", "_id": 139}
             , {"name": "Net Neutrality & Social Movements History", "type": "event", "_id": 140}
             , {"name": "free & open communities", "type": "event", "_id": 141}
+            , {"name": "Media Policy for Social Justice", "type": "event", "_id": 200}
+            , {"name": "Diana Nucera", "type": "person", "_id": 201}
+            , {"name": "AMC Media Lab", "type": "event", "_id": 202}
+            , {"name": "Bryan Mercer", "type": "person", "_id": 203}
+            , {"name": "Detroit Digital Justice Zine", "type": "outcome", "_id": 204}
+            , {"name": "Net Neutrality issue area", "type": "outcome", "_id": 205}
+            , {"name": "Betty Yu", "type": "person", "_id": 206}
+            , {"name": "Andrea Quisada", "type": "person", "_id": 207}
+            , {"name": "Media A-Go-Go Practice Space", "type": "event", "_id": 208}
+            , {"name": "Janel Yamashiro", "type": "person", "_id": 209}
+            , {"cat": "action", "time": 1262304000000, "type": "manage", "_id": 210}
+            , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 211}
+            , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 212}
+            , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 213}
+            , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 214}
             , {"cat": "action", "time": 1199163600000, "type": "assist", "_id": 55}
             , {"cat": "happening", "time": 1262322000000, "type": "attend", "_id": 56}
             , {"cat": "effect", "time": 1262322000000, "type": "introduce", "_id": 57}
@@ -310,7 +323,18 @@ var edges = [ {"type": "did", "_in": 1, "_out": 55}
             , {"type": "did", "_in": 54, "_out": 136}
             , {"type": "did", "_in": 50, "_out": 136}
             , {"type": "did", "_in": 54, "_out": 137}
-            , {"type": "did", "_in": 49, "_out": 137}]
+            , {"type": "did", "_in": 49, "_out": 137}
+            , {"type": "did", "_in": 38, "_out": 210}
+            , {"type": "did", "_in": 210, "_out": 200}
+            , {"type": "did", "_in": 203, "_out": 211}
+            , {"type": "did", "_in": 211, "_out": 200}
+            , {"type": "did", "_in": 206, "_out": 212}
+            , {"type": "did", "_in": 212, "_out": 200}
+            , {"type": "did", "_in": 207, "_out": 213}
+            , {"type": "did", "_in": 213, "_out": 200}
+            , {"type": "did", "_in": 54, "_out": 214}
+            , {"type": "did", "_in": 214, "_out": 200}
+]
 
 // HELPERS
 
@@ -1043,12 +1067,12 @@ function sg_compact(graph) {
     if(node.time)
       return false
 
-    var others = g.v(id).in().run()
+    var others = ( g.v(id).in().run() ).concat( g.v(id).out().run() )
     others.forEach(function(other) {
       if(other.time)
         node.time = Math.min(node.time||Infinity, other.time)
 
-      var oo = g.v(other._id).out().run()
+      var oo = ( g.v(other._id).out().run() ).concat( g.v(other._id).in().run() ) // HACK: need .both
       if(oo.length < 2)
         return false
 
