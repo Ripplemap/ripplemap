@@ -1025,8 +1025,46 @@ var pipeline = noop
 build_pipeline()
 
 function build_pipeline() {
-  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), wrap(wrapper, 'data'), get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings, copy_edges, copy_nodes, add_labels, clear_it, draw_it )
+  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), sg_compact, wrap(wrapper, 'data')
+                 , get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings
+                 , copy_edges, copy_nodes, add_labels
+                 , clear_it, draw_it )
 }
+
+function sg_compact(graph) {
+  // so... this is pretty silly i guess or something
+  var g = Dagoba.graph(graph.V, graph.E)
+  var vertex_ids = g.v().property('_id').run()
+  var newg = Dagoba.graph()
+  var edges = []
+
+  vertex_ids.forEach(function(id) {
+    var node = g.v(id).run()[0]
+    if(node.time)
+      return false
+
+    var others = g.v(id).in().run()
+    others.forEach(function(other) {
+      if(other.time)
+        node.time = Math.min(node.time||Infinity, other.time)
+
+      var oo = g.v(other._id).out().run()
+      if(oo.length < 2)
+        return false
+
+      var edge = {_in: oo[0]._id, _out: oo[1]._id}
+      edges.push(edge)
+      newg.addVertex(node)
+    })
+  })
+
+  edges.forEach(function(edge) {
+    newg.addEdge(edge)
+  })
+
+  return JSON.parse(Dagoba.jsonify(newg))
+}
+
 
 
 function wrap(env, prop) {
