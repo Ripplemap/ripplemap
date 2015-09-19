@@ -1052,7 +1052,7 @@ function build_pipeline() {
   pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), sg_compact, wrap(wrapper, 'data')
                  , get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings
                  , copy_edges, copy_nodes, add_labels
-                 , clear_it, draw_it )
+                 , clear_it, draw_it, draw_metadata )
 }
 
 function sg_compact(graph) {
@@ -1237,7 +1237,15 @@ function draw_it(env) {
   env.shapes.forEach(function(node) {
     draw_shape(ctx, node)
   })
+  return env
 }
+
+function draw_metadata(env) {
+  el('minyear').innerText = env.params.minyear
+  el('maxyear').innerText = maxyear
+  return env
+}
+
 
 function draw_shape(ctx, node) {
   var cx = 450
