@@ -1241,8 +1241,8 @@ function draw_it(env) {
 }
 
 function draw_metadata(env) {
-  el('minyear').innerText = env.params.minyear
-  el('maxyear').innerText = maxyear
+  el('minyear').innerText = 1900 + env.params.minyear
+  el('maxyear').innerText = 1900 + maxyear
   return env
 }
 
