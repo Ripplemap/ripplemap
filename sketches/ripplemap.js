@@ -417,6 +417,7 @@ var el_graph = el('graph')
 var el_nodes = el('nodes_ta')
 var el_edges = el('edges_ta')
 var el_ripples = el('ripples')
+var el_sentences = el('sentences')
 
 function show_graph(graph) {
   var text = ''
@@ -993,8 +994,7 @@ new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
 
-
-// RENDER PIPELINE
+// INTERACTIONS
 
 document.addEventListener('keypress', function(ev) {
   var key = ev.keyCode || ev.which
@@ -1006,25 +1006,28 @@ document.addEventListener('keypress', function(ev) {
   if(key === n) {
     maxyear++
     build_pipeline()
-    pipeline(G)
+    render()
   }
 
   if(key === p) {
     maxyear--
     build_pipeline()
-    pipeline(G)
+    render()
   }
 
   if(key === a) {
     all_edges = true
-    pipeline(G)
+    render()
   }
 
   if(key === s) {
     all_edges = false
-    pipeline(G)
+    render()
   }
 })
+
+
+// RENDER PIPELINE
 
 var all_edges = true // awkward... :(
 var maxyear = 115
@@ -1039,6 +1042,14 @@ function build_pipeline() {
                  , copy_edges, copy_nodes, add_labels
                  , clear_it, draw_it, draw_metadata )
 }
+
+function render() {
+  pipeline(G)
+}
+
+
+
+// COMPACTIONS
 
 function sg_compact(graph) {
   // so... this is pretty silly i guess or something
@@ -1075,6 +1086,7 @@ function sg_compact(graph) {
 }
 
 
+// RENDER TOOLS
 
 function wrap(env, prop) {
   return function(data) {
@@ -1285,7 +1297,7 @@ function init() {
   // ripple_it(G)
   // springy_it(G)
   // webcola_it(G)
-  pipeline(G)
+  render()
 }
 
 init()
