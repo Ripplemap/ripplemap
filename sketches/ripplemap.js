@@ -160,38 +160,6 @@ function draw_edges(ctx, points, stroke, line) {
 
 
 
-// different kind of drawing /oy
-
-function draw_text(ctx, x, y, str, font) {
-  font = font || "12p sans-serif"
-  x = x || 0
-  y = y || 0
-  ctx.fillText(str, x, y)
-}
-
-
-function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
-  var path=new Path2D()
-  path.moveTo(fromx, fromy)
-  path.lineTo(tox, toy)
-  ctx.strokeStyle = stroke_color || '#eef'
-  ctx.lineWidth = line_width || 0.5
-  ctx.stroke(path)
-}
-
-
-
-
-function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
-  ctx.beginPath()
-  ctx.arc(x, y, radius, 0, tau, false)
-  ctx.fillStyle = fill_color || '#444444'
-  ctx.fill()
-  ctx.lineWidth = line_width || 2
-  ctx.strokeStyle = stroke_color || '#eef'
-  ctx.stroke()
-}
-
 
 /* INTERFACES FOR RIPPLE MODEL
  *
@@ -629,13 +597,18 @@ function build_pipelines() {
                      , copy_edges, copy_nodes, add_labels
                      , clear_it, draw_it, draw_metadata )
 
-  // pipelines[1] = pipe( Dagoba.cloneflat, )
+  pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
+                     , get_actions, make_sentences, write_sentences
+                     )
 }
 
 function render() {
   pipelines[0](G)
   // pipelines[1](G)
 }
+
+// SENTENCE STRUCTURES
+
 
 
 
@@ -738,7 +711,6 @@ function filter_years(max, min) {
     return env
   }
 }
-
 
 function assign_xy(env) {
   var degs = {}
@@ -846,6 +818,32 @@ function draw_shape(ctx, node) {
 
   if(node.shape === 'text')
     draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font)
+}
+
+function draw_text(ctx, x, y, str, font) {
+  font = font || "12p sans-serif"
+  x = x || 0
+  y = y || 0
+  ctx.fillText(str, x, y)
+}
+
+function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
+  var path=new Path2D()
+  path.moveTo(fromx, fromy)
+  path.lineTo(tox, toy)
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.lineWidth = line_width || 0.5
+  ctx.stroke(path)
+}
+
+function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, tau, false)
+  ctx.fillStyle = fill_color || '#444444'
+  ctx.fill()
+  ctx.lineWidth = line_width || 2
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.stroke()
 }
 
 
