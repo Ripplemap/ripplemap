@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dagoba</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="js/dagoba.js"></script>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/springy.js"></script>
+    <script src="js/springyui.js"></script>
+
+    <style type="text/css">
+      @import url(css/style.css);
+      .background {
+        stroke: white;
+        stroke-width: 1px;
+        fill: white;
+      }
+
+      .node {
+        stroke: black;
+        stroke-width: 1.5px;
+        cursor: move;
+        fill: lightcoral;
+      }
+
+      .link {
+        fill: none;
+        stroke: #000;
+        stroke-width: 3px;
+        opacity: 0.7;
+        marker-end: url(#end-arrow);
+      }
+
+      .label {
+        fill: black;
+        font-family: Verdana;
+        font-size: 25px;
+        text-anchor: middle;
+        cursor: move;
+      }
+
+      svg {
+        border: 1px solid black;
+      }
+
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+
+    <pre id="graph" style="display:none"></pre>
+
+    <textarea cols="30" id="nodes_ta" name="nodes_ta" rows="10"></textarea>
+    <textarea cols="30" id="edges_ta" name="edges_ta" rows="10"></textarea>
+<div style="display:none">
+    <button id="save">Save</button>
+</div>
+    <h1> Welcome to ripplemapping </h1>
+
+    <p>
+      Keys: <br />
+      'p' for previous year <br />
+      'n' for next year <br />
+      'a' for all edges <br />
+      's' for some edges <br />
+    </p>
+
+    <div>
+      <p>
+        min year:
+        <span id="minyear"></span>
+        max year:
+        <span id="maxyear"></span>
+      </p>
+    </div>
+
+
+    <canvas id="ripples" width="900" height="900"></canvas>
+
+
+
+    <canvas id="springydemo" width="640" height="480"></canvas>
+
+
+
+    <script src="js/d3.v3.js"></script>
+    <script src="js/cola.js"></script>
+    <link rel="stylesheet" href="css/github.css">
+    <script src="js/highlight.pack.js"></script>
+    <script src="js/ripplemap.js"></script>
+
+    <script type="text/javascript" src="early_graphs.js"></script>
+
+  </body>
+</html>
