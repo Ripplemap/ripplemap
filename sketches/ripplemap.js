@@ -77,81 +77,9 @@ var RM = {}
 var el = document.getElementById.bind(document)
 // var qs = document.querySelectorAll.bind(document)
 
-var el_graph = el('graph')
-var el_nodes = el('nodes_ta')
-var el_edges = el('edges_ta')
 var el_ripples = el('ripples')
 var el_sentences = el('sentences')
 
-function show_graph(graph) {
-  var text = ''
-
-  graph.v().run().reverse().forEach(function(node) {
-    text += '\n\n' + JSON.stringify(node, Dagoba.cleanVertex)
-    text += '\n  in: ' + JSON.stringify(node._in, Dagoba.cleanEdge)
-    text += '\n  out: ' + JSON.stringify(node._out, Dagoba.cleanEdge)
-  })
-
-  el_graph.innerText = text
-
-  var json = Dagoba.jsonify(graph)
-  var obj = JSON.parse(json)
-  var nodes_text = JSON.stringify(obj.V)
-  var edges_text = JSON.stringify(obj.E)
-
-  el_nodes.value = nodes_text
-  el_edges.value = edges_text
-}
-
-// SPRINGY IT
-
-function springy_it(graph) {
-  var graphJSON = {nodes: graph.vertices.map(prop('_id')), edges: graph.edges.map(function(edge) {return [edge._in._id, edge._out._id]})}
-
-  jQuery(function(){
-    var graph = new Springy.Graph()
-    graph.loadJSON(graphJSON)
-
-    var springy = jQuery('#springydemo').springy({
-          graph: graph,
-          damping: 0.1
-        })
-  })
-}
-
-// WEBCOLA IT
-
-function webcola_it(graph) {
-  var new_graph = clone(JSON.parse(Dagoba.jsonify(graph)))
-  var nodes = new_graph.V
-  var edges = new_graph.E
-  var new_nodes = []
-  nodes.forEach(function(node) {
-    new_nodes[node['_id']] = node
-  })
-
-  // add fake nodes where needed (sigh)
-  // var ids = new_nodes.map(prop('_id')).sort(function(a, b) {return a - b})
-  // var max = ids[ids.length-1]
-  // for(var i = 0; i < max; i++) {
-  //   if(!~ids.indexOf(i))
-  //     new_nodes[i] = {name: '___'}
-  // }
-  var max = new_nodes.length
-  for(var i = 0; i < max; i++) {
-    if(!new_nodes[i])
-      new_nodes[i] = {name: '___'}
-  }
-
-  // shouldn't need this fix it blargh
-  // new_nodes[0] = {name: '___'}
-  // new_nodes[2] = {name: '___'}
-  // new_nodes[52] = {name: '___'}
-  // new_nodes[53] = {name: '___'}
-  // new_nodes[116] = {name: '___'}
-
-  graph_it([new_nodes, edges.map(cp_prop('_in', 'source')).map(cp_prop('_out', 'target')) ])
-}
 
 // RIPPLE IT
 
@@ -243,11 +171,6 @@ function draw_text(ctx, x, y, str, font) {
 
 
 function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
-  // ctx.beginPath()
-  // ctx.moveTo(fromx, fromy)
-  // ctx.lineTo(tox, toy)
-  // ctx.stroke()
-
   var path=new Path2D()
   path.moveTo(fromx, fromy)
   path.lineTo(tox, toy)
@@ -928,8 +851,6 @@ function draw_shape(ctx, node) {
 
 
 
-
-
 // INIT
 
 function add_data( ) {
@@ -949,19 +870,10 @@ function add_data( ) {
 
 
 function init() {
-  // var graph = build_graph()
   G = Dagoba.graph()
 
   add_data()
 
-  // show_graph(graph)
-  // springy_it(graph)
-  // webcola_it(graph)
-
-  // show_graph(G)
-  // ripple_it(G)
-  // springy_it(G)
-  // webcola_it(G)
   render()
 }
 
