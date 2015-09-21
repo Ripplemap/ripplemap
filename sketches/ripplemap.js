@@ -1,70 +1,70 @@
 /*global Dagoba */
 
-var nodes = [ {"name": "Cayden Makk", "type": "person", "_id": 1}
-            , {"name": "Andy Gunn", "type": "person", "_id": 4}
-            , {"name": "Sasha Costanzachock", "type": "person", "_id": 5}
-            , {"name": "Nina Bianchi", "type": "person", "_id": 6}
-            , {"name": "Chance Williams", "type": "person", "_id": 7}
-            , {"name": "Amalia Daloney", "type": "person", "_id": 8}
-            , {"name": "FCC", "type": "org", "_id": 9}
-            , {"name": "Josh Breitbart", "type": "person", "_id": 15}
-            , {"name": "Hannah Sassaman", "type": "person", "_id": 16}
-            , {"name": "Alfredo Lopez", "type": "person", "_id": 17}
-            , {"name": "Emi Kane", "type": "person", "_id": 19}
-            , {"name": "Seeta Gangadharon", "type": "person", "_id": 20}
-            , {"name": "Sarah Morris", "type": "person", "_id": 25}
-            , {"name": "Mary Alice Crim", "type": "person", "_id": 30}
-            , {"name": "Liza Dichter", "type": "person", "_id": 32}
-            , {"name": "Joe Torres", "type": "person", "_id": 34}
-            , {"name": "Danielle Chynoweth", "type": "person", "_id": 35}
-            , {"name": "Steven Renderos", "type": "person", "_id": 54}
-            , {"name": "AMC", "type": "org", "_id": 3}
-            , {"name": "US Circuit Court", "type": "org", "_id": 11}
-            , {"name": "Legacy Civil Rights Groups", "type": "org", "_id": 12}
-            , {"name": "18MR", "type": "org", "_id": 18}
-            , {"name": "Free Press", "type": "org", "_id": 33}
-            , {"name": "OTI", "type": "org", "_id": 36}
-            , {"name": "Media Mobilizing Project", "type": "org", "_id": 37}
-            , {"name": "MAG-Net", "type": "org", "_id": 38}
-            , {"name": "DDJC", "type": "org", "_id": 39}
-            , {"name": "CMJ", "type": "org", "_id": 40}
-            , {"name": "18 MR", "type": "org", "_id": 46}
-            , {"name": "OSF", "type": "org", "_id": 47}
-            , {"name": "Open Internet Order", "type": "event", "_id": 10}
-            , {"name": "Games Track", "type": "event", "_id": 13}
-            , {"name": "Coordinators retreat", "type": "event", "_id": 14}
-            , {"name": "Section 706 V Title 2", "type": "event", "_id": 21}
-            , {"name": "brought to org - another Asian American voice", "type": "event", "_id": 22}
-            , {"name": "Media Rights Track", "type": "event", "_id": 23}
-            , {"name": "Blogging from prison workshop in webmaking track", "type": "event", "_id": 24}
-            , {"name": "2 or 3 open internet princples", "type": "event", "_id": 26}
-            , {"name": "How to make policy concepts session", "type": "event", "_id": 27}
-            , {"name": "Securities surveillance track", "type": "event", "_id": 28}
-            , {"name": "POC Deligation", "type": "event", "_id": 29}
-            , {"name": "Title 2", "type": "event", "_id": 31}
-            , {"name": "Mobile Justice: The Next Frontier.", "type": "event", "_id": 41}
-            , {"name": "Visioning Our Media Policy Future", "type": "event", "_id": 42}
-            , {"name": "Coordinators Retreat", "type": "event", "_id": 43}
-            , {"name": "Racial Justice and Surveilance Natwork Gathering", "type": "event", "_id": 44}
-            , {"name": "Town Hall", "type": "event", "_id": 45}
-            , {"name": "Racial Justice & Surveillance network gathering", "type": "event", "_id": 48}
-            , {"name": "breifing on Capitol Hill", "type": "event", "_id": 49}
-            , {"name": "hearing for FTC", "type": "event", "_id": 50}
-            , {"name": "Internet Slowdown Day", "type": "event", "_id": 51}
-            , {"name": "a track?", "type": "event", "_id": 138}
-            , {"name": "Panel on Net Neutrality & racial Justice", "type": "event", "_id": 139}
-            , {"name": "Net Neutrality & Social Movements History", "type": "event", "_id": 140}
-            , {"name": "free & open communities", "type": "event", "_id": 141}
-            , {"name": "Media Policy for Social Justice", "type": "event", "_id": 200}
-            , {"name": "Diana Nucera", "type": "person", "_id": 201}
-            , {"name": "AMC Media Lab", "type": "event", "_id": 202}
-            , {"name": "Bryan Mercer", "type": "person", "_id": 203}
-            , {"name": "Detroit Digital Justice Zine", "type": "outcome", "_id": 204}
-            , {"name": "Net Neutrality issue area", "type": "outcome", "_id": 205}
-            , {"name": "Betty Yu", "type": "person", "_id": 206}
-            , {"name": "Andrea Quisada", "type": "person", "_id": 207}
-            , {"name": "Media A-Go-Go Practice Space", "type": "event", "_id": 208}
-            , {"name": "Janel Yamashiro", "type": "person", "_id": 209}
+var nodes = [ {cat: "thing", "name": "Cayden Makk", "type": "person", "_id": 1}
+            , {cat: "thing", "name": "Andy Gunn", "type": "person", "_id": 4}
+            , {cat: "thing", "name": "Sasha Costanzachock", "type": "person", "_id": 5}
+            , {cat: "thing", "name": "Nina Bianchi", "type": "person", "_id": 6}
+            , {cat: "thing", "name": "Chance Williams", "type": "person", "_id": 7}
+            , {cat: "thing", "name": "Amalia Daloney", "type": "person", "_id": 8}
+            , {cat: "thing", "name": "FCC", "type": "org", "_id": 9}
+            , {cat: "thing", "name": "Josh Breitbart", "type": "person", "_id": 15}
+            , {cat: "thing", "name": "Hannah Sassaman", "type": "person", "_id": 16}
+            , {cat: "thing", "name": "Alfredo Lopez", "type": "person", "_id": 17}
+            , {cat: "thing", "name": "Emi Kane", "type": "person", "_id": 19}
+            , {cat: "thing", "name": "Seeta Gangadharon", "type": "person", "_id": 20}
+            , {cat: "thing", "name": "Sarah Morris", "type": "person", "_id": 25}
+            , {cat: "thing", "name": "Mary Alice Crim", "type": "person", "_id": 30}
+            , {cat: "thing", "name": "Liza Dichter", "type": "person", "_id": 32}
+            , {cat: "thing", "name": "Joe Torres", "type": "person", "_id": 34}
+            , {cat: "thing", "name": "Danielle Chynoweth", "type": "person", "_id": 35}
+            , {cat: "thing", "name": "Steven Renderos", "type": "person", "_id": 54}
+            , {cat: "thing", "name": "AMC", "type": "org", "_id": 3}
+            , {cat: "thing", "name": "US Circuit Court", "type": "org", "_id": 11}
+            , {cat: "thing", "name": "Legacy Civil Rights Groups", "type": "org", "_id": 12}
+            , {cat: "thing", "name": "18MR", "type": "org", "_id": 18}
+            , {cat: "thing", "name": "Free Press", "type": "org", "_id": 33}
+            , {cat: "thing", "name": "OTI", "type": "org", "_id": 36}
+            , {cat: "thing", "name": "Media Mobilizing Project", "type": "org", "_id": 37}
+            , {cat: "thing", "name": "MAG-Net", "type": "org", "_id": 38}
+            , {cat: "thing", "name": "DDJC", "type": "org", "_id": 39}
+            , {cat: "thing", "name": "CMJ", "type": "org", "_id": 40}
+            , {cat: "thing", "name": "18 MR", "type": "org", "_id": 46}
+            , {cat: "thing", "name": "OSF", "type": "org", "_id": 47}
+            , {cat: "thing", "name": "Open Internet Order", "type": "event", "_id": 10}
+            , {cat: "thing", "name": "Games Track", "type": "event", "_id": 13}
+            , {cat: "thing", "name": "Coordinators retreat", "type": "event", "_id": 14}
+            , {cat: "thing", "name": "Section 706 V Title 2", "type": "event", "_id": 21}
+            , {cat: "thing", "name": "brought to org - another Asian American voice", "type": "event", "_id": 22}
+            , {cat: "thing", "name": "Media Rights Track", "type": "event", "_id": 23}
+            , {cat: "thing", "name": "Blogging from prison workshop in webmaking track", "type": "event", "_id": 24}
+            , {cat: "thing", "name": "2 or 3 open internet princples", "type": "event", "_id": 26}
+            , {cat: "thing", "name": "How to make policy concepts session", "type": "event", "_id": 27}
+            , {cat: "thing", "name": "Securities surveillance track", "type": "event", "_id": 28}
+            , {cat: "thing", "name": "POC Deligation", "type": "event", "_id": 29}
+            , {cat: "thing", "name": "Title 2", "type": "event", "_id": 31}
+            , {cat: "thing", "name": "Mobile Justice: The Next Frontier.", "type": "event", "_id": 41}
+            , {cat: "thing", "name": "Visioning Our Media Policy Future", "type": "event", "_id": 42}
+            , {cat: "thing", "name": "Coordinators Retreat", "type": "event", "_id": 43}
+            , {cat: "thing", "name": "Racial Justice and Surveilance Natwork Gathering", "type": "event", "_id": 44}
+            , {cat: "thing", "name": "Town Hall", "type": "event", "_id": 45}
+            , {cat: "thing", "name": "Racial Justice & Surveillance network gathering", "type": "event", "_id": 48}
+            , {cat: "thing", "name": "breifing on Capitol Hill", "type": "event", "_id": 49}
+            , {cat: "thing", "name": "hearing for FTC", "type": "event", "_id": 50}
+            , {cat: "thing", "name": "Internet Slowdown Day", "type": "event", "_id": 51}
+            , {cat: "thing", "name": "a track?", "type": "event", "_id": 138}
+            , {cat: "thing", "name": "Panel on Net Neutrality & racial Justice", "type": "event", "_id": 139}
+            , {cat: "thing", "name": "Net Neutrality & Social Movements History", "type": "event", "_id": 140}
+            , {cat: "thing", "name": "free & open communities", "type": "event", "_id": 141}
+            , {cat: "thing", "name": "Media Policy for Social Justice", "type": "event", "_id": 200}
+            , {cat: "thing", "name": "Diana Nucera", "type": "person", "_id": 201}
+            , {cat: "thing", "name": "AMC Media Lab", "type": "event", "_id": 202}
+            , {cat: "thing", "name": "Bryan Mercer", "type": "person", "_id": 203}
+            , {cat: "thing", "name": "Detroit Digital Justice Zine", "type": "outcome", "_id": 204}
+            , {cat: "thing", "name": "Net Neutrality issue area", "type": "outcome", "_id": 205}
+            , {cat: "thing", "name": "Betty Yu", "type": "person", "_id": 206}
+            , {cat: "thing", "name": "Andrea Quisada", "type": "person", "_id": 207}
+            , {cat: "thing", "name": "Media A-Go-Go Practice Space", "type": "event", "_id": 208}
+            , {cat: "thing", "name": "Janel Yamashiro", "type": "person", "_id": 209}
             , {"cat": "action", "time": 1262304000000, "type": "manage", "_id": 210}
             , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 211}
             , {"cat": "action", "time": 1293840000000, "type": "manage", "_id": 212}
@@ -1005,13 +1005,13 @@ document.addEventListener('keypress', function(ev) {
 
   if(key === n) {
     maxyear++
-    build_pipeline()
+    build_pipelines()
     render()
   }
 
   if(key === p) {
     maxyear--
-    build_pipeline()
+    build_pipelines()
     render()
   }
 
@@ -1033,18 +1033,21 @@ var all_edges = true // awkward... :(
 var maxyear = 115
 var minyear = 108
 var wrapper = {data: [], params: {}, shapes: []}
-var pipeline = noop
-build_pipeline()
+var pipelines = []
+build_pipelines()
 
-function build_pipeline() {
-  pipeline = pipe( Dagoba.jsonify, JSON.parse.bind(JSON), sg_compact, wrap(wrapper, 'data')
-                 , get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings
-                 , copy_edges, copy_nodes, add_labels
-                 , clear_it, draw_it, draw_metadata )
+function build_pipelines() {
+  pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
+                     , get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings
+                     , copy_edges, copy_nodes, add_labels
+                     , clear_it, draw_it, draw_metadata )
+
+  // pipelines[1] = pipe( Dagoba.cloneflat, )
 }
 
 function render() {
-  pipeline(G)
+  pipelines[0](G)
+  // pipelines[1](G)
 }
 
 
@@ -1267,9 +1270,7 @@ function draw_shape(ctx, node) {
 
 function add_data( ) {
   nodes.forEach(function(node) {
-    var cat = node.cat || 'thing'
-
-    var fun = window['add_' + cat] // FIXME: ugh erk yuck poo
+    var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
 
     if(!fun) return false
 
