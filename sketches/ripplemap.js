@@ -604,11 +604,44 @@ function build_pipelines() {
 
 function render() {
   pipelines[0](G)
-  // pipelines[1](G)
+  pipelines[1](G)
 }
 
 // SENTENCE STRUCTURES
 
+function get_actions(env) {
+  var actions = G.v({cat: 'action'}).run() // FIXME: use env.data, not G
+  env.params.actions = actions
+  return env
+}
+
+function make_sentences(env) {
+  var sentences = env.params.actions.map(construct)
+  env.params.sentences = sentences
+  return env
+}
+
+function construct(action) {
+  var list = []
+  var edges = action._out.concat(action._in)
+  list.push(edges[0]._in, edges[0], action, edges[1], edges[1]._in)
+  return list
+}
+
+function write_sentences(env) {
+  env.params.sentences.forEach(function(list) {
+    var sentence = '<p>'
+    list.forEach(function(thing) {
+      var word = thing.name || thing.label
+      var type = thing.cat ? thing.type : 'edge'
+      sentence += ' <span class="word ' + type + '" contentEditable="true">' + word + '</span>'
+    })
+    sentence += '.</p>'
+    el_sentences.innerHTML += sentence
+  })
+
+  return env
+}
 
 
 
