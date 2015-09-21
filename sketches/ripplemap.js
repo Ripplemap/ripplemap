@@ -1063,12 +1063,12 @@ function sg_compact(graph) {
     if(node.time)
       return false
 
-    var others = ( g.v(id).in().run() ).concat( g.v(id).out().run() )
+    var others = ( g.v(id).in().run() ).concat( g.v(id).both().run() )
     others.forEach(function(other) {
       if(other.time)
         node.time = Math.min(node.time||Infinity, other.time)
 
-      var oo = ( g.v(other._id).out().run() ).concat( g.v(other._id).in().run() ) // HACK: need .both
+      var oo = ( g.v(other._id).both().run() ).concat( g.v(other._id).in().run() ) // HACK: need .both
       if(oo.length < 2)
         return false
 
