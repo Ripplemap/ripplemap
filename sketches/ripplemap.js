@@ -416,22 +416,7 @@ var el = document.getElementById.bind(document)
 var el_graph = el('graph')
 var el_nodes = el('nodes_ta')
 var el_edges = el('edges_ta')
-var el_save = el('save')
 var el_ripples = el('ripples')
-
-el_save.addEventListener('click', save_button)
-
-function save_button() {
-  var nodes_text = el_nodes.value
-  var edges_text = el_edges.value
-  G = Dagoba.graph(JSON.parse(nodes_text), JSON.parse(edges_text))
-  Dagoba.persist(G, 'ripplemap')
-
-  init()
-
-  // TODO: make renderers accept a graph
-  // TODO: add new node structure for data model
-}
 
 function show_graph(graph) {
   var text = ''
