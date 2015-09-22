@@ -599,25 +599,48 @@ el_sentences.addEventListener('keyup', function(ev) {
 
   // ev.preventDefault()
 
+  // handle the node case
   if(type === 'cat' && id && val) {
     var node = G.vertexIndex[id]
     if(node && node.name !== val) {
       // update the name/label in the real graph
       node.name = val
-      // publish the change
-      Dagoba.persist(G, 'rripplemap')
-      // update all other sentences
-      var spans = qs('span.node-' + node._id)
-      for(var i = 0; i < spans.length; i++) {
-        if(spans[i] !== span)
-          spans[i].innerText = val
-      }
-      // rerender the graph
-      pipelines[0](G)
+      pub(id)
     }
   }
 
-  // TODO: handle the edge case
+  // handle the edge case
+  if(type === 'edge') {
+    var id1 = span.getAttribute('data-id1')
+    var id2 = span.getAttribute('data-id2')
+
+    var node1 = G.vertexIndex[id1]
+    var edges = node1._in.concat(node1._out)
+    var edge = edges.filter
+      (function(edge)
+        {return ( edge._in._id == id1 && edge._out._id == id2 )
+             || ( edge._in._id == id2 && edge._out._id == id1 ) })[0]
+
+    if(!edge) return false
+
+    edge.label = val
+    edge.type = val
+    // pub(id1 + '-' + id2)
+    Dagoba.persist(G, 'rripplemap')
+  }
+
+  function pub(id) {
+    // publish the change
+    Dagoba.persist(G, 'rripplemap')
+    // update all other sentences
+    var spans = qs('span.node-' + id)
+    for(var i = 0; i < spans.length; i++) {
+      if(spans[i] !== span)
+        spans[i].innerText = val
+    }
+    // rerender the graph
+    pipelines[0](G)
+  }
 
 })
 
@@ -675,7 +698,17 @@ function write_sentences(env) {
       var word = thing.name || thing.label
       var cat = thing.cat || ''
       var type = cat ? ' ' + thing.type : 'edge'
-      sentence += ' <span class="word ' + cat + type + ' node-' + thing._id + '" data-id="' + (thing._id||'') + '" contentEditable="true">' + word + '</span>'
+      if(type !== 'edge')
+        sentence += ' <span class="word ' + cat + type + ' node-' + thing._id
+                 +  '" data-id="' + (thing._id||'')
+                 + '" contentEditable="true">'
+                 +  word + '</span>'
+      else
+        sentence += ' <span class="word ' + type + ' node-' + thing._in._id + '-' + thing._out._id
+                 + '" data-id1="' + thing._in._id +  '" data-id2="' + thing._out._id
+                 + '" contentEditable="true">'
+                 +  word + '</span>'
+
     })
     sentence += '.</p>'
     el_sentences.innerHTML += sentence
