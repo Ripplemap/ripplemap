@@ -75,7 +75,7 @@ function build_graph() {
 var RM = {}
 
 var el = document.getElementById.bind(document)
-// var qs = document.querySelectorAll.bind(document)
+var qs = document.querySelectorAll.bind(document)
 
 var el_ripples = el('ripples')
 var el_sentences = el('sentences')
@@ -177,11 +177,13 @@ function publish(type, item) {
   if(type === 'node') {
     G.addVertex(item)
     // TODO: persist somewhere
+    Dagoba.persist(G, 'rripplemap')
   }
 
   if(type === 'edge') {
     G.addEdge(item)
     // TODO: persist somewhere
+    Dagoba.persist(G, 'rripplemap')
   }
 }
 
@@ -264,7 +266,7 @@ function add_action(type, props) {
     return err('that is not a valid action type', type)
 
   node.type = type
-  node.name = type // TODO: remove
+  node.name = props.name || type // TODO: remove
 
   node.priority = 1 // bbq???
 
@@ -552,6 +554,9 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 // INTERACTIONS
 
 document.addEventListener('keypress', function(ev) {
+  // TODO: clean this up (prevent span hijacking)
+  if(ev.target.tagName === 'SPAN') return true
+
   var key = ev.keyCode || ev.which
   var n = 110
   var p = 112
@@ -581,20 +586,39 @@ document.addEventListener('keypress', function(ev) {
   }
 })
 
-el_sentences.addEventListener('keydown', function(ev) {
+el_sentences.addEventListener('keyup', function(ev) {
   var key = ev.keyCode || ev.which
-  var id = ev.target.id
-  var type = ev.target.classList.contains('edge') ? 'edge' : 'cat'
-  var val = ev.target.innerText
+  var span = ev.target
+  var id = span.id
+  var type = span.classList.contains('edge') ? 'edge' : 'cat'
+  var val = span.innerText
+  var id = span.getAttribute('data-id')
 
   // TODO: trap return for special effects
   // TODO: maybe trap tab also
 
-  ev.preventDefault()
+  // ev.preventDefault()
 
-  // update the name/label in the real graph
-  // persist the change
-  // update all other sentences
+  if(type === 'cat' && id && val) {
+    var node = G.vertexIndex[id]
+    if(node && node.name !== val) {
+      // update the name/label in the real graph
+      node.name = val
+      // publish the change
+      Dagoba.persist(G, 'rripplemap')
+      // update all other sentences
+      var spans = qs('span.node-' + node._id)
+      for(var i = 0; i < spans.length; i++) {
+        if(spans[i] !== span)
+          spans[i].innerText = val
+      }
+      // rerender the graph
+      pipelines[0](G)
+    }
+  }
+
+  // TODO: handle the edge case
+
 })
 
 // RENDER PIPELINE
@@ -650,7 +674,7 @@ function write_sentences(env) {
       var word = thing.name || thing.label
       var cat = thing.cat || ''
       var type = cat ? ' ' + thing.type : 'edge'
-      sentence += ' <span class="word ' + cat + type + '" contentEditable="true">' + word + '</span>'
+      sentence += ' <span class="word ' + cat + type + ' node-' + thing._id + '" data-id="' + (thing._id||'') + '" contentEditable="true">' + word + '</span>'
     })
     sentence += '.</p>'
     el_sentences.innerHTML += sentence
@@ -900,6 +924,13 @@ function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
 // INIT
 
 function add_data( ) {
+  if(localStorage["DAGOBA::rripplemap"]) {
+    var lalala = JSON.parse(localStorage["DAGOBA::rripplemap"])
+    nodes = lalala.V
+    edges = lalala.E
+  }
+
+
   nodes.forEach(function(node) {
     var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
 
