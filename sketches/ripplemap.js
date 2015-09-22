@@ -581,6 +581,21 @@ document.addEventListener('keypress', function(ev) {
   }
 })
 
+el_sentences.addEventListener('keydown', function(ev) {
+  var key = ev.keyCode || ev.which
+  var id = ev.target.id
+  var type = ev.target.classList.contains('edge') ? 'edge' : 'cat'
+  var val = ev.target.innerText
+
+  // TODO: trap return for special effects
+  // TODO: maybe trap tab also
+
+  ev.preventDefault()
+
+  // update the name/label in the real graph
+  // persist the change
+  // update all other sentences
+})
 
 // RENDER PIPELINE
 
@@ -633,8 +648,9 @@ function write_sentences(env) {
     var sentence = '<p>'
     list.forEach(function(thing) {
       var word = thing.name || thing.label
-      var type = thing.cat ? thing.type : 'edge'
-      sentence += ' <span class="word ' + type + '" contentEditable="true">' + word + '</span>'
+      var cat = thing.cat || ''
+      var type = cat ? ' ' + thing.type : 'edge'
+      sentence += ' <span class="word ' + cat + type + '" contentEditable="true">' + word + '</span>'
     })
     sentence += '.</p>'
     el_sentences.innerHTML += sentence
@@ -642,7 +658,6 @@ function write_sentences(env) {
 
   return env
 }
-
 
 
 // COMPACTIONS
@@ -659,12 +674,12 @@ function sg_compact(graph) {
     if(node.time)
       return false
 
-    var others = ( g.v(id).in().run() ).concat( g.v(id).both().run() )
+    var others = g.v(id).both().run()
     others.forEach(function(other) {
       if(other.time)
         node.time = Math.min(node.time||Infinity, other.time)
 
-      var oo = ( g.v(other._id).both().run() ).concat( g.v(other._id).in().run() ) // HACK: need .both
+      var oo = g.v(other._id).both().run()
       if(oo.length < 2)
         return false
 
