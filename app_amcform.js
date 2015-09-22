@@ -50,30 +50,19 @@ function handler (req, res) {
     }
 
 
-    function cb() {
-      post['_id'] = 1
-      edit_the_data_okay('rmdata', post)
-
-      res.writeHead(200, 'OK', appjson)
+    var cb = function() {
+      res.writeHead(302, {
+        'Location': 'http://ripplemap.io/thank-you.html'
+      })
       res.end()
     }
 
-    add('rmhistory', post, cb)
+    add('amcform', post, cb)
 
   })
 }
 
-function edit_the_data_okay(collection, item) {
-  try {
-    db.collection(collection, function(err, c) {
 
-      c.save(item)
-
-    })
-  } catch (err) {
-    onError('Edit error', err)
-  }
-}
 
 function add(collection, item, cb) {
   try {
