@@ -663,7 +663,8 @@ function make_sentences(env) {
 function construct(action) {
   var list = []
   var edges = action._out.concat(action._in)
-  list.push(edges[0]._in, edges[0], action, edges[1], edges[1]._in)
+  function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
+  list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
   return list
 }
 
