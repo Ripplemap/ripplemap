@@ -749,7 +749,7 @@ function get_actions(env) {
 }
 
 function make_sentences(env) {
-  var sentences = env.params.actions.map(construct)
+  var sentences = env.params.actions.map(construct).filter(Boolean)
   env.params.sentences = sentences
   return env
 }
@@ -757,12 +757,16 @@ function make_sentences(env) {
 function construct(action) {
   var list = []
   var edges = action._out.concat(action._in)
+  if(!edges[1]) return false
+  if(edges[0].label === 'the')
+    edges = [edges[1], edges[0]]
   function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
   list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
   return list
 }
 
 function write_sentences(env) {
+  el_sentences.innerHTML = ''
   env.params.sentences.forEach(function(list) {
     var sentence = '<p>'
     list.forEach(function(thing) {
