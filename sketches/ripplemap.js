@@ -78,6 +78,7 @@ var el = document.getElementById.bind(document)
 var qs = document.querySelectorAll.bind(document)
 
 var el_ripples = el('ripples')
+var el_gobutton = el('addaction')
 var el_sentences = el('sentences')
 
 
@@ -643,6 +644,37 @@ el_sentences.addEventListener('keyup', function(ev) {
   }
 
 })
+
+
+el_gobutton.addEventListener('click', function(ev) {
+  var thing1name = el('thing1name').value
+  var thing1type = el('thing1type').value
+  var thing2name = el('thing2name').value
+  var thing2type = el('thing2type').value
+
+  var actiontype = el('actiontype').value
+  var actiondate = el('actiondate').value
+
+  // check for thing1
+  var thing1 = G.v({name: thing1name, type: thing1type}).run()[0]
+  if(!thing1) {
+    thing1 = add_thing(thing1type, {name: thing1name})
+  }
+
+  var thing2 = G.v({name: thing2name, type: thing2type}).run()[1]
+  if(!thing2) {
+    thing2 = add_thing(thing2type, {name: thing2name})
+  }
+
+  var action = add_action(actiontype, {time: new Date(actiondate).getTime() }) // TODO: default props to {}
+
+  add_edge('the', action._id, thing2._id)
+  add_edge('did', thing1._id, action._id)
+
+  render()
+})
+
+
 
 // RENDER PIPELINE
 
