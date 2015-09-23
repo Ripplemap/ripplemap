@@ -26,6 +26,14 @@ function handler (req, res) {
 
   log('req.url: ', req.url)
 
+  // yuck make this less horrible
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE, CONNECT')
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept')
+  res.setHeader('Access-Control-Allow-Credentials', true)
+  res.setHeader('Access-Control-Max-Age', '86400') // 24 hours
+
+
   req.on('data', function(chunk) {
     body += chunk
     if(body.length > 5E6) req.connection.destroy()          // 5MB-ish
