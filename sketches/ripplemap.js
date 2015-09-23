@@ -4,6 +4,8 @@
 
 function noop() {}
 
+function not(fun) {return function() {return !fun.apply(null, arguments)}}
+
 function eq(attr, val) {return function(obj) {return obj[attr] === val}}
 
 function unique(v, k, list) {return list.indexOf(v) === k}
@@ -618,13 +620,15 @@ document.addEventListener('keypress', function(ev) {
   var s = 115
 
   if(key === n) {
-    maxyear++
+    if(current_year >= my_maxyear) return false
+    current_year++
     build_pipelines()
     render()
   }
 
   if(key === p) {
-    maxyear--
+    if(current_year <= my_minyear) return false
+    current_year--
     build_pipelines()
     render()
   }
@@ -736,16 +740,17 @@ el_gobutton.addEventListener('click', function(ev) {
 // RENDER PIPELINE
 
 var all_edges = false // awkward... :(
-var maxyear = 115
-var minyear = 108
+var my_maxyear = 115 // total hackery...
+var my_minyear = 108 // hack hack hack
+var current_year = 115 // more hacks
 var wrapper = {data: [], params: {}, shapes: []}
 var pipelines = []
 build_pipelines()
 
 function build_pipelines() {
   pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
-                     , get_years, assign_years, filter_years(maxyear, minyear), assign_xy, add_rings
-                     , copy_edges, copy_nodes, add_labels
+                     , get_years, assign_years, filter_years(my_maxyear, my_minyear), assign_xy, add_rings
+                     , add_ring_labels, copy_edges, copy_nodes, add_labels
                      , clear_it, draw_it, draw_metadata )
 
   pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
@@ -948,9 +953,9 @@ function assign_xy(env) {
 
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
-    var color = 'black'
+    var color = '#ccc'
     var radius = 50 * (i - 107)
-    env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white'})
+    env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
   }
   return env
 }
@@ -962,7 +967,7 @@ function copy_nodes(env) {
 
 function copy_edges(env) {
   env.data.E.forEach(function(edge) {
-    if(!all_edges && !(edge._out.year === maxyear || edge._in.year === maxyear)) // HACK: remove this
+    if(!all_edges && !(edge._out.year === current_year || edge._in.year === current_year)) // HACK: remove this
       return false
 
     var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: '#f77'}
@@ -977,6 +982,18 @@ function add_labels(env) {
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
     var label = {shape: 'text', str: shape.name, x: shape.x + 10, y: shape.y + 5}
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+function add_ring_labels(env) {
+  var labels = []
+
+  env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
+    var label = {shape: 'text', str: shape.year + 1900, x: -15, y: -shape.r - 5, fill: '#ccc' }
     labels.push(label)
   })
 
@@ -999,8 +1016,8 @@ function draw_it(env) {
 }
 
 function draw_metadata(env) {
-  el('minyear').innerText = 1900 + env.params.minyear
-  el('maxyear').innerText = 1900 + maxyear
+  // el('minyear').innerText = 1900 + env.params.minyear
+  el('maxyear').innerText = 1900 + current_year
   return env
 }
 
@@ -1016,11 +1033,13 @@ function draw_shape(ctx, node) {
     draw_line(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.stroke, node.line)
 
   if(node.shape === 'text')
-    draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font)
+    draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font, node.fill)
 }
 
-function draw_text(ctx, x, y, str, font) {
-  font = font || "20p sans-serif"
+function draw_text(ctx, x, y, str, font, fill_color, max_width) {
+  ctx.fillStyle = fill_color || '#337'
+  ctx.font = font || "14px sans-serif"
+  if(isNaN(x)) return false
   x = x || 0
   y = y || 0
   ctx.fillText(str, x, y)
