@@ -24,7 +24,7 @@ function handler (req, res) {
   var appjson = {'Content-Type': 'application/json'}
   var status = function(str) {return JSON.stringify({'status': str})}
 
-  log('req.url: ', req.url)
+  // log('req.url: ', req.url)
 
   // yuck make this less horrible
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -88,7 +88,7 @@ function edit_the_data_okay(collection, item) {
 }
 
 function find(collection, query, cb) {
-  log('find: ', collection, query)
+  // log('find: ', collection, query)
   var result
 
   try {
