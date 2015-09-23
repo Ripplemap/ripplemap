@@ -62,7 +62,6 @@ function handler (req, res) {
       return false
     }
 
-
     function cb() {
       post['_id'] = 1
       edit_the_data_okay('rmdata', post)
@@ -125,12 +124,9 @@ function add(collection, item, cb) {
         return cb()
       }
 
-      log('added: ', item)
-
       c.save(item)
 
       return cb(item)
-
     })
   } catch (err) {
     onError('Insertion error', err)
@@ -150,7 +146,7 @@ function log() {
   }
 }
 
-db.open(function(err, db) {
+db.open(function(err, _db) {
   if(err)
     return onError('DB refused to open', err)
 
