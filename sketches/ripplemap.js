@@ -209,13 +209,13 @@ function debounce(func, wait, immediate) {
 
 function send_data_to_server_no_questions_asked_okay() {
   var json = Dagoba.jsonify(G)
-  fetch('http://sherpa.local:8888', { method: 'post'
+  fetch('http://ripplemap.io:8888', { method: 'post'
                                     , body: json
   });
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
-  fetch('http://sherpa.local:8888', {
+  fetch('http://ripplemap.io:8888', {
 	  method: 'get'
   }).then(function(response) {
     return response.json()
