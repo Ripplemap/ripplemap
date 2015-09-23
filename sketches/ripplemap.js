@@ -735,7 +735,7 @@ el_gobutton.addEventListener('click', function(ev) {
 
 // RENDER PIPELINE
 
-var all_edges = true // awkward... :(
+var all_edges = false // awkward... :(
 var maxyear = 115
 var minyear = 108
 var wrapper = {data: [], params: {}, shapes: []}
@@ -938,7 +938,7 @@ function assign_xy(env) {
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 8 + Math.floor(Math.random()*5)
+    node.r = 6 + Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -1020,7 +1020,7 @@ function draw_shape(ctx, node) {
 }
 
 function draw_text(ctx, x, y, str, font) {
-  font = font || "12p sans-serif"
+  font = font || "20p sans-serif"
   x = x || 0
   y = y || 0
   ctx.fillText(str, x, y)
