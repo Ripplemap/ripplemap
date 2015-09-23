@@ -41,14 +41,19 @@ function handler (req, res) {
 
   req.on('end', function() {
     if(req.method == 'GET') {
-      res.writeHead(200, 'OK', appjson)
-      res.end(status('ok'))
+      // res.writeHead(200, 'OK', appjson)
+
+      find('rmdata', {_id: 1}, function(item) {
+        res.end(JSON.stringify(item))
+      })
+
       return false
     }
 
-    var post = qs.parse(body)
+    // var post = qs.parse(body)
+    var post = JSON.parse(body)
 
-    log('post', post)
+    // log('post', post)
 
     if(!post) {
       onError('Invalid request', post)
@@ -80,6 +85,34 @@ function edit_the_data_okay(collection, item) {
     })
   } catch (err) {
     onError('Edit error', err)
+  }
+}
+
+function find(collection, query, cb) {
+  log('find: ', collection, query)
+  var result
+
+  try {
+    db.collection(collection, function(err, c) {
+
+      c.find(query).toArray(function(err, items) {
+        // res.end(JSON.stringify(games[0]))
+
+        // log('found: ', items)
+
+        result = items.reduce(function(acc, value) {
+          acc[value['_id']] = value
+          value.userObjectID = value['_id']
+          return acc
+        }, {})
+
+        return cb(result)
+      })
+
+    })
+  } catch (err) {
+    onError('Finding error', err)
+    return cb(result)
   }
 }
 
