@@ -591,7 +591,11 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 document.addEventListener('keypress', function(ev) {
   // TODO: clean this up (prevent span hijacking)
-  if(ev.target.tagName === 'SPAN') return true
+  if( ev.target.tagName === 'SPAN'
+   || ev.target.tagName === 'INPUT'
+   || ev.target.tagName === 'TEXTAREA'
+    )
+    return true
 
   var key = ev.keyCode || ev.which
   var n = 110
