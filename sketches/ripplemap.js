@@ -275,6 +275,7 @@ function add_thing(type, props) {
   // TODO: check name
   // node.name = name
   node.type = type
+  node.cat = 'thing'
 
   node.priority = 1 // bbq???
 
@@ -283,6 +284,8 @@ function add_thing(type, props) {
 
   // publish in dagoba + persist
   publish('node', node)
+
+  return node
 }
 
 function add_action(type, props) {
@@ -295,6 +298,7 @@ function add_action(type, props) {
 
   node.type = type
   node.name = props.name || type // TODO: remove
+  node.cat = 'action'
 
   node.priority = 1 // bbq???
 
@@ -305,6 +309,8 @@ function add_action(type, props) {
   // check props against type
   // publish in dagoba + persist
   publish('node', node)
+
+  return node
 }
 
 function add_effect(type, props) {
@@ -317,6 +323,7 @@ function add_effect(type, props) {
 
   node.type = type
   node.name = type // TODO: remove
+  node.cat = 'effect'
 
   node.priority = 0.5 // bbq???
 
@@ -339,6 +346,7 @@ function add_happening(type, props) {
 
   node.type = type
   node.name = type // TODO: remove
+  node.cat = 'happening'
 
   node.priority = 0.2 // bbq???
 
