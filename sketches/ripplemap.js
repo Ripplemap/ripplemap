@@ -55,19 +55,6 @@ function err(mess) {
 // GRAPH
 
 var G
-function build_graph() {
-  // G = Dagoba.depersist('ripplemap')
-
-  // if(G) return G
-
-  G = Dagoba.graph()
-
-  G.addVertices(clone(nodes))
-
-  G.addEdges(clone(edges))
-
-  return G
-}
 
 
 // SHOW IT
@@ -178,13 +165,15 @@ function publish(type, item) {
   if(type === 'node') {
     G.addVertex(item)
     // TODO: persist somewhere
-    Dagoba.persist(G, 'rripplemap')
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
   }
 
   if(type === 'edge') {
     G.addEdge(item)
     // TODO: persist somewhere
-    Dagoba.persist(G, 'rripplemap')
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
   }
 }
 
@@ -195,6 +184,28 @@ function persist() {
   // hit the server
   send_data_to_server_no_questions_asked_okay()
 }
+
+persist = debounce(persist, 1000)
+
+// via underscore, needs cleaning
+// Returns a function, that, as long as it continues to be invoked, will not
+// be triggered. The function will be called after it stops being called for
+// N milliseconds. If `immediate` is passed, trigger the function on the
+// leading edge, instead of the trailing.
+function debounce(func, wait, immediate) {
+	var timeout;
+	return function() {
+		var context = this, args = arguments;
+		var later = function() {
+			    timeout = null;
+			    if (!immediate) func.apply(context, args);
+		    };
+		var callNow = immediate && !timeout;
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+		if (callNow) func.apply(context, args);
+	};
+};
 
 function send_data_to_server_no_questions_asked_okay() {
   var json = Dagoba.jsonify(G)
@@ -207,7 +218,10 @@ function get_data_from_server_no_questions_asked_okay(cb) {
   fetch('http://sherpa.local:8888', {
 	  method: 'get'
   }).then(function(response) {
-    cb(response.json())
+    return response.json()
+  }).then(function(data) {
+    if(data[1])
+      cb(data[1])
   }).catch(function(err) {
 	  console.log('lalalal', err)
   })
@@ -665,13 +679,17 @@ el_sentences.addEventListener('keyup', function(ev) {
 
     edge.label = val
     edge.type = val
+
     // pub(id1 + '-' + id2)
-    Dagoba.persist(G, 'rripplemap')
+    // Dagoba.persist(G, 'rripplemap')
+    persist()
   }
 
   function pub(id) {
     // publish the change
-    Dagoba.persist(G, 'rripplemap')
+    // Dagoba.persist(G, 'rripplemap')
+    persist()
+
     // update all other sentences
     var spans = qs('span.node-' + id)
     for(var i = 0; i < spans.length; i++) {
@@ -1033,25 +1051,36 @@ function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
 // INIT
 
 function add_data( ) {
-  if(localStorage["DAGOBA::rripplemap"]) {
-    var lalala = JSON.parse(localStorage["DAGOBA::rripplemap"])
-    nodes = lalala.V
-    edges = lalala.E
+  // if(localStorage["DAGOBA::rripplemap"]) {
+  //   var data = JSON.parse(localStorage["DAGOBA::rripplemap"])
+  //   load_data(data.V, data.E)
+  // }
+  // else if(typeof nodes === 'object' && typeof edges === 'object') {
+  //   load_data(nodes, edges)
+  // }
+
+  get_data_from_server_no_questions_asked_okay(function(data) {
+    // G = Dagoba.graph()
+    // RM.clear()
+    load_data(data.V, data.E)
+    render()
+  })
+
+  function load_data(nodes, edges) {
+    nodes.forEach(function(node) {
+      var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
+
+      if(!fun) return false
+
+      // fun(node.type, node.name, {_id: node._id})
+      fun(node.type, node)
+    })
+
+    edges.forEach(function(edge) {
+      add_edge(edge.type, edge._out, edge._in, edge)
+    })
   }
 
-
-  nodes.forEach(function(node) {
-    var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
-
-    if(!fun) return false
-
-    // fun(node.type, node.name, {_id: node._id})
-    fun(node.type, node)
-  })
-
-  edges.forEach(function(edge) {
-    add_edge(edge.type, edge._out, edge._in, edge)
-  })
 }
 
 
@@ -1060,7 +1089,7 @@ function init() {
 
   add_data()
 
-  render()
+  // render()
 }
 
 init()
