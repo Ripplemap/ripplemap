@@ -188,6 +188,33 @@ function publish(type, item) {
   }
 }
 
+function persist() {
+  // localstorage
+  Dagoba.persist(G, 'rripplemap')
+
+  // hit the server
+  send_data_to_server_no_questions_asked_okay()
+}
+
+function send_data_to_server_no_questions_asked_okay() {
+  var json = Dagoba.jsonify(G)
+  fetch('http://sherpa.local:8888', { method: 'post'
+                                    , body: json
+  });
+}
+
+function get_data_from_server_no_questions_asked_okay(cb) {
+  fetch('http://sherpa.local:8888', {
+	  method: 'get'
+  }).then(function(response) {
+    cb(response.json())
+  }).catch(function(err) {
+	  console.log('lalalal', err)
+  })
+}
+
+
+
 RM.cats = {} // ripplemap categories
 RM.cats.things = {}
 RM.cats.actions = {}
