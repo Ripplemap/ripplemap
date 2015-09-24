@@ -733,7 +733,7 @@ el_gobutton.addEventListener('click', function(ev) {
     thing1 = add_thing(thing1type, {name: thing1name})
   }
 
-  var thing2 = G.v({name: thing2name, type: thing2type}).run()[1]
+  var thing2 = G.v({name: thing2name, type: thing2type}).run()[0]
   if(!thing2) {
     thing2 = add_thing(thing2type, {name: thing2name})
   }
