@@ -20,6 +20,11 @@ function cp_prop(from_attr, to_attr) {return function(obj) {obj[to_attr] = obj[f
 
 function clone(obj) {return JSON.parse(JSON.stringify(obj))}
 
+function truncate(str, to) {
+  if(!to || str.length <= to) return str
+  return str.substr(0, to-2) + '...'
+}
+
 function pipe() {
   var all_funs = [].slice.call(arguments)
 
@@ -816,6 +821,7 @@ function write_sentences(env) {
 }
 
 
+
 // COMPACTIONS
 
 function sg_compact(graph) {
@@ -981,7 +987,8 @@ function add_labels(env) {
 
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
-    var label = {shape: 'text', str: shape.name, x: shape.x + 10, y: shape.y + 5}
+    var str = truncate(shape.name, 20)
+    var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
     labels.push(label)
   })
 
