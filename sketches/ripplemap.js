@@ -619,6 +619,7 @@ document.addEventListener('keypress', function(ev) {
     return true
 
   var key = ev.keyCode || ev.which
+  var f = 102
   var n = 110
   var p = 112
   var a = 97
@@ -635,6 +636,11 @@ document.addEventListener('keypress', function(ev) {
     if(current_year <= my_minyear) return false
     current_year--
     build_pipelines()
+    render()
+  }
+
+  if(key === f) {
+    filter_sentences = !filter_sentences
     render()
   }
 
@@ -745,6 +751,7 @@ el_gobutton.addEventListener('click', function(ev) {
 // RENDER PIPELINE
 
 var all_edges = false // awkward... :(
+var filter_sentences = true // awkward... :(
 var my_maxyear = 115 // total hackery...
 var my_minyear = 108 // hack hack hack
 var current_year = 115 // more hacks
@@ -759,7 +766,8 @@ function build_pipelines() {
                      , clear_it, draw_it, draw_metadata )
 
   pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
-                     , get_actions, make_sentences, write_sentences
+                     , get_actions, filter_actions
+                     , make_sentences, write_sentences
                      )
 }
 
@@ -775,6 +783,17 @@ function get_actions(env) {
   env.params.actions = actions
   return env
 }
+
+function filter_actions(env) {
+  if(!filter_sentences) return env
+  env.params.actions = env.params.actions.filter(function(action) {
+    return new Date(action.time).getYear() === current_year
+  })
+
+  return env
+}
+
+
 
 function make_sentences(env) {
   var sentences = env.params.actions.map(construct).filter(Boolean)
