@@ -43,6 +43,14 @@
         border: 1px solid black;
       }
 
+      #legend {
+        float: left;
+      }
+
+      #newaction {
+        float: right;
+      }
+
       .word:active, .word:focus, .word:hover {
         border: none;
         outline: none;
@@ -74,22 +82,13 @@
 
     <h1> Welcome to ripplemapping </h1>
 
-    <p>
+    <p id="legend">
       Keys: <br />
       'p' for previous year <br />
       'n' for next year <br />
       'a' for all edges <br />
       's' for some edges <br />
     </p>
-
-    <div>
-      <p>
-        min year:
-        <span id="minyear"></span>
-        max year:
-        <span id="maxyear"></span>
-      </p>
-    </div>
 
     <div id="newaction">
       <p>
@@ -137,6 +136,14 @@
 
     <canvas id="ripples" width="900" height="900"></canvas>
 
+    <div style="display:none">
+      <p>
+        min year:
+        <span id="minyear"></span>
+        max year:
+        <span id="maxyear"></span>
+      </p>
+    </div>
 
     <div id="sentences"> </div>
 
