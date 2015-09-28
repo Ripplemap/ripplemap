@@ -930,13 +930,17 @@ function filter_years(max, min) {
   min = min || 0
 
   return function(env) {
+
+    // hack hack hack
+    if(current_year < max)
+      max = current_year
+
     // TODO: do this in Dagoba so we can erase edges automatically
     env.data.V = env.data.V.filter(function(node) {
       if(node.year > max) return false
       if(node.year < min) return false
       return true
-    }
-)
+    })
     return env
   }
 }
@@ -1018,7 +1022,7 @@ function add_labels(env) {
 
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
-    var str = truncate(shape.name, 20)
+    var str = truncate(shape.name, 50)
     var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
     labels.push(label)
   })
