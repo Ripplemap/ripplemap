@@ -88,7 +88,7 @@
       'n' for next year <br />
       'a' for all edges <br />
       's' for some edges <br />
-      'f' for filter toggle <br />
+      'f' for filter stories by year <br />
     </p>
 
     <div id="newaction">
@@ -105,15 +105,14 @@
       </p>
       <p>
         <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
-        did
         <select id="actiontype" name="actiontype">
-          <option value="create">create</option>
-          <option value="attend">attend</option>
-          <option value="manage">manage</option>
-          <option value="assist">assist</option>
-          <option value="present">present</option>
-          <option value="join">join</option>
-          <option value="leave">leave</option>
+          <option value="create">created</option>
+          <option value="attend">attended</option>
+          <option value="manage">managed</option>
+          <option value="assist">assisted</option>
+          <option value="present">presented</option>
+          <option value="join">joined</option>
+          <option value="leave">left</option>
         </select>
       </p>
       <p>
@@ -128,7 +127,7 @@
         </select>
       </p>
       <p>
-        during
+        on
         <input id="actiondate" name="actiondate" type="date" value="2010-10-10" />
       </p>
       <p>
@@ -147,6 +146,8 @@
         <span id="maxyear"></span>
       </p>
     </div>
+
+    <p>Click any story to edit</p>
 
     <div id="sentences"> </div>
 

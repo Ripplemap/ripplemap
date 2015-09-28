@@ -754,7 +754,7 @@ var all_edges = false // awkward... :(
 var filter_sentences = true // awkward... :(
 var my_maxyear = 115 // total hackery...
 var my_minyear = 108 // hack hack hack
-var current_year = 115 // more hacks
+var current_year = 109 // more hacks
 var wrapper = {data: [], params: {}, shapes: []}
 var pipelines = []
 build_pipelines()
@@ -864,7 +864,7 @@ function sg_compact(graph) {
       if(oo.length < 2)
         return false
 
-      var edge = {_in: oo[0]._id, _out: oo[1]._id}
+      var edge = {_in: oo[0]._id, _out: oo[1]._id, label: other.name || ""}
       edges.push(edge)
       newg.addVertex(node)
     })
@@ -968,7 +968,7 @@ function assign_xy(env) {
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 6 + Math.floor(node.name.charCodeAt(0)/20)
+    node.r = 4 + Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -995,7 +995,19 @@ function copy_edges(env) {
     if(!all_edges && !(edge._out.year === current_year || edge._in.year === current_year)) // HACK: remove this
       return false
 
-    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: '#f77'}
+    var label = edge.label || "777"
+    var color = str_to_color(label)
+
+    function str_to_color(str) { return 'hsl(' + str_to_num(str) + ',100%,40%)';}
+    function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
+    function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
+
+    // var color = '#'
+    //           + (label.charCodeAt(0) % 10)
+    //           + (label.charCodeAt(1) % 10)
+    //           + (label.charCodeAt(2) % 10)
+
+    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color} // '#f77'}
     env.shapes.push(line)
   })
   return env
