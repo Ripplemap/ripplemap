@@ -92,11 +92,12 @@
       'f' for filter stories by year <br />
     </p>
 
-    <div id="newaction">
+    <form id="newaction">
       <p>
         <input id="thing1name" name="thing1name" type="text" value="Thing 1 name" size="40" /> <br />
         <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
         <select id="thing1type" name="thing1type">
+          <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
           <option value="person">person</option>
           <option value="org">org</option>
           <option value="event">event</option>
@@ -107,6 +108,7 @@
       <p>
         <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
         <select id="actiontype" name="actiontype">
+          <option value="" selected="selected" disabled="disabled">did... (choose one)</option>
           <option value="create">created</option>
           <option value="attend">attended</option>
           <option value="manage">managed</option>
@@ -120,6 +122,7 @@
         <input id="thing2name" name="thing2name" type="text" value="Thing 2 name" size="40" /> <br />
         <!--         <input id="thing2type" name="thing2type" type="text" value="person" /> (person, org, event, outcome, place) -->
         <select id="thing2type" name="thing2type">
+          <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
           <option value="person">person</option>
           <option value="org">org</option>
           <option value="event">event</option>
@@ -135,7 +138,7 @@
       <p>
         <input id="addaction" name="addaction" type="button" value="Go!" />
       </p>
-    </div>
+    </form>
 
 
     <canvas id="ripples" width="900" height="900"></canvas>

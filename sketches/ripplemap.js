@@ -215,10 +215,11 @@ function debounce(func, wait, immediate) {
 };
 
 function send_data_to_server_no_questions_asked_okay() {
-  var json = Dagoba.jsonify(G)
-  fetch('http://ripplemap.io:8888', { method: 'post'
-                                    , body: json
-  });
+  console.log(G)
+  // var json = Dagoba.jsonify(G)
+  // fetch('http://ripplemap.io:8888', { method: 'post'
+  //                                   , body: json
+  // });
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
@@ -739,6 +740,10 @@ el_gobutton.addEventListener('click', function(ev) {
   }
 
   var action = add_action(actiontype, {time: new Date(actiondate).getTime() }) // TODO: default props to {}
+
+  // did everything go okay?
+  if(!thing1 || !thing2 || !action)
+    return false
 
   add_edge('the', action._id, thing2._id)
   add_edge('did', thing1._id, action._id)
