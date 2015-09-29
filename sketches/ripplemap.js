@@ -74,6 +74,7 @@ var qs = document.querySelectorAll.bind(document)
 var el_ripples = el('ripples')
 var el_gobutton = el('addaction')
 var el_sentences = el('sentences')
+var el_newaction = el('newaction')
 
 
 // RIPPLE IT
@@ -745,6 +746,8 @@ el_gobutton.addEventListener('click', function(ev) {
   if(!thing1 || !thing2 || !action)
     return false
 
+  el_newaction.reset()
+
   add_edge('the', action._id, thing2._id)
   add_edge('did', thing1._id, action._id)
 
@@ -822,24 +825,44 @@ function write_sentences(env) {
   env.params.sentences.forEach(function(list) {
     var sentence = '<p>'
     list.forEach(function(thing) {
+      var data
       var word = thing.name || thing.label
-      var cat = thing.cat || ''
-      var type = cat ? ' ' + thing.type : 'edge'
-      if(type !== 'edge')
-        sentence += ' <span class="word ' + cat + type + ' node-' + thing._id
-                 +  '" data-id="' + (thing._id||'')
-                 + '" contentEditable="true">'
-                 +  word + '</span>'
-      else
-        sentence += ' <span class="word ' + type + ' node-' + thing._in._id + '-' + thing._out._id
-                 + '" data-id1="' + thing._in._id +  '" data-id2="' + thing._out._id
-                 + '" contentEditable="true">'
-                 +  word + '</span>'
+      var cat = thing.cat
+      var type = cat ? thing.type : 'edge'
 
+      var classes = [type]
+      if(cat) {
+        classes.push(cat)
+        classes.push('node-' + thing._id)
+      }
+      else {
+        classes.push('node-' +  thing._in._id + '-' + thing._out._id)
+      }
+
+      if(type !== 'edge')
+        data = {id: thing._id||''}
+      else
+        data = {id1: thing._in._id, id2: thing._out._id}
+
+      sentence += template(classes, data, word)
     })
     sentence += '.</p>'
     el_sentences.innerHTML += sentence
   })
+
+  function template(classes, data, text) {
+    classes.unshift('word')
+    var classtext = classes.join(' ')
+
+    var datatext = Object.keys(data).map
+      (function(key)
+        {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
+
+    return ' <span class="' + classtext + '"'
+         + datatext
+         + ' contentEditable="true">'
+         + text + '</span>'
+  }
 
   return env
 }
