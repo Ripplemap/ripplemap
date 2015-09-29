@@ -1,1 +1,4 @@
 .tern-port
+.htaccess
+config.js
+node_modules
