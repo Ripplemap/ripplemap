@@ -626,6 +626,7 @@ document.addEventListener('keypress', function(ev) {
   var p = 112
   var a = 97
   var s = 115
+  var tilde = 126
 
   if(key === n) {
     if(current_year >= my_maxyear) return false
@@ -653,6 +654,11 @@ document.addEventListener('keypress', function(ev) {
 
   if(key === s) {
     all_edges = false
+    render()
+  }
+
+  if(key === tilde) {
+    admin_mode = !admin_mode
     render()
   }
 })
@@ -719,6 +725,26 @@ el_sentences.addEventListener('keyup', function(ev) {
 
 })
 
+el_sentences.addEventListener('click', function(ev) {
+  var target = ev.target
+  if(target.nodeName !== 'BUTTON')
+    return true
+
+  var id = target.getAttribute('data-id')
+  var node = G.vertexIndex[id]
+
+  if(!node)
+    return err('That node does not exist')
+
+  if(node.cat === 'action') { // remove "sentence"
+    G.removeVertex(node)
+  }
+  else {
+    G.removeVertex(node) // THINK: is this really reasonable?
+  }
+
+  render()
+})
 
 el_gobutton.addEventListener('click', function(ev) {
   var thing1name = el('thing1name').value
@@ -758,6 +784,7 @@ el_gobutton.addEventListener('click', function(ev) {
 
 // RENDER PIPELINE
 
+var admin_mode = false // yep another hack w00t
 var all_edges = false // awkward... :(
 var filter_sentences = true // awkward... :(
 var my_maxyear = 115 // total hackery...
@@ -823,6 +850,7 @@ function construct(action) {
 function write_sentences(env) {
   el_sentences.innerHTML = ''
   env.params.sentences.forEach(function(list) {
+
     var sentence = '<p>'
     list.forEach(function(thing) {
       var data
@@ -844,9 +872,13 @@ function write_sentences(env) {
       else
         data = {id1: thing._in._id, id2: thing._out._id}
 
-      sentence += template(classes, data, word)
+      if(!admin_mode)
+        sentence += template(classes, data, word)
+      else
+        sentence += admin_template(thing, type, cat, word)
     })
     sentence += '.</p>'
+
     el_sentences.innerHTML += sentence
   })
 
@@ -855,13 +887,28 @@ function write_sentences(env) {
     var classtext = classes.join(' ')
 
     var datatext = Object.keys(data).map
-      (function(key)
-        {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
+    (function(key)
+     {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
 
     return ' <span class="' + classtext + '"'
-         + datatext
-         + ' contentEditable="true">'
-         + text + '</span>'
+      + datatext
+      + ' contentEditable="true">'
+      + text + '</span>'
+  }
+
+  function admin_template(thing, type, cat, text) {
+    var button = ''
+    var notes = ''
+
+    if(cat === 'action') {
+      button = '<button class="delete" data-id="'+thing._id+'">delete just this sentence</button>'
+    }
+    else if(type !== 'edge') {
+      notes = ' (' + type + ')'
+      button = '<button class="delete" data-id="'+thing._id+'">delete this thing and all its sentences entirely</button>'
+    }
+
+    return ' ' + text + notes + button
   }
 
   return env
