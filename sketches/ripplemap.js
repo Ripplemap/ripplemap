@@ -743,6 +743,7 @@ el_sentences.addEventListener('click', function(ev) {
     G.removeVertex(node) // THINK: is this really reasonable?
   }
 
+  persist()
   render()
 })
 
