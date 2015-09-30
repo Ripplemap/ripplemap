@@ -101,7 +101,7 @@
     <form id="newaction">
       <p>Please tell us more about this story.</p>
       <p>
-        <input id="thing1name" name="thing1name" type="text" value="Thing 1 name" size="40" /> <br />
+        <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
         <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
         <select id="thing1type" name="thing1type">
           <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
@@ -109,13 +109,16 @@
           <option value="org">org</option>
           <option value="event">event</option>
           <option value="outcome">outcome</option>
-          <option value="place">place</option>
+          <!--           <option value="place">place</option> -->
         </select>
       </p>
       <p>
         <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
         <select id="actiontype" name="actiontype">
-          <option value="" selected="selected" disabled="disabled">did... (choose one)</option>
+          <option value="" selected="selected" disabled="disabled">who... (choose one)</option>
+          <option value="facilitate">facilitated</option>
+          <option value="coordinate">coordinated</option>
+          <option value="contribute">contributed</option>
           <option value="create">created</option>
           <option value="attend">attended</option>
           <option value="manage">managed</option>
@@ -126,7 +129,7 @@
         </select>
       </p>
       <p>
-        <input id="thing2name" name="thing2name" type="text" value="Thing 2 name" size="40" /> <br />
+        <input id="thing2name" name="thing2name" type="text" value="" size="40" /> <br />
         <!--         <input id="thing2type" name="thing2type" type="text" value="person" /> (person, org, event, outcome, place) -->
         <select id="thing2type" name="thing2type">
           <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
@@ -134,7 +137,7 @@
           <option value="org">org</option>
           <option value="event">event</option>
           <option value="outcome">outcome</option>
-          <option value="place">place</option>
+          <!--           <option value="place">place</option> -->
         </select>
       </p>
       <p>
