@@ -201,19 +201,19 @@ persist = debounce(persist, 1000)
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
 function debounce(func, wait, immediate) {
-	var timeout;
+	var timeout
 	return function() {
-		var context = this, args = arguments;
+		var context = this, args = arguments
 		var later = function() {
-			    timeout = null;
-			    if (!immediate) func.apply(context, args);
-		    };
-		var callNow = immediate && !timeout;
-		clearTimeout(timeout);
-		timeout = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
-};
+			    timeout = null
+			    if (!immediate) func.apply(context, args)
+		    }
+		var callNow = immediate && !timeout
+		clearTimeout(timeout)
+		timeout = setTimeout(later, wait)
+		if (callNow) func.apply(context, args)
+	}
+}
 
 function send_data_to_server_no_questions_asked_okay() {
   console.log(G)
@@ -797,8 +797,10 @@ build_pipelines()
 
 function build_pipelines() {
   pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
-                     , get_years, assign_years, filter_years(my_maxyear, my_minyear), assign_xy, add_rings
-                     , add_ring_labels, copy_edges, copy_nodes, add_labels
+                     , get_years, assign_years, filter_years(my_maxyear, my_minyear), assign_xy
+                     , score_nodes, minimize_edge_length, unique_y_pos
+                     , add_rings, add_ring_labels
+                     , copy_edges, copy_nodes, add_labels
                      , clear_it, draw_it, draw_metadata )
 
   pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
@@ -1056,6 +1058,56 @@ function assign_xy(env) {
   return env
 }
 
+function score_nodes(env) {
+  env.data.V = env.data.V.map(function(node) { node.score = score(node); return node })
+  return env
+}
+
+function minimize_edge_length(env) {
+  var known = {}
+  env.data.V.filter(function(node) {return node.x || node.y})
+    .forEach(function(node) {
+      if(!known[node.year])
+        known[node.year] = {}
+      var peers = known[node.year]
+
+      peers.push(node)
+      var peer = peers[0]
+
+      if(node.score > peer.score) {
+        swap(node, peer)
+        if(node.score + peer.score < score(node) + score(peer)) {
+          swap(node, peer)
+        } else {
+          node.score = score(node)
+          peer.score = score(peer)
+        }
+      }
+      peers.sort(score_sort)
+    })
+
+  return env
+
+  function swap(n1, n2) {
+    var x = n1.x, y = n1.y
+    n1.x = n2.x; n1.y = n2.y
+    n2.x = x;    n2.y = y
+  }
+
+  function score_sort(n1, n2) {
+    return n1.score - n2.score
+  }
+}
+
+function score(node) {
+  return node.x + node.y
+}
+
+function unique_y_pos(env) {
+  // env.nodes.filter().forEach()
+  return env
+}
+
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
     var color = '#ccc'
@@ -1065,8 +1117,15 @@ function add_rings(env) {
   return env
 }
 
-function copy_nodes(env) {
-  env.shapes = env.shapes.concat(env.data.V)
+function add_ring_labels(env) {
+  var labels = []
+
+  env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
+    var label = {shape: 'text', str: shape.year + 1900, x: -15, y: -shape.r - 5, fill: '#ccc' }
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
   return env
 }
 
@@ -1093,6 +1152,11 @@ function copy_edges(env) {
   return env
 }
 
+function copy_nodes(env) {
+  env.shapes = env.shapes.concat(env.data.V)
+  return env
+}
+
 function add_labels(env) {
   var labels = []
 
@@ -1106,19 +1170,6 @@ function add_labels(env) {
   env.shapes = env.shapes.concat(labels)
   return env
 }
-
-function add_ring_labels(env) {
-  var labels = []
-
-  env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year + 1900, x: -15, y: -shape.r - 5, fill: '#ccc' }
-    labels.push(label)
-  })
-
-  env.shapes = env.shapes.concat(labels)
-  return env
-}
-
 
 function clear_it(env) {
   ctx.clearRect(0, 0, 1000, 1000)
