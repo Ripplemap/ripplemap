@@ -786,11 +786,11 @@ el_gobutton.addEventListener('click', function(ev) {
 // RENDER PIPELINE
 
 var admin_mode = false // yep another hack w00t
-var all_edges = false // awkward... :(
+var all_edges = true // awkward... :(
 var filter_sentences = true // awkward... :(
 var my_maxyear = 115 // total hackery...
 var my_minyear = 108 // hack hack hack
-var current_year = 109 // more hacks
+var current_year = 115 // more hacks
 var wrapper = {data: [], params: {}, shapes: []}
 var pipelines = []
 build_pipelines()
@@ -993,7 +993,7 @@ function assign_years(env) {
   var graph = Dagoba.graph(env.data.V, env.data.E)
   env.data.V = env.data.V.map(function(node) {
     if(node.year) return node
-    var neighbors = graph.v(node._id).in().run() // TODO: both. also add more distance, of the right kind...
+    var neighbors = graph.v(node._id).both().run() // TODO: also add more distance, of the right kind...
     var minyear = neighbors.map(prop('year')).filter(Boolean).sort()[0]
     if(minyear)
       node.year = minyear
@@ -1068,7 +1068,7 @@ function minimize_edge_length(env) {
   env.data.V.filter(function(node) {return node.x || node.y})
     .forEach(function(node) {
       if(!known[node.year])
-        known[node.year] = {}
+        known[node.year] = []
       var peers = known[node.year]
 
       peers.push(node)
@@ -1100,7 +1100,12 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  return node.x + node.y
+  return node._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+       + node._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+
+  function score_edge(edge) {
+    return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
+  }
 }
 
 function unique_y_pos(env) {
