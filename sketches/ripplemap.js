@@ -25,6 +25,14 @@ function truncate(str, to) {
   return str.substr(0, to-2) + '...'
 }
 
+function push_it(list, key, val) {
+  if(!list[key])
+    return list[key] = [val]
+
+  list[key].push(val)
+  return list[key]
+}
+
 function pipe() {
   var all_funs = [].slice.call(arguments)
 
@@ -797,7 +805,7 @@ build_pipelines()
 
 function build_pipelines() {
   pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
-                     , get_years, assign_years, filter_years(my_maxyear, my_minyear), assign_xy
+                     , get_years, data_to_graph, filter_years(my_maxyear, my_minyear), assign_xy
                      , score_nodes, minimize_edge_length, unique_y_pos
                      , add_rings, add_ring_labels
                      , copy_edges, copy_nodes, add_labels
@@ -969,6 +977,7 @@ function wrap(env, prop) {
 function get_years(env) {
   var minyear = Infinity
   var maxyear = 0
+  var list = env.params.years = {}
 
   env.data.V = env.data.V.map(function(node) {
 
@@ -979,6 +988,8 @@ function get_years(env) {
     if(year > maxyear) maxyear = year // effectful :(
 
     node.year = year // mutation :(
+    push_it(list, node.year, G.vertexIndex[node._id])
+
     return node
   })
 
@@ -988,18 +999,8 @@ function get_years(env) {
   return env
 }
 
-function assign_years(env) {
-  // var graph = G // FIXME: this is silly, but so is spinning up a new instance...
+function data_to_graph(env) {
   var graph = Dagoba.graph(env.data.V, env.data.E)
-  env.data.V = env.data.V.map(function(node) {
-    if(node.year) return node
-    var neighbors = graph.v(node._id).both().run() // TODO: also add more distance, of the right kind...
-    var minyear = neighbors.map(prop('year')).filter(Boolean).sort()[0]
-    if(minyear)
-      node.year = minyear
-    return node
-  })
-
   return env
 }
 
@@ -1024,28 +1025,21 @@ function filter_years(max, min) {
 }
 
 function assign_xy(env) {
-  var degs = {}
-
+  var years = env.params.years
   env.data.V.map(function(node) {
     if(node.x) return node
 
     var offset = node.year - 107
     var radius = offset * 50 // HACK: remove this!
 
-    // var deg = Math.random() * 360
-    var denom = 12 + offset
-    denom /= 2
+    var nabes = years[node.year]
+    var gnode = G.vertexIndex[node._id]
+    var index = nabes.indexOf(gnode)
+    var arc = 2 * Math.PI / nabes.length
 
-    if(!degs[offset])
-      degs[offset] = offset // Math.random() * 7
-
-    degs[offset] += ((1.2*Math.PI/denom) || 0) // + (Math.random()/(2*denom))
-    if(offset < 2)
-      degs[offset] += 5 // special case for inner circle :(
-    var deg = degs[offset]
-
-    var cx = 0 + radius*Math.cos(deg) // 0 instead of a non-origin x and y
-    var cy = 0 + radius*Math.sin(deg) // we'll take care of that later
+    var deg = offset + index * arc
+    var cx  = radius * Math.cos(deg)
+    var cy  = radius * Math.sin(deg)
 
     node.shape = 'circle'
     node.x = cx
@@ -1067,11 +1061,7 @@ function minimize_edge_length(env) {
   var known = {}
   env.data.V.filter(function(node) {return node.x || node.y})
     .forEach(function(node) {
-      if(!known[node.year])
-        known[node.year] = []
-      var peers = known[node.year]
-
-      peers.push(node)
+      var peers = push_it(known, node.year, node)
       var peer = peers[0]
 
       if(node.score > peer.score) {
@@ -1100,8 +1090,9 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  return node._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
-       + node._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+  var gnode = G.vertexIndex[node._id]
+  return gnode._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+       + gnode._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
 
   function score_edge(edge) {
     return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
