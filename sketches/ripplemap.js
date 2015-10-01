@@ -988,7 +988,7 @@ function get_years(env) {
     if(year > maxyear) maxyear = year // effectful :(
 
     node.year = year // mutation :(
-    push_it(list, node.year, G.vertexIndex[node._id])
+    push_it(list, node.year, node) //, G.vertexIndex[node._id])
 
     return node
   })
@@ -1033,8 +1033,8 @@ function assign_xy(env) {
     var radius = offset * 50 // HACK: remove this!
 
     var nabes = years[node.year]
-    var gnode = G.vertexIndex[node._id]
-    var index = nabes.indexOf(gnode)
+    // var gnode = G.vertexIndex[node._id]
+    var index = nabes.indexOf(node)
     var arc = 2 * Math.PI / nabes.length
 
     var deg = offset + index * arc
@@ -1052,19 +1052,23 @@ function assign_xy(env) {
   return env
 }
 
+function unique_y_pos(env) {
+  return env
+}
+
 function score_nodes(env) {
   env.data.V = env.data.V.map(function(node) { node.score = score(node); return node })
   return env
 }
 
 function minimize_edge_length(env) {
-  var known = {}
-  env.data.V.filter(function(node) {return node.x || node.y})
-    .forEach(function(node) {
-      var peers = push_it(known, node.year, node)
-      var peer = peers[0]
+  var years = env.params.years
 
-      if(node.score > peer.score) {
+  Object.keys(years).sort().forEach(function(key) {
+    var peers = years[key]
+    peers.sort(score_sort)
+    peers.forEach(function(node) {
+      peers.forEach(function(peer) {
         swap(node, peer)
         if(node.score + peer.score < score(node) + score(peer)) {
           swap(node, peer)
@@ -1072,9 +1076,9 @@ function minimize_edge_length(env) {
           node.score = score(node)
           peer.score = score(peer)
         }
-      }
-      peers.sort(score_sort)
+      })
     })
+  })
 
   return env
 
@@ -1090,18 +1094,12 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  var gnode = G.vertexIndex[node._id]
-  return gnode._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
-       + gnode._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+  return node._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+       + node._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
 
   function score_edge(edge) {
     return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
   }
-}
-
-function unique_y_pos(env) {
-  // env.nodes.filter().forEach()
-  return env
 }
 
 function add_rings(env) {
