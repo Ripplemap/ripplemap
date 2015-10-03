@@ -1001,7 +1001,7 @@ function get_years(env) {
 }
 
 function data_to_graph(env) {
-  // THINK: this is kind of weird... we could probably get more leverage by using G itself
+  // THINK: this is kind of weird... we could probably get more leverage by just using G itself
   env.params.graph = Dagoba.graph(env.data.V, env.data.E)
   env.data.V = env.params.graph.vertices
   env.data.E = env.params.graph.edges
