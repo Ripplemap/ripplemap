@@ -793,20 +793,21 @@ el_gobutton.addEventListener('click', function(ev) {
 
 // RENDER PIPELINE
 
-var admin_mode = false // yep another hack w00t
-var all_edges = true // awkward... :(
-var filter_sentences = true // awkward... :(
-var my_maxyear = 115 // total hackery...
-var my_minyear = 108 // hack hack hack
-var current_year = 115 // more hacks
+var all_edges        = true  // awkward... :(
+var admin_mode       = false // yep another hack w00t
+var my_maxyear       = 115   // total hackery...
+var my_minyear       = 108   // hack hack hack
+var current_year     = 115   // more hacks
+var filter_sentences = true  // awkward... :(
 var wrapper = {data: [], params: {}, shapes: []}
 var pipelines = []
 build_pipelines()
 
 function build_pipelines() {
   pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
-                     , get_years, data_to_graph, filter_years(my_maxyear, my_minyear), assign_xy
+                     , get_years, data_to_graph, assign_xy
                      , score_nodes, minimize_edge_length, unique_y_pos
+                     , filter_years(my_maxyear, my_minyear)
                      , add_rings, add_ring_labels
                      , copy_edges, copy_nodes, add_labels
                      , clear_it, draw_it, draw_metadata )
@@ -1000,28 +1001,11 @@ function get_years(env) {
 }
 
 function data_to_graph(env) {
-  var graph = Dagoba.graph(env.data.V, env.data.E)
+  // THINK: this is kind of weird... we could probably get more leverage by using G itself
+  env.params.graph = Dagoba.graph(env.data.V, env.data.E)
+  env.data.V = env.params.graph.vertices
+  env.data.E = env.params.graph.edges
   return env
-}
-
-function filter_years(max, min) {
-  max = max || Infinity
-  min = min || 0
-
-  return function(env) {
-
-    // hack hack hack
-    if(current_year < max)
-      max = current_year
-
-    // TODO: do this in Dagoba so we can erase edges automatically
-    env.data.V = env.data.V.filter(function(node) {
-      if(node.year > max) return false
-      if(node.year < min) return false
-      return true
-    })
-    return env
-  }
 }
 
 function assign_xy(env) {
@@ -1049,10 +1033,6 @@ function assign_xy(env) {
     return node
   })
 
-  return env
-}
-
-function unique_y_pos(env) {
   return env
 }
 
@@ -1100,6 +1080,33 @@ function score(node) {
   function score_edge(edge) {
     return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
   }
+}
+
+function filter_years(max, min) {
+  max = max || Infinity
+  min = min || 0
+
+  return function(env) {
+
+    // hack hack hack
+    if(current_year < max)
+      max = current_year
+
+    // TODO: do this in Dagoba so we can erase edges automatically
+    env.data.V = env.data.V.filter(function(node) {
+      // yuckyuckyuck
+      if(node.year > max || node.year < min) {
+        env.params.graph.removeVertex(node)
+        return false
+      }
+      return true
+    })
+    return env
+  }
+}
+
+function unique_y_pos(env) {
+  return env
 }
 
 function add_rings(env) {
