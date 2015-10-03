@@ -225,10 +225,10 @@ function debounce(func, wait, immediate) {
 
 function send_data_to_server_no_questions_asked_okay() {
   console.log(G)
-  // var json = Dagoba.jsonify(G)
-  // fetch('http://ripplemap.io:8888', { method: 'post'
-  //                                   , body: json
-  // });
+  var json = Dagoba.jsonify(G)
+  fetch('http://ripplemap.io:8888', { method: 'post'
+                                    , body: json
+  });
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
