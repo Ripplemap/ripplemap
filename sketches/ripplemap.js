@@ -224,7 +224,9 @@ function debounce(func, wait, immediate) {
 }
 
 function send_data_to_server_no_questions_asked_okay() {
-  console.log(G)
+  if(safe_mode)
+    return console.log(G)
+
   var json = Dagoba.jsonify(G)
   fetch('http://ripplemap.io:8888', { method: 'post'
                                     , body: json
@@ -634,6 +636,7 @@ document.addEventListener('keypress', function(ev) {
   var p = 112
   var a = 97
   var s = 115
+  var l = 108
   var tilde = 126
 
   if(key === n) {
@@ -662,6 +665,11 @@ document.addEventListener('keypress', function(ev) {
 
   if(key === s) {
     all_edges = false
+    render()
+  }
+
+  if(key === l) {
+    show_labels = !show_labels
     render()
   }
 
@@ -793,10 +801,12 @@ el_gobutton.addEventListener('click', function(ev) {
 
 // RENDER PIPELINE
 
+var safe_mode        = false // okay whatever
 var all_edges        = true  // awkward... :(
 var admin_mode       = false // yep another hack w00t
 var my_maxyear       = 115   // total hackery...
 var my_minyear       = 108   // hack hack hack
+var show_labels      = true  // yup
 var current_year     = 115   // more hacks
 var filter_sentences = true  // awkward... :(
 var wrapper = {data: [], params: {}, shapes: []}
@@ -809,7 +819,7 @@ function build_pipelines() {
                      , score_nodes, minimize_edge_length, unique_y_pos
                      , filter_years(my_maxyear, my_minyear)
                      , add_rings, add_ring_labels
-                     , copy_edges, copy_nodes, add_labels
+                     , copy_edges, copy_nodes, add_node_labels, add_edge_labels
                      , clear_it, draw_it, draw_metadata )
 
   pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
@@ -1138,7 +1148,7 @@ function copy_edges(env) {
     var label = edge.label || "777"
     var color = str_to_color(label)
 
-    function str_to_color(str) { return 'hsl(' + str_to_num(str) + ',100%,40%)';}
+    function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1147,7 +1157,7 @@ function copy_edges(env) {
     //           + (label.charCodeAt(1) % 10)
     //           + (label.charCodeAt(2) % 10)
 
-    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color} // '#f77'}
+    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color, type: 'edge', label: label}
     env.shapes.push(line)
   })
   return env
@@ -1158,13 +1168,29 @@ function copy_nodes(env) {
   return env
 }
 
-function add_labels(env) {
+function add_node_labels(env) {
   var labels = []
 
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
     var str = truncate(shape.name, 50)
     var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+function add_edge_labels(env) {
+  if(!show_labels)
+    return env
+
+  var labels = []
+
+  env.shapes.forEach(function(shape) {
+    if(shape.type !== 'edge') return false
+    var label = {shape: 'angle_text', x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2, fill: shape.stroke, str: shape.label}
     labels.push(label)
   })
 
@@ -1204,24 +1230,9 @@ function draw_shape(ctx, node) {
 
   if(node.shape === 'text')
     draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font, node.fill)
-}
 
-function draw_text(ctx, x, y, str, font, fill_color, max_width) {
-  ctx.fillStyle = fill_color || '#337'
-  ctx.font = font || "14px sans-serif"
-  if(isNaN(x)) return false
-  x = x || 0
-  y = y || 0
-  ctx.fillText(str, x, y)
-}
-
-function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
-  var path=new Path2D()
-  path.moveTo(fromx, fromy)
-  path.lineTo(tox, toy)
-  ctx.strokeStyle = stroke_color || '#eef'
-  ctx.lineWidth = line_width || 0.5
-  ctx.stroke(path)
+  if(node.shape === 'angle_text')
+    draw_angle_text(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.str, node.font, node.fill)
 }
 
 function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
@@ -1234,6 +1245,62 @@ function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
   ctx.stroke()
 }
 
+function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
+  var path=new Path2D()
+  path.moveTo(fromx, fromy)
+  path.lineTo(tox, toy)
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.lineWidth = line_width || 0.5
+  ctx.stroke(path)
+}
+
+function draw_text(ctx, x, y, str, font, fill_color) {
+  ctx.fillStyle = fill_color || '#337'
+  ctx.font = font || "14px sans-serif"
+  if(isNaN(x)) return false
+  x = x || 0
+  y = y || 0
+  ctx.fillText(str, x, y)
+}
+
+function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
+  ctx.fillStyle = fill_color || '337'
+  ctx.font = font || "14px sans-serif"
+
+  // modified from http://phrogz.net/tmp/canvas_rotated_text.html
+
+	var padding = 5
+	var dx = x2 - x1
+	var dy = y2 - y1
+	var len = Math.sqrt(dx*dx+dy*dy)
+	var avail = len - 2*padding
+  var pad = 1/2
+  var x = x1
+  var y = y1
+
+	var textToDraw = str;
+	if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
+		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1);
+		textToDraw += "…";
+	}
+
+	// Keep text upright
+	var angle = Math.atan2(dy,dx);
+	if (angle < -Math.PI/2 || angle > Math.PI/2){
+		x = x2
+    y = y2
+		dx *= -1;
+		dy *= -1;
+		angle -= Math.PI;
+	}
+
+  ctx.save()
+	ctx.textAlign = 'center';
+	ctx.translate(x+dx*pad, y+dy*pad)
+	ctx.rotate(angle);
+	ctx.fillText(textToDraw,0,-3);
+	ctx.restore();
+}
 
 
 
