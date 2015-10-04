@@ -84,84 +84,8 @@ var el_gobutton = el('addaction')
 var el_sentences = el('sentences')
 var el_newaction = el('newaction')
 
-
-// RIPPLE IT
-
-RM.ballsize = 20
-RM.ringmul = 3
-RM.ringspots = 12
 var tau = Math.PI*2
 var ctx = el_ripples.getContext('2d')
-
-function ripple_it(graph) {
-  var new_graph = clone(JSON.parse(Dagoba.jsonify(graph)))
-  var nodes = new_graph.V
-  var edges = new_graph.E
-
-  // draw_circle(ctx, 100, 100, 30)
-
-  var circles = [{stroke: 'blue', fill: 'orange', line: 5}, {stroke: 'red', line: 8, radius: 40}, {fill: 'black'}]
-
-  circles = circles.concat(clone(circles), clone(circles), clone(circles), clone(circles))
-
-  // draw_on_ring(ctx, 300, 300, 200, circles) // mutates
-
-  // draw_edges(ctx, circles)
-
-  // group nodes by timestamp
-  // nodes.map(prop('time')).filter(Boolean).map(function(x) {return (new Date(x)).getYear()}).sort()
-  var timed_nodes = nodes.filter(function(y) {return y.time > 1199161600000})
-
-  var chunks = timed_nodes.reduce(function(acc, node) {
-        var year = (new Date(node.time)).getYear()
-        if(!acc[year])
-          acc[year] = {year: year, nodes: []}
-        acc[year].nodes.push(node)
-        return acc
-      }, {})
-
-  Object.keys(chunks).forEach(function(year) {
-    var poo = chunks[year]
-    var radius = (year - 107) * 30
-    draw_on_ring(ctx, 400, 400, radius, poo.nodes)
-    draw_edges(ctx, poo.nodes)
-  })
-
-  var nnn = Object.keys(chunks).reduce(function(acc, key) {return acc.concat(chunks[key].nodes)}, [])
-
-  // draw_edges(ctx, nnn)
-
-}
-
-function draw_on_ring(ctx, x, y, radius, circles) {
-  circles.forEach(function(circle) {
-    // pick a point on the ring
-    var deg = Math.random() * 360
-    var cx = x + radius*Math.cos(deg)
-    var cy = y + radius*Math.sin(deg)
-    var size = circle.size || RM.ballsize
-    var stroke = circle.stroke || null
-    var fill = circle.fill || null
-    var line = circle.line || null
-
-    circle.x = cx
-    circle.y = cy
-
-    draw_circle(ctx, cx, cy, size, stroke, fill, line)
-  })
-}
-
-function draw_edges(ctx, points, stroke, line) {
-  ctx.lineWidth = line || 2
-  ctx.strokeStyle = stroke || 'red'
-
-  points.forEach(function(point1) {
-    points.forEach(function(point2) {
-      draw_line(ctx, point1.x, point1.y, point2.x, point2.y)
-    })
-  })
-}
-
 
 
 
@@ -1151,11 +1075,6 @@ function copy_edges(env) {
     function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
-
-    // var color = '#'
-    //           + (label.charCodeAt(0) % 10)
-    //           + (label.charCodeAt(1) % 10)
-    //           + (label.charCodeAt(2) % 10)
 
     var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color, type: 'edge', label: label}
     env.shapes.push(line)
