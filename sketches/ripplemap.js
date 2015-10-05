@@ -72,9 +72,9 @@ function err(mess) {
 var G
 
 
-// SHOW IT
-
 var RM = {}
+
+// TODO: fix these globals
 
 var el = document.getElementById.bind(document)
 var qs = document.querySelectorAll.bind(document)
@@ -113,26 +113,31 @@ RM.dats.actions = {}
 RM.dats.effects = {}
 RM.dats.happenings = {}
 
-
-function add_thing(type, props) {
+function get_node(catstr, typestr, props) {
   var node = convert_props(props)
 
-  // check type against list of thing types
-  var cattype = RM.cats.things[type]
-  if(!cattype)
-    return err('that is not a valid thing type', type)
+  var cat = RM.cats[catstr]
+  if(!cat)
+    return err('that is not a valid cat', catstr)
 
-  // check props again the thing's type's property list
+  var type = cat[typestr]
+  if(!type)
+    return err('that is not a valid ' + catstr + ' type', typestr)
 
-  // TODO: check name
-  // node.name = name
-  node.type = type
-  node.cat = 'thing'
+  // TODO: check props again the cattype's property list
+
+  node.cat  = catstr
+  node.type = typestr
+  node.name = props.name || typestr // TODO: remove (or something...)
+
+  return node
+}
+
+function add_thing(type, props) {
+  var node = get_node('things', type, props)
+  if(!node) return false
 
   node.priority = 1 // bbq???
-
-  // add to RM things
-  RM.dats.things[type].push(node)
 
   // publish in dagoba + persist
   publish('node', node)
@@ -141,24 +146,13 @@ function add_thing(type, props) {
 }
 
 function add_action(type, props) {
-  var node = convert_props(props)
-
-  // check type against list of action types
-  var cattype = RM.cats.actions[type]
-  if(!cattype)
-    return err('that is not a valid action type', type)
-
-  node.type = type
-  node.name = props.name || type // TODO: remove
-  node.cat = 'action'
+  var node = get_node('actions', type, props)
+  if(!node) return false
 
   node.priority = 1 // bbq???
 
-  // add to RM actions
-  RM.dats.actions[type].push(node)
+  // TODO: check props against type (what does this mean?)
 
-  // check type against list of action types
-  // check props against type
   // publish in dagoba + persist
   publish('node', node)
 
@@ -166,47 +160,21 @@ function add_action(type, props) {
 }
 
 function add_effect(type, props) {
-  var node = convert_props(props)
-
-  // check type against list of effect types
-  var cattype = RM.cats.effects[type]
-  if(!cattype)
-    return err('that is not a valid effect type', type)
-
-  node.type = type
-  node.name = type // TODO: remove
-  node.cat = 'effect'
+  var node = get_node('effects', type, props)
+  if(!node) return false
 
   node.priority = 0.5 // bbq???
 
-  // add to RM effects
-  RM.dats.effects[type].push(node)
-
-  // check type against list of effect types
-  // check props against type
   // publish in dagoba + persist
   publish('node', node)
 }
 
 function add_happening(type, props) {
-  var node = convert_props(props)
+  var node = get_node('happenings', type, props)
+  if(!node) return false
 
-  // check type against list of happening types
-  var cattype = RM.cats.happenings[type]
-  if(!cattype)
-    return err('that is not a valid happening type', type)
+  node.priority = 0.4
 
-  node.type = type
-  node.name = type // TODO: remove
-  node.cat = 'happening'
-
-  node.priority = 0.2 // bbq???
-
-  // add to RM happenings
-  RM.dats.happenings[type].push(node)
-
-  // check type against list of happening types
-  // check props
   // publish in dagoba + persist
   publish('node', node)
 }
@@ -462,6 +430,92 @@ new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
 
+
+// MODEL HELPERS
+
+
+function publish(type, item) {
+  if(type === 'node') {
+    G.addVertex(item)
+    // TODO: persist somewhere
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
+  }
+
+  if(type === 'edge') {
+    G.addEdge(item)
+    // TODO: persist somewhere
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
+  }
+}
+
+function persist() {
+  // localstorage
+  Dagoba.persist(G, 'rripplemap')
+
+  // hit the server
+  send_data_to_server_no_questions_asked_okay()
+}
+
+persist = debounce(persist, 1000)
+
+function debounce(func, wait, immediate) {
+  // via underscore, needs cleaning
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+
+	var timeout
+	return function() {
+		var context = this, args = arguments
+		var later = function() {
+			    timeout = null
+			    if (!immediate) func.apply(context, args)
+		    }
+		var callNow = immediate && !timeout
+		clearTimeout(timeout)
+		timeout = setTimeout(later, wait)
+		if (callNow) func.apply(context, args)
+	}
+}
+
+function send_data_to_server_no_questions_asked_okay() {
+  if(safe_mode)
+    return console.log(G)
+
+  var json = Dagoba.jsonify(G)
+  fetch('http://ripplemap.io:8888', { method: 'post'
+                                    , body: json
+  });
+}
+
+function get_data_from_server_no_questions_asked_okay(cb) {
+  fetch('http://ripplemap.io:8888', {
+	  method: 'get'
+  }).then(function(response) {
+    return response.json()
+  }).then(function(data) {
+    if(data[1])
+      cb(data[1])
+  }).catch(function(err) {
+	  console.log('lalalal', err)
+  })
+}
+
+function convert_props(props) {
+  if(typeof props !== 'object')
+    return {}
+
+  if(Array.isArray(props))
+    return {}
+
+  return clone(props)
+}
+
+
+
 // INTERACTIONS
 
 document.addEventListener('keypress', function(ev) {
@@ -640,93 +694,11 @@ el_gobutton.addEventListener('click', function(ev) {
 })
 
 
-// MODEL HELPERS
-
-
-function publish(type, item) {
-  if(type === 'node') {
-    G.addVertex(item)
-    // TODO: persist somewhere
-    persist()
-    // Dagoba.persist(G, 'rripplemap')
-  }
-
-  if(type === 'edge') {
-    G.addEdge(item)
-    // TODO: persist somewhere
-    persist()
-    // Dagoba.persist(G, 'rripplemap')
-  }
-}
-
-function persist() {
-  // localstorage
-  Dagoba.persist(G, 'rripplemap')
-
-  // hit the server
-  send_data_to_server_no_questions_asked_okay()
-}
-
-persist = debounce(persist, 1000)
-
-function debounce(func, wait, immediate) {
-  // via underscore, needs cleaning
-  // Returns a function, that, as long as it continues to be invoked, will not
-  // be triggered. The function will be called after it stops being called for
-  // N milliseconds. If `immediate` is passed, trigger the function on the
-  // leading edge, instead of the trailing.
-
-	var timeout
-	return function() {
-		var context = this, args = arguments
-		var later = function() {
-			    timeout = null
-			    if (!immediate) func.apply(context, args)
-		    }
-		var callNow = immediate && !timeout
-		clearTimeout(timeout)
-		timeout = setTimeout(later, wait)
-		if (callNow) func.apply(context, args)
-	}
-}
-
-function send_data_to_server_no_questions_asked_okay() {
-  if(safe_mode)
-    return console.log(G)
-
-  var json = Dagoba.jsonify(G)
-  fetch('http://ripplemap.io:8888', { method: 'post'
-                                    , body: json
-  });
-}
-
-function get_data_from_server_no_questions_asked_okay(cb) {
-  fetch('http://ripplemap.io:8888', {
-	  method: 'get'
-  }).then(function(response) {
-    return response.json()
-  }).then(function(data) {
-    if(data[1])
-      cb(data[1])
-  }).catch(function(err) {
-	  console.log('lalalal', err)
-  })
-}
-
-function convert_props(props) {
-  if(typeof props !== 'object')
-    return {}
-
-  if(Array.isArray(props))
-    return {}
-
-  return clone(props)
-}
-
-
 
 
 // RENDER PIPELINE
+
+// TODO: fix these globals
 
 var safe_mode        = false // okay whatever
 var all_edges        = true  // awkward... :(
@@ -1271,13 +1243,3 @@ function init() {
 }
 
 init()
-
-
-// INTERFACE FOR DATA...
-
-// make a form for a thing, an action, and another thing
-// name
-// type
-// name
-
-// then make a form that asks questions about other things
