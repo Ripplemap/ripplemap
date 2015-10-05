@@ -107,12 +107,6 @@ RM.cats.actions = {}
 RM.cats.effects = {}
 RM.cats.happenings = {}
 
-RM.dats = {} // ripplemap data, per cat
-RM.dats.things = {}
-RM.dats.actions = {}
-RM.dats.effects = {}
-RM.dats.happenings = {}
-
 function get_node(catstr, typestr, props) {
   var node = convert_props(props)
 
@@ -203,9 +197,6 @@ function new_thing_type(type, properties) {
 
   // TODO: add questions
 
-  // add data slot
-  RM.dats.things[type] = []
-
   // put in place
   RM.cats.things[type] = cattype
 
@@ -240,9 +231,6 @@ function new_action_type(type, properties) {
   cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
-
-  // add data slot
-  RM.dats.actions[type] = []
 
   // put in place
   RM.cats.actions[type] = cattype
@@ -279,9 +267,6 @@ function new_effect_type(type, properties) {
   cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
-
-  // add data slot
-  RM.dats.effects[type] = []
 
   // put in place
   RM.cats.effects[type] = cattype
@@ -321,9 +306,6 @@ function new_happening_type(type, properties) {
   cattype.aliases = [] // THINK: but if you do don't override properties.aliases
 
   // TODO: add questions
-
-  // add data slot
-  RM.dats.happenings[type] = []
 
   // put in place
   RM.cats.happenings[type] = cattype
@@ -393,9 +375,6 @@ function add_alias(cat, type, alias) {
 
   // add alias
   cattype.aliases.push(alias)
-
-  // add data slot
-  RM.dats[cat + 's'][alias]= [] // FIXME: this is horrible help help
 
   // add to catcat type list
   catcat[alias] = cattype
@@ -735,7 +714,7 @@ function render() {
 // SENTENCE STRUCTURES
 
 function get_actions(env) {
-  var actions = G.v({cat: 'action'}).run() // FIXME: use env.data, not G
+  var actions = G.v({cat: 'actions'}).run() // FIXME: use env.data, not G
   env.params.actions = actions
   return env
 }
