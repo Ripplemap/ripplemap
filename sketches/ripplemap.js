@@ -1235,6 +1235,9 @@ function add_data( ) {
 
 
 function init() {
+  if(location.host === "127.0.0.1")
+    safe_mode = true
+
   G = Dagoba.graph()
 
   add_data()
