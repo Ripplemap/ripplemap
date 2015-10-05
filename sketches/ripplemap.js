@@ -101,77 +101,6 @@ var ctx = el_ripples.getContext('2d')
  *
  */
 
-function publish(type, item) {
-  if(type === 'node') {
-    G.addVertex(item)
-    // TODO: persist somewhere
-    persist()
-    // Dagoba.persist(G, 'rripplemap')
-  }
-
-  if(type === 'edge') {
-    G.addEdge(item)
-    // TODO: persist somewhere
-    persist()
-    // Dagoba.persist(G, 'rripplemap')
-  }
-}
-
-function persist() {
-  // localstorage
-  Dagoba.persist(G, 'rripplemap')
-
-  // hit the server
-  send_data_to_server_no_questions_asked_okay()
-}
-
-persist = debounce(persist, 1000)
-
-// via underscore, needs cleaning
-// Returns a function, that, as long as it continues to be invoked, will not
-// be triggered. The function will be called after it stops being called for
-// N milliseconds. If `immediate` is passed, trigger the function on the
-// leading edge, instead of the trailing.
-function debounce(func, wait, immediate) {
-	var timeout
-	return function() {
-		var context = this, args = arguments
-		var later = function() {
-			    timeout = null
-			    if (!immediate) func.apply(context, args)
-		    }
-		var callNow = immediate && !timeout
-		clearTimeout(timeout)
-		timeout = setTimeout(later, wait)
-		if (callNow) func.apply(context, args)
-	}
-}
-
-function send_data_to_server_no_questions_asked_okay() {
-  if(safe_mode)
-    return console.log(G)
-
-  var json = Dagoba.jsonify(G)
-  fetch('http://ripplemap.io:8888', { method: 'post'
-                                    , body: json
-  });
-}
-
-function get_data_from_server_no_questions_asked_okay(cb) {
-  fetch('http://ripplemap.io:8888', {
-	  method: 'get'
-  }).then(function(response) {
-    return response.json()
-  }).then(function(data) {
-    if(data[1])
-      cb(data[1])
-  }).catch(function(err) {
-	  console.log('lalalal', err)
-  })
-}
-
-
-
 RM.cats = {} // ripplemap categories
 RM.cats.things = {}
 RM.cats.actions = {}
@@ -183,40 +112,6 @@ RM.dats.things = {}
 RM.dats.actions = {}
 RM.dats.effects = {}
 RM.dats.happenings = {}
-
-function add_alias(cat, type, alias) {
-  // TODO: check alias
-
-  // add an alias to anything
-  var catcat = RM.cats[cat] || RM.cats[cat + 's'] // FIXME: oh dear goodness gravy
-  if(!catcat)
-    return err('Invalid cat', cat)
-
-  var cattype = catcat[type]
-  if(!cattype)
-    return err('That is not a valid thing type', type)
-
-  // add alias
-  cattype.aliases.push(alias)
-
-  // add data slot
-  RM.dats[cat + 's'][alias]= [] // FIXME: this is horrible help help
-
-  // add to catcat type list
-  catcat[alias] = cattype
-
-  // THINK: alias rules?
-}
-
-function convert_props(props) {
-  if(typeof props !== 'object')
-    return {}
-
-  if(Array.isArray(props))
-    return {}
-
-  return clone(props)
-}
 
 
 function add_thing(type, props) {
@@ -516,6 +411,29 @@ function subgraph_of(thing1, thing2) {
   // find all the paths between them, and their attached bits
 }
 
+function add_alias(cat, type, alias) {
+  // TODO: check alias
+
+  // add an alias to anything
+  var catcat = RM.cats[cat] || RM.cats[cat + 's'] // FIXME: oh dear goodness gravy
+  if(!catcat)
+    return err('Invalid cat', cat)
+
+  var cattype = catcat[type]
+  if(!cattype)
+    return err('That is not a valid thing type', type)
+
+  // add alias
+  cattype.aliases.push(alias)
+
+  // add data slot
+  RM.dats[cat + 's'][alias]= [] // FIXME: this is horrible help help
+
+  // add to catcat type list
+  catcat[alias] = cattype
+
+  // THINK: alias rules?
+}
 
 
 // SET UP CATEGORIES AND EDGES
@@ -720,6 +638,91 @@ el_gobutton.addEventListener('click', function(ev) {
 
   render()
 })
+
+
+// MODEL HELPERS
+
+
+function publish(type, item) {
+  if(type === 'node') {
+    G.addVertex(item)
+    // TODO: persist somewhere
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
+  }
+
+  if(type === 'edge') {
+    G.addEdge(item)
+    // TODO: persist somewhere
+    persist()
+    // Dagoba.persist(G, 'rripplemap')
+  }
+}
+
+function persist() {
+  // localstorage
+  Dagoba.persist(G, 'rripplemap')
+
+  // hit the server
+  send_data_to_server_no_questions_asked_okay()
+}
+
+persist = debounce(persist, 1000)
+
+function debounce(func, wait, immediate) {
+  // via underscore, needs cleaning
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+
+	var timeout
+	return function() {
+		var context = this, args = arguments
+		var later = function() {
+			    timeout = null
+			    if (!immediate) func.apply(context, args)
+		    }
+		var callNow = immediate && !timeout
+		clearTimeout(timeout)
+		timeout = setTimeout(later, wait)
+		if (callNow) func.apply(context, args)
+	}
+}
+
+function send_data_to_server_no_questions_asked_okay() {
+  if(safe_mode)
+    return console.log(G)
+
+  var json = Dagoba.jsonify(G)
+  fetch('http://ripplemap.io:8888', { method: 'post'
+                                    , body: json
+  });
+}
+
+function get_data_from_server_no_questions_asked_okay(cb) {
+  fetch('http://ripplemap.io:8888', {
+	  method: 'get'
+  }).then(function(response) {
+    return response.json()
+  }).then(function(data) {
+    if(data[1])
+      cb(data[1])
+  }).catch(function(err) {
+	  console.log('lalalal', err)
+  })
+}
+
+function convert_props(props) {
+  if(typeof props !== 'object')
+    return {}
+
+  if(Array.isArray(props))
+    return {}
+
+  return clone(props)
+}
+
 
 
 
