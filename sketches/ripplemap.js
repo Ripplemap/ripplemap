@@ -651,7 +651,7 @@ RM.el_gobutton.addEventListener('click', function(ev) {
     thing2 = add_thing(thing2type, {name: thing2name})
   }
 
-  var action = add_action(actiontype, {time: new Date(actiondate).getTime() }) // TODO: default props to {}
+  var action = add_action(actiontype, {time: new Date(actiondate).getTime() })
 
   // did everything go okay?
   if(!thing1 || !thing2 || !action)
@@ -675,10 +675,10 @@ RM.el_gobutton.addEventListener('click', function(ev) {
 var safe_mode        = false // okay whatever
 var all_edges        = true  // awkward... :(
 var admin_mode       = false // yep another hack w00t
-var my_maxyear       = 115   // total hackery...
-var my_minyear       = 108   // hack hack hack
+var my_maxyear       = 2015  // total hackery...
+var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
-var current_year     = 115   // more hacks
+var current_year     = 2015  // more hacks
 var filter_sentences = true  // awkward... :(
 
 function build_pipelines() {
@@ -717,7 +717,7 @@ function get_actions(env) {
 function filter_actions(env) {
   if(!filter_sentences) return env
   env.params.actions = env.params.actions.filter(function(action) {
-    return new Date(action.time).getYear() === current_year
+    return new Date(action.time+1).getFullYear() === current_year
   })
 
   return env
@@ -873,7 +873,7 @@ function get_years(env) {
 
     if(node.time < 1199161600000) return node // HACK: remove me!!!
 
-    var year = (new Date(node.time)).getYear()
+    var year = (new Date(node.time+1)).getFullYear()
     if(year < minyear) minyear = year // effectful :(
     if(year > maxyear) maxyear = year // effectful :(
 
@@ -902,7 +902,7 @@ function assign_xy(env) {
   env.data.V.map(function(node) {
     if(node.x) return node
 
-    var offset = node.year - 107
+    var offset = node.year - env.params.my_minyear + 1
     var radius = offset * 50 // HACK: remove this!
 
     var nabes = years[node.year]
@@ -998,7 +998,7 @@ function unique_y_pos(env) {
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
     var color = '#ccc'
-    var radius = 50 * (i - 107)
+    var radius = 50 * (i - env.params.my_minyear + 1)
     env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
   }
   return env
@@ -1084,7 +1084,7 @@ function draw_it(env) {
 
 function draw_metadata(env) {
   // el('minyear').innerText = 1900 + env.params.minyear
-  el('maxyear').innerText = 1900 + current_year
+  // el('maxyear').innerText = 1900 + current_year
   return env
 }
 
