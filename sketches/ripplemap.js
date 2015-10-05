@@ -121,6 +121,28 @@ function get_node(catstr, typestr, props) {
   return node
 }
 
+function add_alias(catstr, typestr, alias) {
+  // TODO: check alias
+
+  // add an alias to anything
+  var cat = RM.cats[catstr]
+  if(!cat)
+    return err('Invalid cat', catstr)
+
+  var type = cat[typestr]
+  if(!type)
+    return err('That is not a valid thing type', typestr)
+
+  // add alias
+  type.aliases.push(alias)
+
+  // add type to list
+  cat[alias] = type
+
+  // THINK: alias rules?
+}
+
+
 function add_thing(type, props) {
   var node = get_node('thing', type, props)
   if(!node) return false
@@ -166,6 +188,8 @@ function add_happening(type, props) {
   // publish in dagoba + persist
   publish('node', node)
 }
+
+
 
 function new_thing_type(type, properties) {
   // TODO: valid type?
@@ -312,6 +336,7 @@ function new_happening_type(type, properties) {
   }
 }
 
+
 function new_edge_type(type, properties) {
   // what properties do edges have?
 }
@@ -355,27 +380,6 @@ function subgraph_of(thing1, thing2) {
   // find all the paths between them, and their attached bits
 }
 
-function add_alias(cat, type, alias) {
-  // TODO: check alias
-
-  // add an alias to anything
-  var catcat = RM.cats[cat] || RM.cats[cat + 's'] // FIXME: oh dear goodness gravy
-  if(!catcat)
-    return err('Invalid cat', cat)
-
-  var cattype = catcat[type]
-  if(!cattype)
-    return err('That is not a valid thing type', type)
-
-  // add alias
-  cattype.aliases.push(alias)
-
-  // add to catcat type list
-  catcat[alias] = cattype
-
-  // THINK: alias rules?
-}
-
 
 // SET UP CATEGORIES AND EDGES
 
@@ -401,6 +405,14 @@ new_effect_type('introduce', {aliases: ['meet']})
 
 new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
+
+
+// next steps: write out all the connections between words
+// institute real edge conditions
+// get it out the other end
+// stick it into the input
+
+
 
 
 
@@ -1175,9 +1187,48 @@ function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
 
 
 
+// FORM BUILDER & FRIENDS
+
+function whatsnext(graph, conversation) {
+  // TODO: incorporate graph knowledge (graph is the whole world, or the relevant subgraph)
+  // THINK: what is a conversation?
+  // are we currently in a sentence? then find the highest weighted unfilled 'port'
+  //
+}
+
+function get_things(q) {
+  var substrRegex = new RegExp(q, 'i')
+  var frontRegex = new RegExp('^' + q, 'i')
+  var things = RM.G.vertices.filter(function(node) {return node.cat === 'thing'}).map(prop('name'))
+        .filter(function(name) {return substrRegex.test(name)})
+
+  things.sort(function(a, b) {
+    return frontRegex.test(b) - frontRegex.test(a) || a.charCodeAt() - b.charCodeAt()
+  })
+
+  return things
+}
+
+function get_thing_by_name(name) {
+  return RM.G.vertices.filter(function(node) {return node.name === name}) || {}
+}
+
+function render_next(dotdotdot) {
+  $('#the-basics .typeahead').typeahead({
+    hint: true,
+    highlight: true,
+    minLength: 1
+  }, {
+    name: 'states',
+    source: function(q, cb) {cb(get_things(q))}
+  });
+
+}
+
+
 // INIT
 
-function add_data( ) {
+function add_data(cb) {
   // if(localStorage["DAGOBA::rripplemap"]) {
   //   var data = JSON.parse(localStorage["DAGOBA::rripplemap"])
   //   load_data(data.V, data.E)
@@ -1189,8 +1240,9 @@ function add_data( ) {
   get_data_from_server_no_questions_asked_okay(function(data) {
     // G = Dagoba.graph()
     // RM.clear()
-    load_data(data.V, data.E)
-    render()
+    var local_data = load_data(data.V, data.E)
+
+    cb(local_data)
   })
 
   function load_data(nodes, edges) {
@@ -1219,9 +1271,12 @@ function init() {
 
   build_pipelines()
 
-  add_data()
+  var cb = function() {
+    render()
+    render_next()
+  }
 
-  // render()
+  add_data(cb)
 }
 
 init()
