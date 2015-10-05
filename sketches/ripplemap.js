@@ -75,16 +75,12 @@ var qs = document.querySelectorAll.bind(document)
 
 var RM = {}
 
-// TODO: fix these globals
+RM.el_gobutton = el('addaction')
+RM.el_sentences = el('sentences')
+RM.el_newaction = el('newaction')
 
-var el_ripples = el('ripples')
-var el_gobutton = el('addaction')
-var el_sentences = el('sentences')
-var el_newaction = el('newaction')
-
-var tau = Math.PI*2
-var ctx = el_ripples.getContext('2d')
-
+RM.ctx = el('ripples').getContext('2d')
+RM.pipelines = []
 
 
 /* INTERFACES FOR RIPPLE MODEL
@@ -414,20 +410,20 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 function publish(type, item) {
   if(type === 'node') {
     RM.G.addVertex(item)
-    // TODO: persist somewhere
     persist()
-    // Dagoba.persist(G, 'rripplemap')
   }
 
   if(type === 'edge') {
     RM.G.addEdge(item)
-    // TODO: persist somewhere
     persist()
-    // Dagoba.persist(G, 'rripplemap')
   }
+
+  // TODO: persist itemized changes
 }
 
 function persist() {
+  // TODO: persist itemized changes
+
   // localstorage
   Dagoba.persist(RM.G, 'rripplemap')
 
@@ -550,7 +546,7 @@ document.addEventListener('keypress', function(ev) {
   }
 })
 
-el_sentences.addEventListener('keyup', function(ev) {
+RM.el_sentences.addEventListener('keyup', function(ev) {
   var key = ev.keyCode || ev.which
   var span = ev.target
   var id = span.id
@@ -606,13 +602,14 @@ el_sentences.addEventListener('keyup', function(ev) {
       if(spans[i] !== span)
         spans[i].innerText = val
     }
+
     // rerender the graph
-    pipelines[0](RM.G)
+    render(0)
   }
 
 })
 
-el_sentences.addEventListener('click', function(ev) {
+RM.el_sentences.addEventListener('click', function(ev) {
   var target = ev.target
   if(target.nodeName !== 'BUTTON')
     return true
@@ -634,7 +631,7 @@ el_sentences.addEventListener('click', function(ev) {
   render()
 })
 
-el_gobutton.addEventListener('click', function(ev) {
+RM.el_gobutton.addEventListener('click', function(ev) {
   var thing1name = el('thing1name').value
   var thing1type = el('thing1type').value
   var thing2name = el('thing2name').value
@@ -660,7 +657,7 @@ el_gobutton.addEventListener('click', function(ev) {
   if(!thing1 || !thing2 || !action)
     return false
 
-  el_newaction.reset()
+  RM.el_newaction.reset()
 
   add_edge('the', action._id, thing2._id)
   add_edge('did', thing1._id, action._id)
@@ -683,10 +680,9 @@ var my_minyear       = 108   // hack hack hack
 var show_labels      = false // yup
 var current_year     = 115   // more hacks
 var filter_sentences = true  // awkward... :(
-var pipelines = []
 
 function build_pipelines() {
-  pipelines[0] = pipe( mod('data', sg_compact)
+  RM.pipelines[0] = pipe( mod('data', sg_compact)
                      , get_years, data_to_graph, assign_xy
                      , score_nodes, minimize_edge_length, unique_y_pos
                      , filter_years
@@ -695,15 +691,19 @@ function build_pipelines() {
                      , clear_it, draw_it, draw_metadata
                      )
 
-  pipelines[1] = pipe( get_actions, filter_actions
+  RM.pipelines[1] = pipe( get_actions, filter_actions
                      , make_sentences, write_sentences
                      )
 }
 
-function render() {
+function render(n) {
   // TODO: cloning is inefficient: make lazy subgraphs
-  var env = {data: Dagoba.clone(RM.G), params: {my_maxyear: my_maxyear, my_minyear: my_minyear}, shapes: [], ctx: ctx}
-  pipelines.forEach(function(pipeline) { pipeline(env) })
+  var env = {data: Dagoba.clone(RM.G), params: {my_maxyear: my_maxyear, my_minyear: my_minyear}, shapes: [], ctx: RM.ctx}
+
+  if(n === undefined)
+    RM.pipelines.forEach(function(pipeline) { pipeline(env) })
+  else
+    RM.pipelines[n](env)
 }
 
 // SENTENCE STRUCTURES
@@ -743,7 +743,7 @@ function construct(action) {
 }
 
 function write_sentences(env) {
-  el_sentences.innerHTML = ''
+  RM.el_sentences.innerHTML = ''
   env.params.sentences.forEach(function(list) {
 
     var sentence = '<p>'
@@ -774,21 +774,19 @@ function write_sentences(env) {
     })
     sentence += '.</p>'
 
-    el_sentences.innerHTML += sentence
+    RM.el_sentences.innerHTML += sentence
   })
 
   function template(classes, data, text) {
     classes.unshift('word')
     var classtext = classes.join(' ')
 
-    var datatext = Object.keys(data).map
-    (function(key)
-     {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
+    var datatext = Object.keys(data).map(function(key) {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
 
     return ' <span class="' + classtext + '"'
-      + datatext
-      + ' contentEditable="true">'
-      + text + '</span>'
+         + datatext
+         + ' contentEditable="true">'
+         + text + '</span>'
   }
 
   function admin_template(thing, type, cat, text) {
@@ -1072,7 +1070,7 @@ function add_edge_labels(env) {
 }
 
 function clear_it(env) {
-  ctx.clearRect(0, 0, 1000, 1000)
+  env.ctx.clearRect(0, 0, 1000, 1000)
   return env
 }
 
@@ -1110,7 +1108,7 @@ function draw_shape(ctx, node) {
 
 function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
   ctx.beginPath()
-  ctx.arc(x, y, radius, 0, tau, false)
+  ctx.arc(x, y, radius, 0, Math.PI*2, false)
   ctx.fillStyle = fill_color || '#444444'
   ctx.fill()
   ctx.lineWidth = line_width || 2
