@@ -563,7 +563,7 @@ RM.el_sentences.addEventListener('keyup', function(ev) {
   var span = ev.target
   var id = span.id
   var type = span.classList.contains('edge') ? 'edge' : 'cat'
-  var val = span.innerText
+  var val = span.textContent
   var id = span.getAttribute('data-id')
 
   // TODO: trap return for special effects
@@ -612,7 +612,7 @@ RM.el_sentences.addEventListener('keyup', function(ev) {
     var spans = qs('span.node-' + id)
     for(var i = 0; i < spans.length; i++) {
       if(spans[i] !== span)
-        spans[i].innerText = val
+        spans[i].textContent = val
     }
 
     // rerender the graph
@@ -1095,8 +1095,8 @@ function draw_it(env) {
 }
 
 function draw_metadata(env) {
-  // el('minyear').innerText = 1900 + env.params.minyear
-  // el('maxyear').innerText = 1900 + current_year
+  // el('minyear').textContent = 1900 + env.params.minyear
+  // el('maxyear').textContent = 1900 + current_year
   return env
 }
 
@@ -1213,16 +1213,15 @@ function get_thing_by_name(name) {
   return RM.G.vertices.filter(function(node) {return node.name === name}) || {}
 }
 
-function render_next(dotdotdot) {
-  $('#the-basics .typeahead').typeahead({
-    hint: true,
-    highlight: true,
-    minLength: 1
-  }, {
-    name: 'states',
-    source: function(q, cb) {cb(get_things(q))}
-  });
+function render_conversation(conversation) {
+  var typeahead_params = {hint: true, highlight: true, minLength: 1}
+  var typeahead_source = {name: 'states', source: function(q, cb) {cb(get_things(q))}}
 
+  if(!conversation) {
+    var input = '<input class="typeahead" type="text" placeholder="A thing">'
+    RM.el_form.innerHTML = input
+    $('#the-conversation .typeahead').typeahead(typeahead_params, typeahead_source)
+  }
 }
 
 
@@ -1273,7 +1272,7 @@ function init() {
 
   var cb = function() {
     render()
-    render_next()
+    render_conversation()
   }
 
   add_data(cb)
