@@ -67,17 +67,15 @@ function err(mess) {
   console.log(arguments, mess)
 }
 
-// GRAPH
+var el = document.getElementById.bind(document)
+var qs = document.querySelectorAll.bind(document)
 
-var G
 
+// THE BEGINNING
 
 var RM = {}
 
 // TODO: fix these globals
-
-var el = document.getElementById.bind(document)
-var qs = document.querySelectorAll.bind(document)
 
 var el_ripples = el('ripples')
 var el_gobutton = el('addaction')
@@ -349,7 +347,7 @@ function extract_story(V, E) {
 }
 
 function reset_graph() {
-  G = Dagoba.graph()
+  RM.G = Dagoba.graph()
 }
 
 function story_to_text(story) {
@@ -415,14 +413,14 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 function publish(type, item) {
   if(type === 'node') {
-    G.addVertex(item)
+    RM.G.addVertex(item)
     // TODO: persist somewhere
     persist()
     // Dagoba.persist(G, 'rripplemap')
   }
 
   if(type === 'edge') {
-    G.addEdge(item)
+    RM.G.addEdge(item)
     // TODO: persist somewhere
     persist()
     // Dagoba.persist(G, 'rripplemap')
@@ -431,7 +429,7 @@ function publish(type, item) {
 
 function persist() {
   // localstorage
-  Dagoba.persist(G, 'rripplemap')
+  Dagoba.persist(RM.G, 'rripplemap')
 
   // hit the server
   send_data_to_server_no_questions_asked_okay()
@@ -462,9 +460,9 @@ function debounce(func, wait, immediate) {
 
 function send_data_to_server_no_questions_asked_okay() {
   if(safe_mode)
-    return console.log(G)
+    return console.log(RM.G)
 
-  var json = Dagoba.jsonify(G)
+  var json = Dagoba.jsonify(RM.G)
   fetch('http://ripplemap.io:8888', { method: 'post'
                                     , body: json
   });
@@ -569,7 +567,7 @@ el_sentences.addEventListener('keyup', function(ev) {
 
   // handle the node case
   if(type === 'cat' && id && val) {
-    var node = G.vertexIndex[id]
+    var node = RM.G.vertexIndex[id]
     if(node && node.name !== val) {
       // update the name/label in the real graph
       node.name = val
@@ -582,7 +580,7 @@ el_sentences.addEventListener('keyup', function(ev) {
     var id1 = span.getAttribute('data-id1')
     var id2 = span.getAttribute('data-id2')
 
-    var node1 = G.vertexIndex[id1]
+    var node1 = RM.G.vertexIndex[id1]
     var edges = node1._in.concat(node1._out)
     var edge = edges.filter
       (function(edge)
@@ -611,7 +609,7 @@ el_sentences.addEventListener('keyup', function(ev) {
         spans[i].innerText = val
     }
     // rerender the graph
-    pipelines[0](G)
+    pipelines[0](RM.G)
   }
 
 })
@@ -622,16 +620,16 @@ el_sentences.addEventListener('click', function(ev) {
     return true
 
   var id = target.getAttribute('data-id')
-  var node = G.vertexIndex[id]
+  var node = RM.G.vertexIndex[id]
 
   if(!node)
     return err('That node does not exist')
 
   if(node.cat === 'action') { // remove "sentence"
-    G.removeVertex(node)
+    RM.G.removeVertex(node)
   }
   else {
-    G.removeVertex(node) // THINK: is this really reasonable?
+    RM.G.removeVertex(node) // THINK: is this really reasonable?
   }
 
   persist()
@@ -648,12 +646,12 @@ el_gobutton.addEventListener('click', function(ev) {
   var actiondate = el('actiondate').value
 
   // check for thing1
-  var thing1 = G.v({name: thing1name, type: thing1type}).run()[0]
+  var thing1 = RM.G.v({name: thing1name, type: thing1type}).run()[0]
   if(!thing1) {
     thing1 = add_thing(thing1type, {name: thing1name})
   }
 
-  var thing2 = G.v({name: thing2name, type: thing2type}).run()[0]
+  var thing2 = RM.G.v({name: thing2name, type: thing2type}).run()[0]
   if(!thing2) {
     thing2 = add_thing(thing2type, {name: thing2name})
   }
@@ -687,34 +685,34 @@ var my_minyear       = 108   // hack hack hack
 var show_labels      = false // yup
 var current_year     = 115   // more hacks
 var filter_sentences = true  // awkward... :(
-var wrapper = {data: [], params: {}, shapes: []}
 var pipelines = []
-build_pipelines()
 
 function build_pipelines() {
-  pipelines[0] = pipe( Dagoba.cloneflat, sg_compact, wrap(wrapper, 'data')
+  pipelines[0] = pipe( mod('data', sg_compact)
                      , get_years, data_to_graph, assign_xy
                      , score_nodes, minimize_edge_length, unique_y_pos
                      , filter_years(my_maxyear, my_minyear)
                      , add_rings, add_ring_labels
                      , copy_edges, copy_nodes, add_node_labels, add_edge_labels
-                     , clear_it, draw_it, draw_metadata )
+                     , clear_it, draw_it, draw_metadata
+                     )
 
-  pipelines[1] = pipe( Dagoba.cloneflat, wrap(wrapper, 'data')
-                     , get_actions, filter_actions
+  pipelines[1] = pipe( get_actions, filter_actions
                      , make_sentences, write_sentences
                      )
 }
 
 function render() {
-  pipelines[0](G)
-  pipelines[1](G)
+  // TODO: cloning is inefficient: make lazy subgraphs
+  var env = {data: Dagoba.clone(RM.G), params: {}, shapes: [], ctx: ctx}
+  pipelines[0](env)
+  pipelines[1](env)
 }
 
 // SENTENCE STRUCTURES
 
 function get_actions(env) {
-  var actions = G.v({cat: 'action'}).run() // FIXME: use env.data, not G
+  var actions = RM.G.v({cat: 'action'}).run() // FIXME: use env.data, not G
   env.params.actions = actions
   return env
 }
@@ -820,7 +818,8 @@ function write_sentences(env) {
 
 function sg_compact(graph) {
   // so... this is pretty silly i guess or something
-  var g = Dagoba.graph(graph.V, graph.E)
+  // var g = Dagoba.graph(graph.V, graph.E)
+  var g = graph
   var vertex_ids = g.v().property('_id').run()
   var newg = Dagoba.graph()
   var edges = []
@@ -860,6 +859,13 @@ function wrap(env, prop) {
     var foo = clone(env)
     foo[prop] = data
     return foo
+  }
+}
+
+function mod(prop, fun) {
+  return function(env) {
+    env[prop] = fun(env[prop])
+    return env
   }
 }
 
@@ -1079,7 +1085,7 @@ function clear_it(env) {
 
 function draw_it(env) {
   env.shapes.forEach(function(node) {
-    draw_shape(ctx, node)
+    draw_shape(env.ctx, node)
   })
   return env
 }
@@ -1217,7 +1223,9 @@ function init() {
   if(location.host === "127.0.0.1")
     safe_mode = true
 
-  G = Dagoba.graph()
+  RM.G = Dagoba.graph()
+
+  build_pipelines()
 
   add_data()
 
