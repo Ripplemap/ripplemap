@@ -10,40 +10,13 @@
       @import url(css/style.css);
 
       h1 {
-        font-size: 30px;
+        font-size: 24px;
       }
 
       .background {
         stroke: white;
         stroke-width: 1px;
         fill: white;
-      }
-
-      .node {
-        stroke: black;
-        stroke-width: 1.5px;
-        cursor: move;
-        fill: lightcoral;
-      }
-
-      .link {
-        fill: none;
-        stroke: #000;
-        stroke-width: 3px;
-        opacity: 0.7;
-        marker-end: url(#end-arrow);
-      }
-
-      .label {
-        fill: black;
-        font-family: Verdana;
-        font-size: 25px;
-        text-anchor: middle;
-        cursor: move;
-      }
-
-      svg {
-        border: 1px solid black;
       }
 
       canvas {
@@ -91,8 +64,23 @@
     <!--     <h1> Digital Justice and the AMC </h1> -->
     <h1>The ripple effect of 'A Healthy Digital Ecology: Creating a Community Vision for Federal Funding' at AMC 2009</h1>
 
-    <div id="the-basics">
-      <input class="typeahead" type="text" placeholder="A thing">
+    <div id="the-conversation">
+      <p>
+        This is a story all about how <span id="subject"></span>
+      </p>
+      <div id="the-form"></div>
+    </div>
+
+
+    <canvas id="ripples" width="900" height="900"></canvas>
+
+    <div style="display:none">
+      <p>
+        min year:
+        <span id="minyear"></span>
+        max year:
+        <span id="maxyear"></span>
+      </p>
     </div>
 
 
@@ -107,7 +95,6 @@
     </p>
 
     <form id="newaction">
-      <p>Please tell us more about this story.</p>
       <p>
         <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
         <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
@@ -159,16 +146,6 @@
     </form>
 
 
-    <canvas id="ripples" width="900" height="900"></canvas>
-
-    <div style="display:none">
-      <p>
-        min year:
-        <span id="minyear"></span>
-        max year:
-        <span id="maxyear"></span>
-      </p>
-    </div>
 
     <p>Click any story to edit</p>
 
