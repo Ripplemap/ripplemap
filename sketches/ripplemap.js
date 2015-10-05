@@ -515,14 +515,12 @@ document.addEventListener('keypress', function(ev) {
   if(key === n) {
     if(current_year >= my_maxyear) return false
     current_year++
-    build_pipelines()
     render()
   }
 
   if(key === p) {
     if(current_year <= my_minyear) return false
     current_year--
-    build_pipelines()
     render()
   }
 
@@ -691,7 +689,7 @@ function build_pipelines() {
   pipelines[0] = pipe( mod('data', sg_compact)
                      , get_years, data_to_graph, assign_xy
                      , score_nodes, minimize_edge_length, unique_y_pos
-                     , filter_years(my_maxyear, my_minyear)
+                     , filter_years
                      , add_rings, add_ring_labels
                      , copy_edges, copy_nodes, add_node_labels, add_edge_labels
                      , clear_it, draw_it, draw_metadata
@@ -704,9 +702,8 @@ function build_pipelines() {
 
 function render() {
   // TODO: cloning is inefficient: make lazy subgraphs
-  var env = {data: Dagoba.clone(RM.G), params: {}, shapes: [], ctx: ctx}
-  pipelines[0](env)
-  pipelines[1](env)
+  var env = {data: Dagoba.clone(RM.G), params: {my_maxyear: my_maxyear, my_minyear: my_minyear}, shapes: [], ctx: ctx}
+  pipelines.forEach(function(pipeline) { pipeline(env) })
 }
 
 // SENTENCE STRUCTURES
@@ -976,27 +973,24 @@ function score(node) {
   }
 }
 
-function filter_years(max, min) {
-  max = max || Infinity
-  min = min || 0
+function filter_years(env) {
+  var max = env.params.my_maxyear
+  var min = env.params.my_minyear
 
-  return function(env) {
+  // hack hack hack
+  if(current_year < max)
+    max = current_year
 
-    // hack hack hack
-    if(current_year < max)
-      max = current_year
-
-    // TODO: do this in Dagoba so we can erase edges automatically
-    env.data.V = env.data.V.filter(function(node) {
-      // yuckyuckyuck
-      if(node.year > max || node.year < min) {
-        env.params.graph.removeVertex(node)
-        return false
-      }
-      return true
-    })
-    return env
-  }
+  // TODO: do this in Dagoba so we can erase edges automatically
+  env.data.V = env.data.V.filter(function(node) {
+    // yuckyuckyuck
+    if(node.year > max || node.year < min) {
+      env.params.graph.removeVertex(node)
+      return false
+    }
+    return true
+  })
+  return env
 }
 
 function unique_y_pos(env) {
