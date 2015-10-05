@@ -102,10 +102,10 @@ var ctx = el_ripples.getContext('2d')
  */
 
 RM.cats = {} // ripplemap categories
-RM.cats.things = {}
-RM.cats.actions = {}
-RM.cats.effects = {}
-RM.cats.happenings = {}
+RM.cats.thing = {}
+RM.cats.action = {}
+RM.cats.effect = {}
+RM.cats.happening = {}
 
 function get_node(catstr, typestr, props) {
   var node = convert_props(props)
@@ -128,7 +128,7 @@ function get_node(catstr, typestr, props) {
 }
 
 function add_thing(type, props) {
-  var node = get_node('things', type, props)
+  var node = get_node('thing', type, props)
   if(!node) return false
 
   node.priority = 1 // bbq???
@@ -140,7 +140,7 @@ function add_thing(type, props) {
 }
 
 function add_action(type, props) {
-  var node = get_node('actions', type, props)
+  var node = get_node('action', type, props)
   if(!node) return false
 
   node.priority = 1 // bbq???
@@ -154,7 +154,7 @@ function add_action(type, props) {
 }
 
 function add_effect(type, props) {
-  var node = get_node('effects', type, props)
+  var node = get_node('effect', type, props)
   if(!node) return false
 
   node.priority = 0.5 // bbq???
@@ -164,7 +164,7 @@ function add_effect(type, props) {
 }
 
 function add_happening(type, props) {
-  var node = get_node('happenings', type, props)
+  var node = get_node('happening', type, props)
   if(!node) return false
 
   node.priority = 0.4
@@ -177,7 +177,7 @@ function new_thing_type(type, properties) {
   // TODO: valid type?
 
   // does this type exist already?
-  var cattype = RM.cats.things[type]
+  var cattype = RM.cats.thing[type]
   if(cattype)
     return err('That thing type already exists', type)
 
@@ -198,7 +198,7 @@ function new_thing_type(type, properties) {
   // TODO: add questions
 
   // put in place
-  RM.cats.things[type] = cattype
+  RM.cats.thing[type] = cattype
 
   // add properties.aliases
   if(properties.aliases) {
@@ -212,7 +212,7 @@ function new_action_type(type, properties) {
   // TODO: valid type?
 
   // does this type exist already?
-  var cattype = RM.cats.actions[type]
+  var cattype = RM.cats.action[type]
   if(cattype)
     return err('That action type already exists', type)
 
@@ -233,7 +233,7 @@ function new_action_type(type, properties) {
   // TODO: add questions
 
   // put in place
-  RM.cats.actions[type] = cattype
+  RM.cats.action[type] = cattype
 
   // add properties.aliases
   if(properties.aliases) {
@@ -247,7 +247,7 @@ function new_effect_type(type, properties) {
   // TODO: valid type?
 
   // does this type exist already?
-  var cattype = RM.cats.effects[type]
+  var cattype = RM.cats.effect[type]
   if(cattype)
     return err('That effect type already exists', type)
 
@@ -269,7 +269,7 @@ function new_effect_type(type, properties) {
   // TODO: add questions
 
   // put in place
-  RM.cats.effects[type] = cattype
+  RM.cats.effect[type] = cattype
 
   // add properties.aliases
   if(properties.aliases) {
@@ -286,7 +286,7 @@ function new_happening_type(type, properties) {
   // TODO: valid type?
 
   // does this type exist already?
-  var cattype = RM.cats.happenings[type]
+  var cattype = RM.cats.happening[type]
   if(cattype)
     return err('That happening type already exists', type)
 
@@ -308,7 +308,7 @@ function new_happening_type(type, properties) {
   // TODO: add questions
 
   // put in place
-  RM.cats.happenings[type] = cattype
+  RM.cats.happening[type] = cattype
 
   // add properties.aliases
   if(properties.aliases) {
@@ -714,7 +714,7 @@ function render() {
 // SENTENCE STRUCTURES
 
 function get_actions(env) {
-  var actions = G.v({cat: 'actions'}).run() // FIXME: use env.data, not G
+  var actions = G.v({cat: 'action'}).run() // FIXME: use env.data, not G
   env.params.actions = actions
   return env
 }
