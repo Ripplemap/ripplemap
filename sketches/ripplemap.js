@@ -1237,14 +1237,15 @@ function render_conversation(conversation) {
 
   sentence.filled.forEach(function(slot) {
     // display the filled slot
-    if(slot.type === 'word') {
-      prelude += inject_value(slot, slot.value)
-    }
-    else if(slot.type === 'gettype') {
-      prelude += ' (which is a '
-      prelude += slot.value
-      prelude += ') '
-    }
+    prelude += inject_value(slot, slot.value) + ' '
+    // if(slot.type === 'word') {
+    //   prelude += inject_value(slot, slot.value) + ' '
+    // }
+    // else if(slot.type === 'gettype') {
+    //   prelude += ' (which is a '
+    //   prelude += slot.value
+    //   prelude += ') '
+    // }
   })
 
   // display the unfilled slot
@@ -1252,11 +1253,10 @@ function render_conversation(conversation) {
   var input = ''
   if(slot.type === 'word') {
     input = inject_value(slot, make_word_input(slot.cat, slot.key))
-    prelude += input
   } else {
     input = inject_value(slot, make_type_input(slot.cat, slot.key))
-    prelude += input
   }
+  prelude += input
 
 
   // do the DOM
@@ -1275,7 +1275,11 @@ function render_conversation(conversation) {
   // helper functions
 
   function make_word_input(cat, key) {
-    return '<input class="typeahead '+cat+'-input" type="text" placeholder="A'+(/^[ae]/.test(cat)?'n':'')+' '+cat+'" id="'+ key + '">'
+    return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
+  }
+
+  function mayben(val) {
+    return /^[aeiou]/.test(val) ? 'n' : ''
   }
 
   function make_type_input(cat, key) {
@@ -1303,7 +1307,14 @@ function render_conversation(conversation) {
     }
     else if(slot.key === 'object') {
       text += value
-    } else {
+    }
+    else if(slot.type === 'gettype') {
+      text += ' (which is a'
+      text += mayben(value) + ' '
+      text += value
+      text += ') '
+    }
+    else {
       text = value
     }
 
