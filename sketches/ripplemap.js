@@ -509,6 +509,7 @@ document.addEventListener('keypress', function(ev) {
   // TODO: clean this up (prevent span hijacking)
   if( ev.target.tagName === 'SPAN'
    || ev.target.tagName === 'INPUT'
+   || ev.target.tagName === 'SELECT'
    || ev.target.tagName === 'TEXTAREA'
     )
     return true
@@ -1227,7 +1228,7 @@ function render_conversation(conversation) {
   var typeahead_params = {hint: true, highlight: true, minLength: 1}
   function typeahead_source(cat) {return {name: 'states', source: function(q, cb) {cb(get_cat_dat(cat, q))}}}
 
-  var extras = ''
+  var inputs = ''
   var prelude = ''
   var submit_button = '<input type="submit" style="position: absolute; left: -9999px">'
 
@@ -1236,17 +1237,8 @@ function render_conversation(conversation) {
 
   sentence.filled.forEach(function(slot) {
     // display the filled slot
-    if(slot.key === 'subject') {
-      prelude += 'This is a story all about how '
-      prelude += slot.value
-    }
-    if(slot.key === 'action') {
-      prelude += 'did '
-      prelude += slot.value
-      prelude += ' the '
-    }
-    if(slot.key === 'object') {
-      prelude += slot.value
+    if(slot.type === 'word') {
+      prelude += inject_value(slot, slot.value)
     }
     else if(slot.type === 'gettype') {
       prelude += ' (which is a '
@@ -1255,26 +1247,20 @@ function render_conversation(conversation) {
     }
   })
 
-  var slot = sentence.slots[0]
   // display the unfilled slot
-  prelude += make_input('thing', 'subject')
+  var slot = sentence.slots[0]
+  var input = ''
+  if(slot.type === 'word') {
+    input = inject_value(slot, make_word_input(slot.cat, slot.key))
+    prelude += input
+  } else {
+    input = inject_value(slot, make_type_input(slot.cat, slot.key))
+    prelude += input
+  }
 
-  // if(!first_sentence.has.subject) {
-    prelude += 'This is a story all about how '
-    prelude += make_input('thing', 'subject')
-  // } else {
-  //   prelude += 'This is a story about how '
-  //   prelude += conversation.subject.name
-
-  //   if(!first_sentence.has.action) {
-
-  //   } else {
-
-  //   }
-  // }
 
   // do the DOM
-  RM.el_conversation.innerHTML = prelude + extras + submit_button
+  RM.el_conversation.innerHTML = prelude + inputs + submit_button
 
   // wiring... /sigh
   var catnames = Object.keys(RM.cats)
@@ -1282,16 +1268,46 @@ function render_conversation(conversation) {
     $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
   })
 
+  $('#' + slot.key).focus()
+
   return false
 
   // helper functions
 
-  function sentence_to_words() {
-
+  function make_word_input(cat, key) {
+    return '<input class="typeahead '+cat+'-input" type="text" placeholder="A'+(/^[ae]/.test(cat)?'n':'')+' '+cat+'" id="'+ key + '">'
   }
 
-  function make_input(cat, part_of_speech) {
-    return '<input class="typeahead '+cat+'-input" type="text" placeholder="A'+(/^[ae]/.test(cat)?'n':'')+' '+cat+'" data-speech="'+part_of_speech+'" id="'+ part_of_speech + '">'
+  function make_type_input(cat, key) {
+    // TODO: this assumes cat is always 'thing'
+    var str = '<select id="'+key+'">'
+    str += '<option value="person">person</option>'
+    str += '<option value="org">org</option>'
+    str += '<option value="event">event</option>'
+    str += '<option value="outcome">outcome</option>'
+    str += '</select>'
+    return str
+  }
+
+  function inject_value(slot, value) {
+    var text = ''
+
+    if(slot.key === 'subject') {
+      text += 'This is a story about how '
+      text += value
+    }
+    else if(slot.key === 'verb') {
+      text += ' did '
+      text += value
+      text += ' the '
+    }
+    else if(slot.key === 'object') {
+      text += value
+    } else {
+      text = value
+    }
+
+    return text
   }
 }
 
@@ -1317,8 +1333,44 @@ function new_conversation() {
 
 function fulfill_desire(conversation, value) {
   var sentence = give_word(conversation.current, value)
-  // TODO: allow multisentence conversations
-  return sentence.slots.length ? conversation : new_conversation()
+
+  // TODO: allow multi-sentence conversations
+
+
+  // FIXME: alsdkfjalskdfjalsdkfj
+  var actiondate = '2015-10-10'
+
+
+  if(!sentence.slots.length) {
+    var subject, verb, object
+    sentence.filled.forEach(function(slot) {
+      if(slot.type === 'gettype') {
+        var thing = add_thing(slot.value, {name: slot.name})
+        if(slot.oldkey === 'subject') subject = thing
+        if(slot.oldkey === 'object' ) object  = thing
+      }
+      else if(slot.key === 'subject') {
+        subject = slot.word
+      }
+      else if(slot.key === 'object') {
+        object = slot.word
+      }
+      else if(slot.key === 'verb') {
+        verb = add_action(slot.word.type, {time: new Date(actiondate).getTime() })
+      }
+    })
+
+    if(subject && verb && object) {
+      add_edge('the', verb._id, object._id)
+      add_edge('did', subject._id, verb._id)
+    }
+
+    // start over
+    conversation = new_conversation()
+    render() // THINK: this should queue or something... rAF?
+  }
+
+  return conversation
 }
 
 function give_word(sentence, value) {
@@ -1327,18 +1379,21 @@ function give_word(sentence, value) {
     return err('This sentence is finished')
 
   // TODO: check this logic modularly
+  if(slot.type === 'word') {
+    var word = RM.G.v({name: value, cat: slot.cat}).run()[0]
+    if(word) {
+      slot.word = word
+    }
+  }
+
   if(slot.cat === 'thing') {
     if(slot.type === 'word') {
-      var word = RM.G.v({name: value, cat: slot.cat}).run()[0]
-      if(word) {
-        slot.word = word
-      } else {
-        sentence.slots.unshift({key: 'type', type: 'gettype', name: value, cat: slot.cat})
+      if(!slot.word) {
+        sentence.slots.unshift({key: 'type', type: 'gettype', name: value, cat: slot.cat, oldkey: slot.key})
       }
     }
     else if(slot.type === 'gettype') {
-      var nameslot = sentence.filled[sentence.filled.length-1]
-      nameslot.word = add_thing(value, {name: nameslot.name})
+      // var nameslot = sentence.filled[sentence.filled.length-1]
     }
   }
 
