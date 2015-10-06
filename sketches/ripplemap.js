@@ -738,7 +738,7 @@ function get_actions(env) {
 function filter_actions(env) {
   if(!filter_sentences) return env
   env.params.actions = env.params.actions.filter(function(action) {
-    return new Date(action.time+1).getFullYear() === current_year
+    return new Date(action.time+100000000).getFullYear() === current_year
   })
 
   return env
@@ -894,7 +894,7 @@ function get_years(env) {
 
     if(node.time < 1199161600000) return node // HACK: remove me!!!
 
-    var year = (new Date(node.time+1)).getFullYear()
+    var year = (new Date(node.time+100000000)).getFullYear()
     if(year < minyear) minyear = year // effectful :(
     if(year > maxyear) maxyear = year // effectful :(
 
@@ -1253,9 +1253,14 @@ function render_conversation(conversation) {
   var input = ''
   if(slot.type === 'word') {
     input = inject_value(slot, make_word_input(slot.cat, slot.key))
-  } else {
+  }
+  else if(slot.type === 'gettype') {
     input = inject_value(slot, make_type_input(slot.cat, slot.key))
   }
+  else if(slot.type === 'date') {
+    input = inject_value(slot, make_date_input(slot.key))
+  }
+
   prelude += input
 
 
@@ -1275,11 +1280,19 @@ function render_conversation(conversation) {
   // helper functions
 
   function make_word_input(cat, key) {
-    return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
-  }
+    var text = ''
 
-  function mayben(val) {
-    return /^[aeiou]/.test(val) ? 'n' : ''
+    if(cat === 'thing')
+      return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
+    if(cat === 'action') {
+      text += '<select id="verb" name="verb">'
+      var options = ['facilitate','coordinate','contribute','create','attend','manage','assist','present','join','leave']
+      options.forEach(function(option) {
+        text += '<option>' + option + '</option>'
+      })
+      text += '</select>'
+      return text
+    }
   }
 
   function make_type_input(cat, key) {
@@ -1293,12 +1306,17 @@ function render_conversation(conversation) {
     return str
   }
 
+  function make_date_input(key) {
+    var str = '<input id="' +key+ '" type="date" name="' +key+ '" value="2010-01-01" />'
+    return str
+  }
+
   function inject_value(slot, value) {
     var text = ''
 
     if(slot.key === 'subject') {
       text += 'This is a story about how '
-      text += value
+      text += value + ' '
     }
     else if(slot.key === 'verb') {
       text += ' did '
@@ -1306,7 +1324,7 @@ function render_conversation(conversation) {
       text += ' the '
     }
     else if(slot.key === 'object') {
-      text += value
+      text += value + ' '
     }
     else if(slot.type === 'gettype') {
       text += ' (which is a'
@@ -1314,12 +1332,20 @@ function render_conversation(conversation) {
       text += value
       text += ') '
     }
+    else if(slot.type === 'date') {
+      text += ' on approximately '
+      text += value + ' '
+    }
     else {
-      text = value
+      text = ' ' + value + ' '
     }
 
     return text
   }
+}
+
+function mayben(val) {
+  return /^[aeiou]/.test(val) ? 'n' : ''
 }
 
 function join_conversation(conversation) {
@@ -1333,7 +1359,11 @@ function join_conversation(conversation) {
 }
 
 function new_sentence() {
-  var slots = [{key: 'subject', type: 'word', cat: 'thing'}, {key: 'verb', type: 'word', cat: 'action'}, {key: 'object', type: 'word', cat: 'thing'}]
+  var slots = [ {key: 'subject', type: 'word', cat: 'thing'}
+              , {key: 'verb', type: 'word', cat: 'action'}
+              , {key: 'object', type: 'word', cat: 'thing'}
+              , {key: 'date', type: 'date'}
+              ]
   return {slots: slots, filled: []}
 }
 
@@ -1353,12 +1383,15 @@ function fulfill_desire(conversation, value) {
 
 
   if(!sentence.slots.length) {
-    var subject, verb, object
+    var subject, verb, object, date
     sentence.filled.forEach(function(slot) {
       if(slot.type === 'gettype') {
         var thing = add_thing(slot.value, {name: slot.name})
         if(slot.oldkey === 'subject') subject = thing
         if(slot.oldkey === 'object' ) object  = thing
+      }
+      else if(slot.type === 'date') {
+        date = slot.value
       }
       else if(slot.key === 'subject') {
         subject = slot.word
@@ -1367,11 +1400,12 @@ function fulfill_desire(conversation, value) {
         object = slot.word
       }
       else if(slot.key === 'verb') {
-        verb = add_action(slot.word.type, {time: new Date(actiondate).getTime() })
+        verb = slot.word.type
       }
     })
 
     if(subject && verb && object) {
+      verb = add_action(verb, {time: new Date(date).getTime() })
       add_edge('the', verb._id, object._id)
       add_edge('did', subject._id, verb._id)
     }
