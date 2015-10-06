@@ -78,9 +78,11 @@ var RM = {}
 RM.el_gobutton = el('addaction')
 RM.el_sentences = el('sentences')
 RM.el_newaction = el('newaction')
+RM.el_conversation = el('the-conversation')
 
 RM.ctx = el('ripples').getContext('2d')
 RM.pipelines = []
+RM.conversation = {}
 
 
 /* INTERFACES FOR RIPPLE MODEL
@@ -677,7 +679,13 @@ RM.el_gobutton.addEventListener('click', function(ev) {
   render()
 })
 
+RM.el_conversation.addEventListener('submit', function(ev) {
+  ev.preventDefault()
 
+  whatsnext(RM.graph, join_conversation(RM.conversation, ev.target))
+
+  return false
+})
 
 
 // RENDER PIPELINE
@@ -1194,19 +1202,21 @@ function whatsnext(graph, conversation) {
   // THINK: what is a conversation?
   // are we currently in a sentence? then find the highest weighted unfilled 'port'
   //
+
+  render_conversation(conversation)
 }
 
-function get_things(q) {
+function get_cat_dat(cat, q) {
   var substrRegex = new RegExp(q, 'i')
   var frontRegex = new RegExp('^' + q, 'i')
-  var things = RM.G.vertices.filter(function(node) {return node.cat === 'thing'}).map(prop('name'))
+  var nodes = RM.G.vertices.filter(function(node) {return node.cat === cat}).map(prop('name'))
         .filter(function(name) {return substrRegex.test(name)})
 
-  things.sort(function(a, b) {
+  nodes.sort(function(a, b) {
     return frontRegex.test(b) - frontRegex.test(a) || a.charCodeAt() - b.charCodeAt()
   })
 
-  return things
+  return nodes
 }
 
 function get_thing_by_name(name) {
@@ -1215,13 +1225,72 @@ function get_thing_by_name(name) {
 
 function render_conversation(conversation) {
   var typeahead_params = {hint: true, highlight: true, minLength: 1}
-  var typeahead_source = {name: 'states', source: function(q, cb) {cb(get_things(q))}}
+  function typeahead_source(cat) {return {name: 'states', source: function(q, cb) {cb(get_cat_dat(cat, q))}}}
 
-  if(!conversation) {
-    var input = '<input class="typeahead" type="text" placeholder="A thing">'
-    RM.el_form.innerHTML = input
-    $('#the-conversation .typeahead').typeahead(typeahead_params, typeahead_source)
+  var extras = ''
+  var submit_button = '<input type="submit" style="position: absolute; left: -9999px">'
+
+  // first step
+  var prelude = 'This is a story all about how '
+  if(!conversation || !conversation.subject) {
+    prelude += make_input('thing', 'subject')
+  } else {
+    prelude += conversation.subject.name
   }
+
+  // do the DOM
+  RM.el_conversation.innerHTML = prelude + extras + submit_button
+
+  // wiring... /sigh
+  var catnames = Object.keys(RM.cats)
+  catnames.forEach(function(cat) {
+    $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
+  })
+
+  function make_input(cat, part_of_speech) {
+    return '<input class="typeahead '+cat+'-input" type="text" placeholder="A'+(/^[ae]/.test(cat)?'n':'')+' '+cat+'" data-speech="'+part_of_speech+'" id="'+ part_of_speech + '">'
+  }
+}
+
+function join_conversation(conversation, form_el_wat) {
+  console.log(form_el_wat)
+
+
+  var wants = conversation.wants.name
+  var val = el(wants).value
+  conversation.has[wants] = val
+
+  RM.conversation = conversation
+  return conversation
+}
+
+function new_sentence() {
+  var template = [{name: 'subject', cat: 'thing'}, {name: 'verb', cat: 'action'}, {name: 'object', cat: 'thing'}]
+  return {wants: template[0], has: {}, template: template}
+}
+
+function new_conversation() {
+  var sentence = new_sentence()
+  return {wants: sentence.wants, sentences: [sentence], current: sentence}
+}
+
+function fulfill_desire(conversation, value) {
+  var sentence = give_word(conversation.current, value)
+  if(!sentence.wants) {
+    sentence = new_sentence()
+    conversation.sentences.push(sentence)
+    conversation.current = sentence
+  }
+  conversation.wants = sentence.wants
+  return conversation
+}
+
+function give_word(sentence, value) {
+  // TODO: check word
+  sentence.has[sentence.wants.name] = value
+  var index = sentence.template.indexOf(sentence.wants)
+  sentence.wants = sentence.template[index+1]
+  return sentence
 }
 
 
@@ -1272,7 +1341,7 @@ function init() {
 
   var cb = function() {
     render()
-    render_conversation()
+    render_conversation(RM.conversation)
   }
 
   add_data(cb)
