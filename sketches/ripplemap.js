@@ -82,7 +82,7 @@ RM.el_conversation = el('the-conversation')
 
 RM.ctx = el('ripples').getContext('2d')
 RM.pipelines = []
-RM.conversation = {}
+RM.conversation = new_conversation()
 
 
 /* INTERFACES FOR RIPPLE MODEL
@@ -682,7 +682,7 @@ RM.el_gobutton.addEventListener('click', function(ev) {
 RM.el_conversation.addEventListener('submit', function(ev) {
   ev.preventDefault()
 
-  whatsnext(RM.graph, join_conversation(RM.conversation, ev.target))
+  whatsnext(RM.graph, join_conversation(RM.conversation))
 
   return false
 })
@@ -1228,15 +1228,50 @@ function render_conversation(conversation) {
   function typeahead_source(cat) {return {name: 'states', source: function(q, cb) {cb(get_cat_dat(cat, q))}}}
 
   var extras = ''
+  var prelude = ''
   var submit_button = '<input type="submit" style="position: absolute; left: -9999px">'
 
-  // first step
-  var prelude = 'This is a story all about how '
-  if(!conversation || !conversation.subject) {
+  // special case the first step
+  var sentence = conversation.current
+
+  sentence.filled.forEach(function(slot) {
+    // display the filled slot
+    if(slot.key === 'subject') {
+      prelude += 'This is a story all about how '
+      prelude += slot.value
+    }
+    if(slot.key === 'action') {
+      prelude += 'did '
+      prelude += slot.value
+      prelude += ' the '
+    }
+    if(slot.key === 'object') {
+      prelude += slot.value
+    }
+    else if(slot.type === 'gettype') {
+      prelude += ' (which is a '
+      prelude += slot.value
+      prelude += ') '
+    }
+  })
+
+  var slot = sentence.slots[0]
+  // display the unfilled slot
+  prelude += make_input('thing', 'subject')
+
+  // if(!first_sentence.has.subject) {
+    prelude += 'This is a story all about how '
     prelude += make_input('thing', 'subject')
-  } else {
-    prelude += conversation.subject.name
-  }
+  // } else {
+  //   prelude += 'This is a story about how '
+  //   prelude += conversation.subject.name
+
+  //   if(!first_sentence.has.action) {
+
+  //   } else {
+
+  //   }
+  // }
 
   // do the DOM
   RM.el_conversation.innerHTML = prelude + extras + submit_button
@@ -1247,49 +1282,70 @@ function render_conversation(conversation) {
     $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
   })
 
+  return false
+
+  // helper functions
+
+  function sentence_to_words() {
+
+  }
+
   function make_input(cat, part_of_speech) {
     return '<input class="typeahead '+cat+'-input" type="text" placeholder="A'+(/^[ae]/.test(cat)?'n':'')+' '+cat+'" data-speech="'+part_of_speech+'" id="'+ part_of_speech + '">'
   }
 }
 
-function join_conversation(conversation, form_el_wat) {
-  console.log(form_el_wat)
+function join_conversation(conversation) {
+  var wants = conversation.current.slots[0].key
+  var value = el(wants).value
 
+  var convo = fulfill_desire(conversation, value)
 
-  var wants = conversation.wants.name
-  var val = el(wants).value
-  conversation.has[wants] = val
-
-  RM.conversation = conversation
-  return conversation
+  RM.conversation = convo
+  return convo
 }
 
 function new_sentence() {
-  var template = [{name: 'subject', cat: 'thing'}, {name: 'verb', cat: 'action'}, {name: 'object', cat: 'thing'}]
-  return {wants: template[0], has: {}, template: template}
+  var slots = [{key: 'subject', type: 'word', cat: 'thing'}, {key: 'verb', type: 'word', cat: 'action'}, {key: 'object', type: 'word', cat: 'thing'}]
+  return {slots: slots, filled: []}
 }
 
 function new_conversation() {
   var sentence = new_sentence()
-  return {wants: sentence.wants, sentences: [sentence], current: sentence}
+  return {sentences: [sentence], current: sentence}
 }
 
 function fulfill_desire(conversation, value) {
   var sentence = give_word(conversation.current, value)
-  if(!sentence.wants) {
-    sentence = new_sentence()
-    conversation.sentences.push(sentence)
-    conversation.current = sentence
-  }
-  conversation.wants = sentence.wants
-  return conversation
+  // TODO: allow multisentence conversations
+  return sentence.slots.length ? conversation : new_conversation()
 }
 
 function give_word(sentence, value) {
-  // TODO: check word
-  sentence.has[sentence.wants.name] = value
-  var index = sentence.template.indexOf(sentence.wants)
-  sentence.wants = sentence.template[index+1]
+  var slot = sentence.slots.shift()
+  if(!slot)
+    return err('This sentence is finished')
+
+  // TODO: check this logic modularly
+  if(slot.cat === 'thing') {
+    if(slot.type === 'word') {
+      var word = RM.G.v({name: value, cat: slot.cat}).run()[0]
+      if(word) {
+        slot.word = word
+      } else {
+        sentence.slots.unshift({key: 'type', type: 'gettype', name: value, cat: slot.cat})
+      }
+    }
+    else if(slot.type === 'gettype') {
+      var nameslot = sentence.filled[sentence.filled.length-1]
+      nameslot.word = add_thing(value, {name: nameslot.name})
+    }
+  }
+
+  // fix it in post
+  slot.value = value
+  sentence.filled.push(slot)
+
   return sentence
 }
 
