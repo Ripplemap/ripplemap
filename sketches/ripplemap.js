@@ -1029,7 +1029,7 @@ function add_ring_labels(env) {
   var labels = []
 
   env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year + 1900, x: -15, y: -shape.r - 5, fill: '#ccc' }
+    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
     labels.push(label)
   })
 

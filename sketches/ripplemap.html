@@ -16,7 +16,8 @@
       }
 
       h1 {
-        font-size: 24px;
+        font-size: 20px;
+        color: purple;
       }
 
       .background {
@@ -30,11 +31,17 @@
       }
 
       #legend {
-        float: left;
+        /*         float: left; */
+        padding: 10px;
+        font-size: 14px;
       }
 
       #newaction {
         float: right;
+      }
+
+      #sentences, h3 {
+        font-size: 26px;
       }
 
       .word:active, .word:focus, .word:hover {
@@ -85,17 +92,17 @@
     </div>
 
 
-    <p id="legend">
-      Keys: <br />
+    <div id="legend">
+      <strong>Keys: </strong> <br />
       'p' for previous year <br />
       'n' for next year <br />
       'a' for all connections <br />
       's' for show most recent connections <br />
       'f' for filter stories by year <br />
       'l' for legend edges <br />
-    </p>
+    </div>
 
-    <form id="newaction">
+    <form id="newaction" style="display:none">
       <p>
         <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
         <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
@@ -146,9 +153,9 @@
       </p>
     </form>
 
+    <hr style="clear:both" />
 
-
-    <p>Click any story to edit</p>
+    <h3>Click any story to edit</h3>
 
     <div id="sentences"> </div>
 
