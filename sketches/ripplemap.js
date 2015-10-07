@@ -479,13 +479,18 @@ function send_data_to_server_no_questions_asked_okay() {
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
-  fetch('http://ripplemap.io:8888', {
+  var index = +safe_mode || 1
+  // var u = new URLSearchParams()
+  // u.append('index', index)
+  var u = "?index=" + index
+
+  fetch('http://ripplemap.io:8888' + u, {
 	  method: 'get'
   }).then(function(response) {
     return response.json()
   }).then(function(data) {
-    if(data[1])
-      cb(data[1])
+    if(data[index])
+      cb(data[index])
   }).catch(function(err) {
 	  console.log('lalalal', err)
   })
@@ -867,6 +872,9 @@ function set_coords(env) {
 
     var nabes = years[node.year]
     // var gnode = G.vertexIndex[node._id]
+
+    if(!nabes) return false
+
     var index = nabes.indexOf(node)
     var arc = 2 * Math.PI / nabes.length
 
@@ -1616,8 +1624,12 @@ function add_data(cb) {
 
 
 function init() {
-  if(location.host === "127.0.0.1")
-    safe_mode = true
+  if(location.host === "127.0.0.1") {
+    if(location.hash)
+      safe_mode = location.hash.slice(1)
+    else
+      safe_mode = true
+  }
 
   RM.G = Dagoba.graph()
 

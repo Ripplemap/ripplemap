@@ -23,6 +23,8 @@ function handler (req, res) {
   var body = ''
   var appjson = {'Content-Type': 'application/json'}
   var status = function(str) {return JSON.stringify({'status': str})}
+  var params = qs.parse(req.url.replace(/^.*\?/, ''))
+  var index = +params.index || 1
 
   // log('req.url: ', req.url)
 
@@ -43,7 +45,7 @@ function handler (req, res) {
     if(req.method == 'GET') {
       // res.writeHead(200, 'OK', appjson)
 
-      find('rmdata', {_id: 1}, function(item) {
+      find('rmdata', {_id: index}, function(item) {
         res.end(JSON.stringify(item))
       })
 
