@@ -704,17 +704,19 @@ var filter_sentences = true  // awkward... :(
 
 function build_pipelines() {
   RM.pipelines[0] = pipe( mod('data', sg_compact)
-                     , get_years, data_to_graph, assign_xy
-                     , score_nodes, minimize_edge_length, unique_y_pos
-                     , filter_years
-                     , add_rings, add_ring_labels
-                     , copy_edges, copy_nodes, add_node_labels, add_edge_labels
-                     , clear_it, draw_it, draw_metadata
-                     )
+                        , get_years, data_to_graph
+                        , add_fakes
+                        , assign_xy , score_nodes, minimize_edge_length
+                        , filter_fakes
+                        , unique_y_pos , filter_years
+                        , add_rings, add_ring_labels
+                        , copy_edges, copy_nodes, add_node_labels, add_edge_labels
+                        , clear_it, draw_it, draw_metadata
+                        )
 
   RM.pipelines[1] = pipe( get_actions, filter_actions
-                     , make_sentences, write_sentences
-                     )
+                        , make_sentences, write_sentences
+                        )
 }
 
 function render(n) {
@@ -918,9 +920,25 @@ function data_to_graph(env) {
   return env
 }
 
+function add_fakes(env) {
+  var years = env.params.years
+  var fakes_per_year = 5
+
+  Object.keys(years).forEach(function(yearstr) {
+    var year = years[yearstr]
+    var fake = {type: 'fake', year: yearstr, name: 'fake'}
+    var fakes = [clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake)]
+    Array.prototype.push.apply(year, fakes)
+    Array.prototype.push.apply(env.data.V, fakes)
+  })
+
+  return env
+}
+
 function assign_xy(env) {
   var years = env.params.years
-  env.data.V.map(function(node) {
+
+  env.data.V.forEach(function(node) {
     if(node.x) return node
 
     var offset = node.year - env.params.my_minyear + 1
@@ -984,12 +1002,19 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  return node._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
-       + node._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
 
   function score_edge(edge) {
+    //// TODO: if other end is less than this end, don't count it...
     return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
   }
+}
+
+function filter_fakes(env) {
+  env.data.V = env.data.V.filter(function(node) {
+    return node.type !== 'fake'
+  })
+  return env
 }
 
 function filter_years(env) {
@@ -1376,10 +1401,6 @@ function fulfill_desire(conversation, value) {
   var sentence = give_word(conversation.current, value)
 
   // TODO: allow multi-sentence conversations
-
-
-  // FIXME: alsdkfjalskdfjalsdkfj
-  var actiondate = '2015-10-10'
 
 
   if(!sentence.slots.length) {
