@@ -949,6 +949,75 @@ function remove_fakes(env) {
   return env
 }
 
+function unique_y_pos(env) {
+  var threshold = 12
+  // var node_radius = 5
+  var arc = Math.PI / 100
+  var years = env.params.years
+  var ys = []
+
+  Object.keys(years).sort().forEach(function(key) {
+    var peers = years[key]
+    peers.forEach(function(node) {
+      var coords, closest
+
+      if(node.type === 'fake') // le sigh
+        return
+
+      // A) do a binary search on an array of midpoints to find the closest one
+      // B) if it's within threshold walk around the circle in both directions until you find an opening
+      // C) if you reach the antipode give up
+
+      for(var da = arc; da < Math.PI; da = -1*(da + arc*(da/Math.abs(da)))) {
+        coords = modify_coords(node, da)
+        closest = find_closest(coords.y, ys)
+        if(!closest || Math.abs(closest - coords.y) > threshold)
+          break
+      }
+
+      console.log(da, closest, coords.y, Math.abs(closest - coords.y))
+
+      node.x = coords.x
+      node.y = coords.y
+      ys.push(coords.y)
+
+      ys.sort(function(a,b) {return a - b}) // OPT: just insert coords.y in place
+
+    })
+  })
+
+  gys = ys
+  return env
+
+  function modify_coords(node, da) {
+    return { x: node.x * Math.cos(da) - node.y * Math.sin(da)
+           , y: node.x * Math.sin(da) + node.y * Math.cos(da)
+           }
+  }
+
+  function find_closest(n, ns) { // binary search
+    var closest
+    var index = Math.floor(ns.length / 2)
+    var item = ns[index]
+
+    if(ns.length < 5) {
+      for(var i = 0; i < ns.length; i++) {
+        if(closest === undefined || Math.abs(ns[i] - n) < Math.abs(closest - n))
+          closest = ns[i]
+      }
+      return closest
+    }
+
+    if(item === n)
+      return item
+
+    if(item > n)
+      return find_closest(n, ns.slice(0, index))
+
+    return find_closest(n, ns.slice(index + 1))
+  }
+}
+
 function filter_by_year(env) {
   var max = env.params.my_maxyear
   var min = env.params.my_minyear
@@ -969,27 +1038,6 @@ function filter_by_year(env) {
   return env
 }
 
-function unique_y_pos(env) {
-  // Object.keys(years).sort().forEach(function(key) {
-  //   var peers = years[key]
-  //   peers.sort(score_sort)
-  //   peers.forEach(function(node) {
-  //     peers.forEach(function(peer) {
-  //       swap(node, peer)
-  //       var new_node_score = score(node)
-  //       var new_peer_score = score(peer)
-  //       if(node.score + peer.score < new_node_score + new_peer_score) {
-  //         swap(node, peer)
-  //       } else {
-  //         node.score = new_node_score
-  //         peer.score = new_peer_score
-  //       }
-  //     })
-  //   })
-  // })
-
-  return env
-}
 
 // SHAPES
 
@@ -1022,7 +1070,8 @@ function copy_edges(env) {
     var label = edge.label || "777"
     var color = str_to_color(label)
 
-    function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
+    // function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
+    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')';}
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1192,7 +1241,6 @@ function filter_actions(env) {
 
   return env
 }
-
 
 
 function make_sentences(env) {
