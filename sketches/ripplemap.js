@@ -1002,11 +1002,18 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge, node)}, 0)
 
-  function score_edge(edge) {
-    //// TODO: if other end is less than this end, don't count it...
-    return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
+  function score_edge(edge, self) {
+    //// TODO: if other end is "younger" than this end, don't count it...
+    // if(edge._in  === node && edge._out.year < node.year) return 0
+    // if(edge._out === node && edge._in. year < node.year) return 0
+
+    var dx = Math.abs(edge._in.x - edge._out.x)
+    var dy = Math.abs(edge._in.y - edge._out.y)
+
+
+    return Math.sqrt(dx*dx + dy*dy)
   }
 }
 
