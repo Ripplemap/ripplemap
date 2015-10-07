@@ -479,6 +479,11 @@ function send_data_to_server_no_questions_asked_okay() {
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
+
+  // local shunt for airplane mode
+  if(safe_mode === 'local')
+    return cb(JSON.parse(localStorage['DAGOBA::ripmapdata']))
+
   var index = +safe_mode || 1
   // var u = new URLSearchParams()
   // u.append('index', index)
