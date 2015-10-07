@@ -703,19 +703,35 @@ var current_year     = 2015  // more hacks
 var filter_sentences = true  // awkward... :(
 
 function build_pipelines() {
+  // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
   RM.pipelines[0] = pipe( mod('data', sg_compact)
-                        , get_years, data_to_graph
+                          // layout:
+                        , set_year
+                        , data_to_graph
                         , add_fakes
-                        , assign_xy , score_nodes, minimize_edge_length
-                        , filter_fakes
-                        , unique_y_pos , filter_years
-                        , add_rings, add_ring_labels
-                        , copy_edges, copy_nodes, add_node_labels, add_edge_labels
-                        , clear_it, draw_it, draw_metadata
+                        , set_coords
+                        , set_score
+                        , minimize_edge_length
+                        , remove_fakes
+                        , unique_y_pos
+                        , filter_by_year
+                          // shapes:
+                        , add_rings
+                        , add_ring_labels
+                        , copy_edges
+                        , copy_nodes
+                        , add_node_labels
+                        , add_edge_labels
+                          // rendering:
+                        , clear_it
+                        , draw_it
+                        , draw_metadata
                         )
 
-  RM.pipelines[1] = pipe( get_actions, filter_actions
-                        , make_sentences, write_sentences
+  RM.pipelines[1] = pipe( get_actions
+                        , filter_actions
+                        , make_sentences
+                        , write_sentences
                         )
 }
 
@@ -728,6 +744,418 @@ function render(n) {
   else
     RM.pipelines[n](env)
 }
+
+
+
+// COMPACTIONS
+
+function sg_compact(graph) {
+  // so... this is pretty silly i guess or something
+  // var g = Dagoba.graph(graph.V, graph.E)
+  var g = graph
+  var vertex_ids = g.v().property('_id').run()
+  var newg = Dagoba.graph()
+  var edges = []
+
+  vertex_ids.forEach(function(id) {
+    var node = g.v(id).run()[0]
+    if(node.time)
+      return false
+
+    var others = g.v(id).both().run()
+    others.forEach(function(other) {
+      if(other.time)
+        node.time = Math.min(node.time||Infinity, other.time)
+
+      var oo = g.v(other._id).both().run()
+      if(oo.length < 2)
+        return false
+
+      var edge = {_in: oo[0]._id, _out: oo[1]._id, label: other.name || ""}
+      edges.push(edge)
+      newg.addVertex(node)
+    })
+  })
+
+  edges.forEach(function(edge) {
+    newg.addEdge(edge)
+  })
+
+  return JSON.parse(Dagoba.jsonify(newg))
+}
+
+
+// LAYOUT
+
+function wrap(env, prop) {
+  return function(data) {
+    var foo = clone(env)
+    foo[prop] = data
+    return foo
+  }
+}
+
+function mod(prop, fun) {
+  return function(env) {
+    env[prop] = fun(env[prop])
+    return env
+  }
+}
+
+function set_year(env) {
+  var minyear = Infinity
+  var maxyear = 0
+  var list = env.params.years = {}
+
+  env.data.V = env.data.V.map(function(node) {
+
+    if(node.time < 1199161600000) return node // HACK: remove me!!!
+
+    var year = (new Date(node.time+100000000)).getFullYear()
+    if(year < minyear) minyear = year // effectful :(
+    if(year > maxyear) maxyear = year // effectful :(
+
+    node.year = year // mutation :(
+    push_it(list, node.year, node) //, G.vertexIndex[node._id])
+
+    return node
+  })
+
+  env.params.minyear = minyear
+  env.params.maxyear = maxyear
+
+  return env
+}
+
+function data_to_graph(env) {
+  // THINK: this is kind of weird... we could probably get more leverage by just using G itself
+  env.params.graph = Dagoba.graph(env.data.V, env.data.E)
+  env.data.V = env.params.graph.vertices
+  env.data.E = env.params.graph.edges
+  return env
+}
+
+function add_fakes(env) {
+  var years = env.params.years
+
+  Object.keys(years).forEach(function(yearstr) {
+    var year = years[yearstr]
+    var fake = {type: 'fake', year: yearstr, name: 'fake'}
+    // var copies = 3 + Math.ceil(year.length / 5)
+    var copies = 10 - year.length < 0 ? 2 : 10 - year.length
+    // var fakes = [clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake)]
+    var fakes = []
+    for(var i = 0; i < copies; i++) {
+      fakes.push(clone(fake))
+    }
+
+    Array.prototype.push.apply(year, fakes)
+    Array.prototype.push.apply(env.data.V, fakes)
+  })
+
+  return env
+}
+
+function set_coords(env) {
+  var years = env.params.years
+
+  env.data.V.forEach(function(node) {
+    if(node.x) return node
+
+    var offset = node.year - env.params.my_minyear + 1
+    var radius = offset * 50 // HACK: remove this!
+
+    var nabes = years[node.year]
+    // var gnode = G.vertexIndex[node._id]
+    var index = nabes.indexOf(node)
+    var arc = 2 * Math.PI / nabes.length
+
+    var deg = offset + index * arc
+    var cx  = radius * Math.cos(deg)
+    var cy  = radius * Math.sin(deg)
+
+    node.shape = 'circle'
+    node.x = cx
+    node.y = cy
+    node.r = 4 + Math.floor(node.name.charCodeAt(0)/20)
+
+    return node
+  })
+
+  return env
+}
+
+function set_score(env) {
+  env.data.V = env.data.V.map(function(node) { node.score = score(node); return node })
+  return env
+}
+
+function minimize_edge_length(env) {
+  var years = env.params.years
+
+  Object.keys(years).sort().forEach(function(key) {
+    var peers = years[key]
+    peers.sort(score_sort)
+    peers.forEach(function(node) {
+      peers.forEach(function(peer) {
+        swap(node, peer)
+        var new_node_score = score(node)
+        var new_peer_score = score(peer)
+        if(node.score + peer.score < new_node_score + new_peer_score) {
+          swap(node, peer)
+        } else {
+          node.score = new_node_score
+          peer.score = new_peer_score
+        }
+      })
+    })
+  })
+
+  return env
+
+  function swap(n1, n2) {
+    var x = n1.x, y = n1.y
+    n1.x = n2.x; n1.y = n2.y
+    n2.x = x;    n2.y = y
+  }
+
+  function score_sort(n1, n2) {
+    return n1.score - n2.score
+  }
+}
+
+function score(node) {
+  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge, node)}, 0)
+
+  function score_edge(edge, self) {
+    //// TODO: if other end is "older" than this end, don't count it...
+    if(edge._in  === node && edge._out.year > node.year) return 0
+    if(edge._out === node && edge._in. year > node.year) return 0
+
+    // return edge._in.x + edge._out.x
+
+    var dx = Math.abs(edge._in.x - edge._out.x)
+    var dy = Math.abs(edge._in.y - edge._out.y)
+
+    return Math.sqrt(dx*dx + dy*dy)
+  }
+}
+
+function remove_fakes(env) {
+  env.data.V = env.data.V.filter(function(node) {
+    return node.type !== 'fake'
+  })
+  return env
+}
+
+function filter_by_year(env) {
+  var max = env.params.my_maxyear
+  var min = env.params.my_minyear
+
+  // hack hack hack
+  if(current_year < max)
+    max = current_year
+
+  // TODO: do this in Dagoba so we can erase edges automatically
+  env.data.V = env.data.V.filter(function(node) {
+    // yuckyuckyuck
+    if(node.year > max || node.year < min) {
+      env.params.graph.removeVertex(node)
+      return false
+    }
+    return true
+  })
+  return env
+}
+
+function unique_y_pos(env) {
+  return env
+}
+
+// SHAPES
+
+function add_rings(env) {
+  for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
+    var color = '#ccc'
+    var radius = 50 * (i - env.params.my_minyear + 1)
+    env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
+  }
+  return env
+}
+
+function add_ring_labels(env) {
+  var labels = []
+
+  env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
+    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+function copy_edges(env) {
+  env.data.E.forEach(function(edge) {
+    if(!all_edges && !(edge._out.year === current_year || edge._in.year === current_year)) // HACK: remove this
+      return false
+
+    var label = edge.label || "777"
+    var color = str_to_color(label)
+
+    function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
+    function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
+    function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
+
+    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color, type: 'edge', label: label}
+    env.shapes.push(line)
+  })
+  return env
+}
+
+function copy_nodes(env) {
+  env.shapes = env.shapes.concat(env.data.V)
+  return env
+}
+
+function add_node_labels(env) {
+  var labels = []
+
+  env.shapes.forEach(function(shape) {
+    if(!shape.name) return false
+    var str = truncate(shape.name, 50)
+    var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+function add_edge_labels(env) {
+  if(!show_labels)
+    return env
+
+  var labels = []
+
+  env.shapes.forEach(function(shape) {
+    if(shape.type !== 'edge') return false
+    var label = {shape: 'angle_text', x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2, fill: shape.stroke, str: shape.label}
+    labels.push(label)
+  })
+
+  env.shapes = env.shapes.concat(labels)
+  return env
+}
+
+// RENDERING
+
+function clear_it(env) {
+  env.ctx.clearRect(0, 0, 1000, 1000)
+  return env
+}
+
+function draw_it(env) {
+  env.shapes.forEach(function(node) {
+    draw_shape(env.ctx, node)
+  })
+  return env
+}
+
+function draw_metadata(env) {
+  // el('minyear').textContent = 1900 + env.params.minyear
+  // el('maxyear').textContent = 1900 + current_year
+  return env
+}
+
+
+// CANVAS FUNCTIONS
+
+function draw_shape(ctx, node) {
+  var cx = 450
+  var cy = 450
+
+  if(node.shape === 'circle')
+    draw_circle(ctx, cx + node.x, cy + node.y, node.r, node.stroke, node.fill, node.line)
+
+  if(node.shape === 'line')
+    draw_line(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.stroke, node.line)
+
+  if(node.shape === 'text')
+    draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font, node.fill)
+
+  if(node.shape === 'angle_text')
+    draw_angle_text(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.str, node.font, node.fill)
+}
+
+function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI*2, false)
+  ctx.fillStyle = fill_color || '#444444'
+  ctx.fill()
+  ctx.lineWidth = line_width || 2
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.stroke()
+}
+
+function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
+  var path=new Path2D()
+  path.moveTo(fromx, fromy)
+  path.lineTo(tox, toy)
+  ctx.strokeStyle = stroke_color || '#eef'
+  ctx.lineWidth = line_width || 0.5
+  ctx.stroke(path)
+}
+
+function draw_text(ctx, x, y, str, font, fill_color) {
+  ctx.fillStyle = fill_color || '#337'
+  ctx.font = font || "14px sans-serif"
+  if(isNaN(x)) return false
+  x = x || 0
+  y = y || 0
+  ctx.fillText(str, x, y)
+}
+
+function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
+  ctx.fillStyle = fill_color || '337'
+  ctx.font = font || "14px sans-serif"
+
+  // modified from http://phrogz.net/tmp/canvas_rotated_text.html
+
+	var padding = 5
+	var dx = x2 - x1
+	var dy = y2 - y1
+	var len = Math.sqrt(dx*dx+dy*dy)
+	var avail = len - 2*padding
+  var pad = 1/2
+  var x = x1
+  var y = y1
+
+	var textToDraw = str;
+	if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
+		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1);
+		textToDraw += "…";
+	}
+
+	// Keep text upright
+	var angle = Math.atan2(dy,dx);
+	if (angle < -Math.PI/2 || angle > Math.PI/2){
+		x = x2
+    y = y2
+		dx *= -1;
+		dy *= -1;
+		angle -= Math.PI;
+	}
+
+  ctx.save()
+	ctx.textAlign = 'center';
+	ctx.translate(x+dx*pad, y+dy*pad)
+	ctx.rotate(angle);
+	ctx.fillText(textToDraw,0,-3);
+	ctx.restore();
+}
+
+
 
 // SENTENCE STRUCTURES
 
@@ -830,401 +1258,6 @@ function write_sentences(env) {
   return env
 }
 
-
-
-// COMPACTIONS
-
-function sg_compact(graph) {
-  // so... this is pretty silly i guess or something
-  // var g = Dagoba.graph(graph.V, graph.E)
-  var g = graph
-  var vertex_ids = g.v().property('_id').run()
-  var newg = Dagoba.graph()
-  var edges = []
-
-  vertex_ids.forEach(function(id) {
-    var node = g.v(id).run()[0]
-    if(node.time)
-      return false
-
-    var others = g.v(id).both().run()
-    others.forEach(function(other) {
-      if(other.time)
-        node.time = Math.min(node.time||Infinity, other.time)
-
-      var oo = g.v(other._id).both().run()
-      if(oo.length < 2)
-        return false
-
-      var edge = {_in: oo[0]._id, _out: oo[1]._id, label: other.name || ""}
-      edges.push(edge)
-      newg.addVertex(node)
-    })
-  })
-
-  edges.forEach(function(edge) {
-    newg.addEdge(edge)
-  })
-
-  return JSON.parse(Dagoba.jsonify(newg))
-}
-
-
-// RENDER TOOLS
-
-function wrap(env, prop) {
-  return function(data) {
-    var foo = clone(env)
-    foo[prop] = data
-    return foo
-  }
-}
-
-function mod(prop, fun) {
-  return function(env) {
-    env[prop] = fun(env[prop])
-    return env
-  }
-}
-
-function get_years(env) {
-  var minyear = Infinity
-  var maxyear = 0
-  var list = env.params.years = {}
-
-  env.data.V = env.data.V.map(function(node) {
-
-    if(node.time < 1199161600000) return node // HACK: remove me!!!
-
-    var year = (new Date(node.time+100000000)).getFullYear()
-    if(year < minyear) minyear = year // effectful :(
-    if(year > maxyear) maxyear = year // effectful :(
-
-    node.year = year // mutation :(
-    push_it(list, node.year, node) //, G.vertexIndex[node._id])
-
-    return node
-  })
-
-  env.params.minyear = minyear
-  env.params.maxyear = maxyear
-
-  return env
-}
-
-function data_to_graph(env) {
-  // THINK: this is kind of weird... we could probably get more leverage by just using G itself
-  env.params.graph = Dagoba.graph(env.data.V, env.data.E)
-  env.data.V = env.params.graph.vertices
-  env.data.E = env.params.graph.edges
-  return env
-}
-
-function add_fakes(env) {
-  var years = env.params.years
-  var fakes_per_year = 5
-
-  Object.keys(years).forEach(function(yearstr) {
-    var year = years[yearstr]
-    var fake = {type: 'fake', year: yearstr, name: 'fake'}
-    var fakes = [clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake)]
-    Array.prototype.push.apply(year, fakes)
-    Array.prototype.push.apply(env.data.V, fakes)
-  })
-
-  return env
-}
-
-function assign_xy(env) {
-  var years = env.params.years
-
-  env.data.V.forEach(function(node) {
-    if(node.x) return node
-
-    var offset = node.year - env.params.my_minyear + 1
-    var radius = offset * 50 // HACK: remove this!
-
-    var nabes = years[node.year]
-    // var gnode = G.vertexIndex[node._id]
-    var index = nabes.indexOf(node)
-    var arc = 2 * Math.PI / nabes.length
-
-    var deg = offset + index * arc
-    var cx  = radius * Math.cos(deg)
-    var cy  = radius * Math.sin(deg)
-
-    node.shape = 'circle'
-    node.x = cx
-    node.y = cy
-    node.r = 4 + Math.floor(node.name.charCodeAt(0)/20)
-
-    return node
-  })
-
-  return env
-}
-
-function score_nodes(env) {
-  env.data.V = env.data.V.map(function(node) { node.score = score(node); return node })
-  return env
-}
-
-function minimize_edge_length(env) {
-  var years = env.params.years
-
-  Object.keys(years).sort().forEach(function(key) {
-    var peers = years[key]
-    peers.sort(score_sort)
-    peers.forEach(function(node) {
-      peers.forEach(function(peer) {
-        swap(node, peer)
-        if(node.score + peer.score < score(node) + score(peer)) {
-          swap(node, peer)
-        } else {
-          node.score = score(node)
-          peer.score = score(peer)
-        }
-      })
-    })
-  })
-
-  return env
-
-  function swap(n1, n2) {
-    var x = n1.x, y = n1.y
-    n1.x = n2.x; n1.y = n2.y
-    n2.x = x;    n2.y = y
-  }
-
-  function score_sort(n1, n2) {
-    return n1.score - n2.score
-  }
-}
-
-function score(node) {
-  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge, node)}, 0)
-
-  function score_edge(edge, self) {
-    //// TODO: if other end is "younger" than this end, don't count it...
-    // if(edge._in  === node && edge._out.year < node.year) return 0
-    // if(edge._out === node && edge._in. year < node.year) return 0
-
-    var dx = Math.abs(edge._in.x - edge._out.x)
-    var dy = Math.abs(edge._in.y - edge._out.y)
-
-
-    return Math.sqrt(dx*dx + dy*dy)
-  }
-}
-
-function filter_fakes(env) {
-  env.data.V = env.data.V.filter(function(node) {
-    return node.type !== 'fake'
-  })
-  return env
-}
-
-function filter_years(env) {
-  var max = env.params.my_maxyear
-  var min = env.params.my_minyear
-
-  // hack hack hack
-  if(current_year < max)
-    max = current_year
-
-  // TODO: do this in Dagoba so we can erase edges automatically
-  env.data.V = env.data.V.filter(function(node) {
-    // yuckyuckyuck
-    if(node.year > max || node.year < min) {
-      env.params.graph.removeVertex(node)
-      return false
-    }
-    return true
-  })
-  return env
-}
-
-function unique_y_pos(env) {
-  return env
-}
-
-function add_rings(env) {
-  for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
-    var color = '#ccc'
-    var radius = 50 * (i - env.params.my_minyear + 1)
-    env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
-  }
-  return env
-}
-
-function add_ring_labels(env) {
-  var labels = []
-
-  env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
-    labels.push(label)
-  })
-
-  env.shapes = env.shapes.concat(labels)
-  return env
-}
-
-function copy_edges(env) {
-  env.data.E.forEach(function(edge) {
-    if(!all_edges && !(edge._out.year === current_year || edge._in.year === current_year)) // HACK: remove this
-      return false
-
-    var label = edge.label || "777"
-    var color = str_to_color(label)
-
-    function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
-    function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
-    function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
-
-    var line = {shape: 'line', x1: edge._in.x, y1: edge._in.y, x2: edge._out.x, y2: edge._out.y, stroke: color, type: 'edge', label: label}
-    env.shapes.push(line)
-  })
-  return env
-}
-
-function copy_nodes(env) {
-  env.shapes = env.shapes.concat(env.data.V)
-  return env
-}
-
-function add_node_labels(env) {
-  var labels = []
-
-  env.shapes.forEach(function(shape) {
-    if(!shape.name) return false
-    var str = truncate(shape.name, 50)
-    var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
-    labels.push(label)
-  })
-
-  env.shapes = env.shapes.concat(labels)
-  return env
-}
-
-function add_edge_labels(env) {
-  if(!show_labels)
-    return env
-
-  var labels = []
-
-  env.shapes.forEach(function(shape) {
-    if(shape.type !== 'edge') return false
-    var label = {shape: 'angle_text', x1: shape.x1, y1: shape.y1, x2: shape.x2, y2: shape.y2, fill: shape.stroke, str: shape.label}
-    labels.push(label)
-  })
-
-  env.shapes = env.shapes.concat(labels)
-  return env
-}
-
-function clear_it(env) {
-  env.ctx.clearRect(0, 0, 1000, 1000)
-  return env
-}
-
-
-function draw_it(env) {
-  env.shapes.forEach(function(node) {
-    draw_shape(env.ctx, node)
-  })
-  return env
-}
-
-function draw_metadata(env) {
-  // el('minyear').textContent = 1900 + env.params.minyear
-  // el('maxyear').textContent = 1900 + current_year
-  return env
-}
-
-
-function draw_shape(ctx, node) {
-  var cx = 450
-  var cy = 450
-
-  if(node.shape === 'circle')
-    draw_circle(ctx, cx + node.x, cy + node.y, node.r, node.stroke, node.fill, node.line)
-
-  if(node.shape === 'line')
-    draw_line(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.stroke, node.line)
-
-  if(node.shape === 'text')
-    draw_text(ctx, cx + node.x, cy + node.y, node.str, node.font, node.fill)
-
-  if(node.shape === 'angle_text')
-    draw_angle_text(ctx, cx + node.x1, cy + node.y1, cx + node.x2, cy + node.y2, node.str, node.font, node.fill)
-}
-
-function draw_circle(ctx, x, y, radius, stroke_color, fill_color, line_width) {
-  ctx.beginPath()
-  ctx.arc(x, y, radius, 0, Math.PI*2, false)
-  ctx.fillStyle = fill_color || '#444444'
-  ctx.fill()
-  ctx.lineWidth = line_width || 2
-  ctx.strokeStyle = stroke_color || '#eef'
-  ctx.stroke()
-}
-
-function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
-  var path=new Path2D()
-  path.moveTo(fromx, fromy)
-  path.lineTo(tox, toy)
-  ctx.strokeStyle = stroke_color || '#eef'
-  ctx.lineWidth = line_width || 0.5
-  ctx.stroke(path)
-}
-
-function draw_text(ctx, x, y, str, font, fill_color) {
-  ctx.fillStyle = fill_color || '#337'
-  ctx.font = font || "14px sans-serif"
-  if(isNaN(x)) return false
-  x = x || 0
-  y = y || 0
-  ctx.fillText(str, x, y)
-}
-
-function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
-  ctx.fillStyle = fill_color || '337'
-  ctx.font = font || "14px sans-serif"
-
-  // modified from http://phrogz.net/tmp/canvas_rotated_text.html
-
-	var padding = 5
-	var dx = x2 - x1
-	var dy = y2 - y1
-	var len = Math.sqrt(dx*dx+dy*dy)
-	var avail = len - 2*padding
-  var pad = 1/2
-  var x = x1
-  var y = y1
-
-	var textToDraw = str;
-	if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
-		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1);
-		textToDraw += "…";
-	}
-
-	// Keep text upright
-	var angle = Math.atan2(dy,dx);
-	if (angle < -Math.PI/2 || angle > Math.PI/2){
-		x = x2
-    y = y2
-		dx *= -1;
-		dy *= -1;
-		angle -= Math.PI;
-	}
-
-  ctx.save()
-	ctx.textAlign = 'center';
-	ctx.translate(x+dx*pad, y+dy*pad)
-	ctx.rotate(angle);
-	ctx.fillText(textToDraw,0,-3);
-	ctx.restore();
-}
 
 
 
