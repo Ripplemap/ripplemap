@@ -840,7 +840,7 @@ function add_fakes(env) {
 
   Object.keys(years).forEach(function(yearstr) {
     var year = years[yearstr]
-    var fake = {type: 'fake', year: yearstr, name: 'fake'}
+    var fake = {type: 'fake', year: yearstr, name: 'fake', _in: [], _out: []}
     // var copies = 3 + Math.ceil(year.length / 5)
     var copies = 10 - year.length < 0 ? 2 : 10 - year.length
     // var fakes = [clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake)]
@@ -873,11 +873,12 @@ function set_coords(env) {
     var deg = offset + index * arc
     var cx  = radius * Math.cos(deg)
     var cy  = radius * Math.sin(deg)
+    var edge_count = node._in.length + node._out.length
 
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 4 + Math.floor(node.name.charCodeAt(0)/20)
+    node.r = 4 + Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -969,6 +970,24 @@ function filter_by_year(env) {
 }
 
 function unique_y_pos(env) {
+  // Object.keys(years).sort().forEach(function(key) {
+  //   var peers = years[key]
+  //   peers.sort(score_sort)
+  //   peers.forEach(function(node) {
+  //     peers.forEach(function(peer) {
+  //       swap(node, peer)
+  //       var new_node_score = score(node)
+  //       var new_peer_score = score(peer)
+  //       if(node.score + peer.score < new_node_score + new_peer_score) {
+  //         swap(node, peer)
+  //       } else {
+  //         node.score = new_node_score
+  //         peer.score = new_peer_score
+  //       }
+  //     })
+  //   })
+  // })
+
   return env
 }
 
