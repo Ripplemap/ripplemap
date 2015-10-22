@@ -963,7 +963,7 @@ function remove_fakes(env) {
 }
 
 function unique_y_pos(env) {
-  var threshold = 12
+  var threshold = 6
   // var node_radius = 5
   var arc = Math.PI / 100
   var years = env.params.years
@@ -988,7 +988,7 @@ function unique_y_pos(env) {
           break
       }
 
-      console.log(da, closest, coords.y, Math.abs(closest - coords.y))
+      // console.log(da, closest, coords.y, Math.abs(closest - coords.y))
 
       node.x = coords.x
       node.y = coords.y
@@ -999,7 +999,7 @@ function unique_y_pos(env) {
     })
   })
 
-  gys = ys
+  gys = ys // TODO: remove this smelly global that was put here for debugging
   return env
 
   function modify_coords(node, da) {
@@ -1084,7 +1084,7 @@ function copy_edges(env) {
     var color = str_to_color(label)
 
     // function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
-    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')';}
+    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')' }
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1095,7 +1095,18 @@ function copy_edges(env) {
 }
 
 function copy_nodes(env) {
-  env.shapes = env.shapes.concat(env.data.V)
+  env.shapes = env.shapes.concat(env.data.V.map(function(node) {
+    var this_year = all_edges || node.year === current_year
+    var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+    var shape = { shape: 'circle'
+                , x: node.x
+                , y: node.y
+                , r: node.r
+                , name: node.name
+                , fill: color
+                }
+    return shape
+  }))
   return env
 }
 
