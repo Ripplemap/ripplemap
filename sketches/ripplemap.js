@@ -479,13 +479,23 @@ function send_data_to_server_no_questions_asked_okay() {
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
-  fetch('http://ripplemap.io:8888', {
+
+  // local shunt for airplane mode
+  if(safe_mode === 'local')
+    return cb(JSON.parse(localStorage['DAGOBA::ripmapdata']))
+
+  var index = +safe_mode || 1
+  // var u = new URLSearchParams()
+  // u.append('index', index)
+  var u = "?index=" + index
+
+  fetch('http://ripplemap.io:8888' + u, {
 	  method: 'get'
   }).then(function(response) {
     return response.json()
   }).then(function(data) {
-    if(data[1])
-      cb(data[1])
+    if(data[index])
+      cb(data[index])
   }).catch(function(err) {
 	  console.log('lalalal', err)
   })
@@ -703,18 +713,36 @@ var current_year     = 2015  // more hacks
 var filter_sentences = true  // awkward... :(
 
 function build_pipelines() {
+  // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
   RM.pipelines[0] = pipe( mod('data', sg_compact)
-                     , get_years, data_to_graph, assign_xy
-                     , score_nodes, minimize_edge_length, unique_y_pos
-                     , filter_years
-                     , add_rings, add_ring_labels
-                     , copy_edges, copy_nodes, add_node_labels, add_edge_labels
-                     , clear_it, draw_it, draw_metadata
-                     )
+                          // layout:
+                        , set_year
+                        , data_to_graph
+                        , add_fakes
+                        , set_coords
+                        , set_score
+                        , minimize_edge_length
+                        , remove_fakes
+                        , unique_y_pos
+                        , filter_by_year
+                          // shapes:
+                        , add_rings
+                        , add_ring_labels
+                        , copy_edges
+                        , copy_nodes
+                        , add_node_labels
+                        , add_edge_labels
+                          // rendering:
+                        , clear_it
+                        , draw_it
+                        , draw_metadata
+                        )
 
-  RM.pipelines[1] = pipe( get_actions, filter_actions
-                     , make_sentences, write_sentences
-                     )
+  RM.pipelines[1] = pipe( get_actions
+                        , filter_actions
+                        , make_sentences
+                        , write_sentences
+                        )
 }
 
 function render(n) {
@@ -725,107 +753,6 @@ function render(n) {
     RM.pipelines.forEach(function(pipeline) { pipeline(env) })
   else
     RM.pipelines[n](env)
-}
-
-// SENTENCE STRUCTURES
-
-function get_actions(env) {
-  var actions = RM.G.v({cat: 'action'}).run() // FIXME: use env.data, not G
-  env.params.actions = actions
-  return env
-}
-
-function filter_actions(env) {
-  if(!filter_sentences) return env
-  env.params.actions = env.params.actions.filter(function(action) {
-    return new Date(action.time+100000000).getFullYear() === current_year
-  })
-
-  return env
-}
-
-
-
-function make_sentences(env) {
-  var sentences = env.params.actions.map(construct).filter(Boolean)
-  env.params.sentences = sentences
-  return env
-}
-
-function construct(action) {
-  var list = []
-  var edges = action._out.concat(action._in)
-  if(!edges[1]) return false
-  if(edges[0].label === 'the')
-    edges = [edges[1], edges[0]]
-  function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
-  list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
-  return list
-}
-
-function write_sentences(env) {
-  RM.el_sentences.innerHTML = ''
-  env.params.sentences.forEach(function(list) {
-
-    var sentence = '<p>'
-    list.forEach(function(thing) {
-      var data
-      var word = thing.name || thing.label
-      var cat = thing.cat
-      var type = cat ? thing.type : 'edge'
-
-      var classes = [type]
-      if(cat) {
-        classes.push(cat)
-        classes.push('node-' + thing._id)
-      }
-      else {
-        classes.push('node-' +  thing._in._id + '-' + thing._out._id)
-      }
-
-      if(type !== 'edge')
-        data = {id: thing._id||''}
-      else
-        data = {id1: thing._in._id, id2: thing._out._id}
-
-      if(!admin_mode)
-        sentence += template(classes, data, word)
-      else
-        sentence += admin_template(thing, type, cat, word)
-    })
-    sentence += '.</p>'
-
-    RM.el_sentences.innerHTML += sentence
-  })
-
-  function template(classes, data, text) {
-    classes.unshift('word')
-    var classtext = classes.join(' ')
-
-    var datatext = Object.keys(data).map(function(key) {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
-
-    return ' <span class="' + classtext + '"'
-         + datatext
-         + ' contentEditable="true">'
-         + text + '</span>'
-  }
-
-  function admin_template(thing, type, cat, text) {
-    var button = ''
-    var notes = ''
-
-    if(cat === 'action') {
-      button = '<button class="delete" data-id="'+thing._id+'">delete just this sentence</button>'
-    }
-    else if(type !== 'edge') {
-      notes = ' (' + type + ')'
-      button = '<button class="delete" data-id="'+thing._id+'">delete this thing and all its sentences entirely</button>'
-    }
-
-    return ' ' + text + notes + button
-  }
-
-  return env
 }
 
 
@@ -868,7 +795,7 @@ function sg_compact(graph) {
 }
 
 
-// RENDER TOOLS
+// LAYOUT
 
 function wrap(env, prop) {
   return function(data) {
@@ -885,7 +812,7 @@ function mod(prop, fun) {
   }
 }
 
-function get_years(env) {
+function set_year(env) {
   var minyear = Infinity
   var maxyear = 0
   var list = env.params.years = {}
@@ -918,9 +845,31 @@ function data_to_graph(env) {
   return env
 }
 
-function assign_xy(env) {
+function add_fakes(env) {
   var years = env.params.years
-  env.data.V.map(function(node) {
+
+  Object.keys(years).forEach(function(yearstr) {
+    var year = years[yearstr]
+    var fake = {type: 'fake', year: yearstr, name: 'fake', _in: [], _out: []}
+    // var copies = 3 + Math.ceil(year.length / 5)
+    var copies = 10 - year.length < 0 ? 2 : 10 - year.length
+    // var fakes = [clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake), clone(fake)]
+    var fakes = []
+    for(var i = 0; i < copies; i++) {
+      fakes.push(clone(fake))
+    }
+
+    Array.prototype.push.apply(year, fakes)
+    Array.prototype.push.apply(env.data.V, fakes)
+  })
+
+  return env
+}
+
+function set_coords(env) {
+  var years = env.params.years
+
+  env.data.V.forEach(function(node) {
     if(node.x) return node
 
     var offset = node.year - env.params.my_minyear + 1
@@ -928,17 +877,21 @@ function assign_xy(env) {
 
     var nabes = years[node.year]
     // var gnode = G.vertexIndex[node._id]
+
+    if(!nabes) return false
+
     var index = nabes.indexOf(node)
     var arc = 2 * Math.PI / nabes.length
 
     var deg = offset + index * arc
     var cx  = radius * Math.cos(deg)
     var cy  = radius * Math.sin(deg)
+    var edge_count = node._in.length + node._out.length
 
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 4 + Math.floor(node.name.charCodeAt(0)/20)
+    node.r = 4 + Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -946,7 +899,7 @@ function assign_xy(env) {
   return env
 }
 
-function score_nodes(env) {
+function set_score(env) {
   env.data.V = env.data.V.map(function(node) { node.score = score(node); return node })
   return env
 }
@@ -960,11 +913,13 @@ function minimize_edge_length(env) {
     peers.forEach(function(node) {
       peers.forEach(function(peer) {
         swap(node, peer)
-        if(node.score + peer.score < score(node) + score(peer)) {
+        var new_node_score = score(node)
+        var new_peer_score = score(peer)
+        if(node.score + peer.score < new_node_score + new_peer_score) {
           swap(node, peer)
         } else {
-          node.score = score(node)
-          peer.score = score(peer)
+          node.score = new_node_score
+          peer.score = new_peer_score
         }
       })
     })
@@ -984,15 +939,99 @@ function minimize_edge_length(env) {
 }
 
 function score(node) {
-  return node._in. reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
-       + node._out.reduce(function(acc, edge) {return acc + score_edge(edge)}, 0)
+  return [].concat(node._in||[], node._out||[]).reduce(function(acc, edge) {return acc + score_edge(edge, node)}, 0)
 
-  function score_edge(edge) {
-    return Math.abs(edge._in.x - edge._out.x) + Math.abs(edge._in.y - edge._out.y)
+  function score_edge(edge, self) {
+    //// TODO: if other end is "older" than this end, don't count it...
+    if(edge._in  === node && edge._out.year > node.year) return 0
+    if(edge._out === node && edge._in. year > node.year) return 0
+
+    // return edge._in.x + edge._out.x
+
+    var dx = Math.abs(edge._in.x - edge._out.x)
+    var dy = Math.abs(edge._in.y - edge._out.y)
+
+    return Math.sqrt(dx*dx + dy*dy)
   }
 }
 
-function filter_years(env) {
+function remove_fakes(env) {
+  env.data.V = env.data.V.filter(function(node) {
+    return node.type !== 'fake'
+  })
+  return env
+}
+
+function unique_y_pos(env) {
+  var threshold = 6
+  // var node_radius = 5
+  var arc = Math.PI / 100
+  var years = env.params.years
+  var ys = []
+
+  Object.keys(years).sort().forEach(function(key) {
+    var peers = years[key]
+    peers.forEach(function(node) {
+      var coords, closest
+
+      if(node.type === 'fake') // le sigh
+        return
+
+      // A) do a binary search on an array of midpoints to find the closest one
+      // B) if it's within threshold walk around the circle in both directions until you find an opening
+      // C) if you reach the antipode give up
+
+      for(var da = arc; da < Math.PI; da = -1*(da + arc*(da/Math.abs(da)))) {
+        coords = modify_coords(node, da)
+        closest = find_closest(coords.y, ys)
+        if(!closest || Math.abs(closest - coords.y) > threshold)
+          break
+      }
+
+      // console.log(da, closest, coords.y, Math.abs(closest - coords.y))
+
+      node.x = coords.x
+      node.y = coords.y
+      ys.push(coords.y)
+
+      ys.sort(function(a,b) {return a - b}) // OPT: just insert coords.y in place
+
+    })
+  })
+
+  gys = ys // TODO: remove this smelly global that was put here for debugging
+  return env
+
+  function modify_coords(node, da) {
+    return { x: node.x * Math.cos(da) - node.y * Math.sin(da)
+           , y: node.x * Math.sin(da) + node.y * Math.cos(da)
+           }
+  }
+
+  function find_closest(n, ns) { // binary search
+    var closest
+    var index = Math.floor(ns.length / 2)
+    var item = ns[index]
+
+    if(ns.length < 5) {
+      for(var i = 0; i < ns.length; i++) {
+        if(closest === undefined || Math.abs(ns[i] - n) < Math.abs(closest - n))
+          closest = ns[i]
+      }
+      return closest
+    }
+
+    if(item === n)
+      return item
+
+    if(item > n)
+      return find_closest(n, ns.slice(0, index))
+
+    return find_closest(n, ns.slice(index + 1))
+  }
+}
+
+function filter_by_year(env) {
   var max = env.params.my_maxyear
   var min = env.params.my_minyear
 
@@ -1012,9 +1051,8 @@ function filter_years(env) {
   return env
 }
 
-function unique_y_pos(env) {
-  return env
-}
+
+// SHAPES
 
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
@@ -1045,7 +1083,8 @@ function copy_edges(env) {
     var label = edge.label || "777"
     var color = str_to_color(label)
 
-    function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
+    // function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
+    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')' }
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1056,7 +1095,18 @@ function copy_edges(env) {
 }
 
 function copy_nodes(env) {
-  env.shapes = env.shapes.concat(env.data.V)
+  env.shapes = env.shapes.concat(env.data.V.map(function(node) {
+    var this_year = all_edges || node.year === current_year
+    var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+    var shape = { shape: 'circle'
+                , x: node.x
+                , y: node.y
+                , r: node.r
+                , name: node.name
+                , fill: color
+                }
+    return shape
+  }))
   return env
 }
 
@@ -1090,11 +1140,12 @@ function add_edge_labels(env) {
   return env
 }
 
+// RENDERING
+
 function clear_it(env) {
   env.ctx.clearRect(0, 0, 1000, 1000)
   return env
 }
-
 
 function draw_it(env) {
   env.shapes.forEach(function(node) {
@@ -1109,6 +1160,8 @@ function draw_metadata(env) {
   return env
 }
 
+
+// CANVAS FUNCTIONS
 
 function draw_shape(ctx, node) {
   var cx = 450
@@ -1193,6 +1246,109 @@ function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
 	ctx.fillText(textToDraw,0,-3);
 	ctx.restore();
 }
+
+
+
+// SENTENCE STRUCTURES
+
+function get_actions(env) {
+  var actions = RM.G.v({cat: 'action'}).run() // FIXME: use env.data, not G
+  env.params.actions = actions
+  return env
+}
+
+function filter_actions(env) {
+  if(!filter_sentences) return env
+  env.params.actions = env.params.actions.filter(function(action) {
+    return new Date(action.time+100000000).getFullYear() === current_year
+  })
+
+  return env
+}
+
+
+function make_sentences(env) {
+  var sentences = env.params.actions.map(construct).filter(Boolean)
+  env.params.sentences = sentences
+  return env
+}
+
+function construct(action) {
+  var list = []
+  var edges = action._out.concat(action._in)
+  if(!edges[1]) return false
+  if(edges[0].label === 'the')
+    edges = [edges[1], edges[0]]
+  function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
+  list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
+  return list
+}
+
+function write_sentences(env) {
+  RM.el_sentences.innerHTML = ''
+  env.params.sentences.forEach(function(list) {
+
+    var sentence = '<p>'
+    list.forEach(function(thing) {
+      var data
+      var word = thing.name || thing.label
+      var cat = thing.cat
+      var type = cat ? thing.type : 'edge'
+
+      var classes = [type]
+      if(cat) {
+        classes.push(cat)
+        classes.push('node-' + thing._id)
+      }
+      else {
+        classes.push('node-' +  thing._in._id + '-' + thing._out._id)
+      }
+
+      if(type !== 'edge')
+        data = {id: thing._id||''}
+      else
+        data = {id1: thing._in._id, id2: thing._out._id}
+
+      if(!admin_mode)
+        sentence += template(classes, data, word)
+      else
+        sentence += admin_template(thing, type, cat, word)
+    })
+    sentence += '.</p>'
+
+    RM.el_sentences.innerHTML += sentence
+  })
+
+  function template(classes, data, text) {
+    classes.unshift('word')
+    var classtext = classes.join(' ')
+
+    var datatext = Object.keys(data).map(function(key) {return 'data-' + key + '="' + data[key] + '"'}).join(' ')
+
+    return ' <span class="' + classtext + '"'
+         + datatext
+         + ' contentEditable="true">'
+         + text + '</span>'
+  }
+
+  function admin_template(thing, type, cat, text) {
+    var button = ''
+    var notes = ''
+
+    if(cat === 'action') {
+      button = '<button class="delete" data-id="'+thing._id+'">delete just this sentence</button>'
+    }
+    else if(type !== 'edge') {
+      notes = ' (' + type + ')'
+      button = '<button class="delete" data-id="'+thing._id+'">delete this thing and all its sentences entirely</button>'
+    }
+
+    return ' ' + text + notes + button
+  }
+
+  return env
+}
+
 
 
 
@@ -1378,10 +1534,6 @@ function fulfill_desire(conversation, value) {
   // TODO: allow multi-sentence conversations
 
 
-  // FIXME: alsdkfjalskdfjalsdkfj
-  var actiondate = '2015-10-10'
-
-
   if(!sentence.slots.length) {
     var subject, verb, object, date
     sentence.filled.forEach(function(slot) {
@@ -1488,8 +1640,12 @@ function add_data(cb) {
 
 
 function init() {
-  if(location.host === "127.0.0.1")
-    safe_mode = true
+  if(location.host === "127.0.0.1") {
+    if(location.hash)
+      safe_mode = location.hash.slice(1)
+    else
+      safe_mode = true
+  }
 
   RM.G = Dagoba.graph()
 
