@@ -2,23 +2,23 @@
 
 // HELPERS
 
-function noop() {}
+function noop()     {}
 
-function not(fun) {return function() {return !fun.apply(null, arguments)}}
+function prop (k)   {return function(o) {return o[k]}}
 
-function eq(attr, val) {return function(obj) {return obj[attr] === val}}
+function clone(o)   {return JSON.parse(JSON.stringify(o))}
 
-function unique(v, k, list) {return list.indexOf(v) === k}
+function eq(k, v)   {return function(o) {return o[k] === v}}
 
-function strip(attr) {return function(obj) { delete obj[attr]; return obj }}
+function strip(k)   {return function(o) { delete o[k]; return o }}
 
-function comp(f, g) {return function() { var args = [].slice.call(arguments); return f(g.apply(null, args)) }}
+function not(f)     {return function()  {return !f.apply(null, arguments)}}
 
-function prop (attr) {return function(obj) {return obj[attr]}}
+function comp(f, g) {return function()  { var args = [].slice.call(arguments); return f(g.apply(null, args)) }}
+
+function unique(v, k, l) {return l.indexOf(v) === k}
 
 function cp_prop(from_attr, to_attr) {return function(obj) {obj[to_attr] = obj[from_attr]; return obj}}
-
-function clone(obj) {return JSON.parse(JSON.stringify(obj))}
 
 function truncate(str, to) {
   if(!to || str.length <= to) return str
@@ -736,12 +736,19 @@ function build_pipelines() {
                         , clear_it
                         , draw_it
                         , draw_metadata
+                        , leak_env_yuck_yuck
                         )
 
   RM.pipelines[1] = pipe( get_actions
                         , filter_actions
                         , make_sentences
                         , write_sentences
+                        )
+
+  RM.pipelines[2] = pipe( get_yucky_global_env
+                        , labels_to_chars
+                        , chars_to_string
+                        , render_string
                         )
 }
 
@@ -755,7 +762,74 @@ function render(n) {
     RM.pipelines[n](env)
 }
 
+// ASCII JUNK
 
+global_env = {} // TODO: remove this
+
+function leak_env_yuck_yuck(env) {
+  global_env = env
+  return env
+}
+
+function get_yucky_global_env(env) {
+  env = global_env
+  env.chars = []
+  return env
+}
+
+function labels_to_chars(env) {
+  env.shapes.forEach(function(shape) {
+    if(shape.shape !== 'text')
+      return false
+
+    var str = "" + shape.str
+
+    str.split('').forEach(function(char, index) {
+      var chardesc = {char: char, x: shape.x + index, y: shape.y, fill: shape.fill}
+      env.chars.push(chardesc)
+    })
+  })
+
+
+  // var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
+
+  return env
+}
+
+function chars_to_string(env) {
+  var string = ''
+  var width = 1000
+  var height = 1000
+  var chars = env.chars.sort(function(a, b) {
+    return width*(a.y - b.y) + a.x-b.x
+  })
+
+  chars.forEach(function(chardesc) {
+    var index = chardesc.y*width + chardesc.x
+    string = add_whitespace(string, index - string.length)
+    string += chardesc.char
+  })
+
+  env.params.string = string
+  return env
+
+  function add_whitespace(str, amount) {
+    if(!amount) return str
+    var w = ""
+    str += ""
+
+    // OPT: build up to Math.log(amount)+1, then substr to amount
+    for(var i = 0; i < amount; i++)
+      w += " " // w
+
+    return str + w
+  }
+}
+
+function render_string(env) {
+  el('ascii').textContent = env.params.string
+  return env
+}
 
 // COMPACTIONS
 
