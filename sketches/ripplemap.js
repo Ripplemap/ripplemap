@@ -63,7 +63,7 @@ function pipe() {
   return magic_pipe
 }
 
-function err(mess) {
+function error(mess) {
   console.log(arguments, mess)
 }
 
@@ -108,11 +108,11 @@ function get_node(catstr, typestr, props) {
 
   var cat = RM.cats[catstr]
   if(!cat)
-    return err('that is not a valid cat', catstr)
+    return error('that is not a valid cat', catstr)
 
   var type = cat[typestr]
   if(!type)
-    return err('that is not a valid ' + catstr + ' type', typestr)
+    return error('that is not a valid ' + catstr + ' type', typestr)
 
   // TODO: check props again the cattype's property list
 
@@ -129,11 +129,11 @@ function add_alias(catstr, typestr, alias) {
   // add an alias to anything
   var cat = RM.cats[catstr]
   if(!cat)
-    return err('Invalid cat', catstr)
+    return error('Invalid cat', catstr)
 
   var type = cat[typestr]
   if(!type)
-    return err('That is not a valid thing type', typestr)
+    return error('That is not a valid thing type', typestr)
 
   // add alias
   type.aliases.push(alias)
@@ -199,7 +199,7 @@ function new_thing_type(type, properties) {
   // does this type exist already?
   var cattype = RM.cats.thing[type]
   if(cattype)
-    return err('That thing type already exists', type)
+    return error('That thing type already exists', type)
 
   // manually create
   // THINK: should we copy properties here?
@@ -234,7 +234,7 @@ function new_action_type(type, properties) {
   // does this type exist already?
   var cattype = RM.cats.action[type]
   if(cattype)
-    return err('That action type already exists', type)
+    return error('That action type already exists', type)
 
   // manually create
   // THINK: should we copy properties here?
@@ -269,7 +269,7 @@ function new_effect_type(type, properties) {
   // does this type exist already?
   var cattype = RM.cats.effect[type]
   if(cattype)
-    return err('That effect type already exists', type)
+    return error('That effect type already exists', type)
 
   // manually create
   // THINK: should we copy properties here?
@@ -308,7 +308,7 @@ function new_happening_type(type, properties) {
   // does this type exist already?
   var cattype = RM.cats.happening[type]
   if(cattype)
-    return err('That happening type already exists', type)
+    return error('That happening type already exists', type)
 
   // manually create
   // THINK: should we copy properties here?
@@ -454,18 +454,18 @@ function debounce(func, wait, immediate) {
   // N milliseconds. If `immediate` is passed, trigger the function on the
   // leading edge, instead of the trailing.
 
-	var timeout
-	return function() {
-		var context = this, args = arguments
-		var later = function() {
-			    timeout = null
-			    if (!immediate) func.apply(context, args)
-		    }
-		var callNow = immediate && !timeout
-		clearTimeout(timeout)
-		timeout = setTimeout(later, wait)
-		if (callNow) func.apply(context, args)
-	}
+  var timeout
+  return function() {
+    var context = this, args = arguments
+    var later = function() {
+          timeout = null
+          if (!immediate) func.apply(context, args)
+        }
+    var callNow = immediate && !timeout
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+    if (callNow) func.apply(context, args)
+  }
 }
 
 function send_data_to_server_no_questions_asked_okay() {
@@ -475,7 +475,7 @@ function send_data_to_server_no_questions_asked_okay() {
   var json = Dagoba.jsonify(RM.G)
   fetch('http://ripplemap.io:8888', { method: 'post'
                                     , body: json
-  });
+  })
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
@@ -484,20 +484,25 @@ function get_data_from_server_no_questions_asked_okay(cb) {
   if(safe_mode === 'local')
     return cb(JSON.parse(localStorage['DAGOBA::ripmapdata']))
 
+  var url = 'http://ripplemap.io:8888'
+
+  if(safe_mode === 'daring')
+    url = 'http://localhost:8888/daring'
+
   var index = +safe_mode || 1
   // var u = new URLSearchParams()
   // u.append('index', index)
   var u = "?index=" + index
 
-  fetch('http://ripplemap.io:8888' + u, {
-	  method: 'get'
+  fetch(url + u, {
+    method: 'get'
   }).then(function(response) {
     return response.json()
   }).then(function(data) {
     if(data[index])
       cb(data[index])
   }).catch(function(err) {
-	  console.log('lalalal', err)
+    console.log('lalalal', err)
   })
 }
 
@@ -643,7 +648,7 @@ RM.el_sentences.addEventListener('click', function(ev) {
   var node = RM.G.vertexIndex[id]
 
   if(!node)
-    return err('That node does not exist')
+    return error('That node does not exist')
 
   if(node.cat === 'action') { // remove "sentence"
     RM.G.removeVertex(node)
@@ -1214,37 +1219,37 @@ function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
 
   // modified from http://phrogz.net/tmp/canvas_rotated_text.html
 
-	var padding = 5
-	var dx = x2 - x1
-	var dy = y2 - y1
-	var len = Math.sqrt(dx*dx+dy*dy)
-	var avail = len - 2*padding
+  var padding = 5
+  var dx = x2 - x1
+  var dy = y2 - y1
+  var len = Math.sqrt(dx*dx+dy*dy)
+  var avail = len - 2*padding
   var pad = 1/2
   var x = x1
   var y = y1
 
-	var textToDraw = str;
-	if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
-		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1);
-		textToDraw += "…";
-	}
+  var textToDraw = str
+  if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
+    while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0, -1)
+    textToDraw += "…"
+  }
 
-	// Keep text upright
-	var angle = Math.atan2(dy,dx);
-	if (angle < -Math.PI/2 || angle > Math.PI/2){
-		x = x2
+  // Keep text upright
+  var angle = Math.atan2(dy, dx)
+  if (angle < -Math.PI/2 || angle > Math.PI/2){
+    x = x2
     y = y2
-		dx *= -1;
-		dy *= -1;
-		angle -= Math.PI;
-	}
+    dx *= -1
+    dy *= -1
+    angle -= Math.PI
+  }
 
   ctx.save()
-	ctx.textAlign = 'center';
-	ctx.translate(x+dx*pad, y+dy*pad)
-	ctx.rotate(angle);
-	ctx.fillText(textToDraw,0,-3);
-	ctx.restore();
+  ctx.textAlign = 'center'
+  ctx.translate(x+dx*pad, y+dy*pad)
+  ctx.rotate(angle)
+  ctx.fillText(textToDraw, 0, -3)
+  ctx.restore()
 }
 
 
@@ -1442,7 +1447,7 @@ function render_conversation(conversation) {
       return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
     if(cat === 'action') {
       text += '<select id="verb" name="verb">'
-      var options = ['facilitate','coordinate','contribute','create','attend','manage','assist','present','join','leave']
+      var options = ['facilitate', 'coordinate', 'contribute', 'create', 'attend', 'manage', 'assist', 'present', 'join', 'leave']
       options.forEach(function(option) {
         text += '<option>' + option + '</option>'
       })
@@ -1573,7 +1578,7 @@ function fulfill_desire(conversation, value) {
 function give_word(sentence, value) {
   var slot = sentence.slots.shift()
   if(!slot)
-    return err('This sentence is finished')
+    return error('This sentence is finished')
 
   // TODO: check this logic modularly
   if(slot.type === 'word') {
