@@ -15,7 +15,7 @@ function wrapper(req, res) {
   try {
     return handler(req, res)
   } catch(err) {
-    return onError('Borked request', err)
+    return error('Borked request', err)
   }
 }
 
@@ -25,8 +25,7 @@ function handler (req, res) {
   var status = function(str) {return JSON.stringify({'status': str})}
   var params = qs.parse(req.url.replace(/^.*\?/, ''))
   var index = +params.index || 1
-
-  // log('req.url: ', req.url)
+  var mode = params.mode || ""
 
   // yuck make this less horrible
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -42,8 +41,19 @@ function handler (req, res) {
   })
 
   req.on('end', function() {
-    if(req.method == 'GET') {
-      // res.writeHead(200, 'OK', appjson)
+
+    if(mode === 'daring') {
+
+      find('nodes', {}, function(nodes) {
+        find('edges', {}, function(edges) {
+          res.end(JSON.stringify({V: nodes, E: edges}))
+        })
+      })
+
+      return false
+    }
+
+    if(req.method === 'GET') {
 
       find('rmdata', {_id: index}, function(item) {
         res.end(JSON.stringify(item))
@@ -52,29 +62,68 @@ function handler (req, res) {
       return false
     }
 
-    // var post = qs.parse(body)
     var post = JSON.parse(body)
 
-    // log('post', post)
-
     if(!post) {
-      onError('Invalid request', post)
+      error('Invalid request', post)
       res.writeHead(400, 'OK', appjson)
       res.end(status('Invalid POST request'))
       return false
     }
 
-    function cb() {
-      post['_id'] = 1
-      edit_the_data_okay('rmdata', post)
-
-      res.writeHead(200, 'OK', appjson)
-      res.end()
+    if(post.method === 'addnode') {
+      // change email address into user id
+      // remove _id if there is one
+      // add it
+      var node = post.node
+      email_to_user(post.email, function(user_id) {
+        node.user = user_id
+        delete node._id
+        add('nodes', node, cb)
+      })
     }
 
-    add('rmhistory', post, cb)
+    if(post.method === 'addedge') {
+      var node = post.node
+      email_to_user(post.email, function(user_id) {
+        node.user = user_id
+        add('nodes', node, cb)
+      })
+    }
+
+    if(post.method === 'editnode') {
+
+    }
+
+    if(post.method === 'editedge') {
+
+    }
+
+    if(post.method === 'removenode') {
+
+    }
+
+    if(post.method === 'removeedge') {
+
+    }
+
+    function cb() {}
+
+    // function cb() {
+    //   post['_id'] = 1
+    //   edit_the_data_okay('rmdata', post)
+
+    //   res.writeHead(200, 'OK', appjson)
+    //   res.end()
+    // }
+
+    // add('rmhistory', post, cb)
 
   })
+}
+
+function email_to_user(email, cb) {
+  find('users', {email: email}, function(row) { cb(row._id) })
 }
 
 function edit_the_data_okay(collection, item) {
@@ -85,7 +134,7 @@ function edit_the_data_okay(collection, item) {
 
     })
   } catch (err) {
-    onError('Edit error', err)
+    error('Edit error', err)
   }
 }
 
@@ -97,13 +146,8 @@ function find(collection, query, cb) {
     db.collection(collection, function(err, c) {
 
       c.find(query).toArray(function(err, items) {
-        // res.end(JSON.stringify(games[0]))
-
-        // log('found: ', items)
-
         result = items.reduce(function(acc, value) {
           acc[value['_id']] = value
-          value.userObjectID = value['_id']
           return acc
         }, {})
 
@@ -112,7 +156,7 @@ function find(collection, query, cb) {
 
     })
   } catch (err) {
-    onError('Finding error', err)
+    error('Finding error', err)
     return cb(result)
   }
 }
@@ -122,7 +166,7 @@ function add(collection, item, cb) {
     db.collection(collection, function(err, c) {
 
       if(!item || !Object.keys(item).length) {
-        onError('Invalid item found!!!', item)
+        error('Invalid item found!!!', item)
         return cb()
       }
 
@@ -131,14 +175,14 @@ function add(collection, item, cb) {
       return cb(item)
     })
   } catch (err) {
-    onError('Insertion error', err)
+    error('Insertion error', err)
     return cb()
   }
 }
 
 
 
-function onError() {
+function error() {
   log('ERROR!', arguments)
 }
 
@@ -150,7 +194,7 @@ function log() {
 
 db.open(function(err, _db) {
   if(err)
-    return onError('DB refused to open', err)
+    return error('DB refused to open', err)
 
   if(config.mongo.username) {
     db.authenticate(config.mongo.username, config.mongo.password, function(err, result) {

@@ -420,16 +420,21 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 // MODEL HELPERS
 
+var email = 'bz@dann.bz' // TODO: fix this
 
 function publish(type, item) {
   if(type === 'node') {
     RM.G.addVertex(item)
-    persist()
+    send_data_to_server('addnode', item, email, function(id) {
+      item._id = id // FIXME: is this wise???
+    })
+    // persist()
   }
 
   if(type === 'edge') {
     RM.G.addEdge(item)
-    persist()
+    send_data_to_server('addedge', item, email)
+    // persist()
   }
 
   // TODO: persist itemized changes
@@ -442,7 +447,7 @@ function persist() {
   Dagoba.persist(RM.G, 'rripplemap')
 
   // hit the server
-  send_data_to_server_no_questions_asked_okay()
+  // send_data_to_server_no_questions_asked_okay()
 }
 
 persist = debounce(persist, 1000)
@@ -468,39 +473,66 @@ function debounce(func, wait, immediate) {
   }
 }
 
-function send_data_to_server_no_questions_asked_okay() {
-  if(safe_mode)
-    return console.log(RM.G)
+function send_data_to_server(method, data, email, cb) {
+  var url = ''
 
-  var json = Dagoba.jsonify(RM.G)
-  fetch('http://ripplemap.io:8888', { method: 'post'
-                                    , body: json
+  if(safe_mode === 'daring') {
+    url = 'http://localhost:8888?mode=daring'
+  }
+  else if(safe_mode) {
+    return console.log(RM.G)
+  }
+  else {
+    url = 'http://ripplemap.io:8888'
+  }
+
+  // var json = Dagoba.jsonify(RM.G)
+  var packet = { method: method
+               , email: email
+               , data: data
+               }
+
+  fetch(url, {
+    method: 'post', body: packet
+  }).then(function(response) {
+    return response.json()
+  }).then(function(result) {
+    // now you have the id or something
+    if(cb)
+      cb(result)
   })
 }
 
 function get_data_from_server_no_questions_asked_okay(cb) {
+  var url = 'http://ripplemap.io:8888'
 
   // local shunt for airplane mode
   if(safe_mode === 'local')
     return cb(JSON.parse(localStorage['DAGOBA::ripmapdata']))
 
-  var url = 'http://ripplemap.io:8888'
+  if(safe_mode === 'daring') {
+    url = 'http://localhost:8888?mode=daring'
+  }
+  else {
+    var index = +safe_mode || 1
+    url += "?index=" + index
+    // var u = new URLSearchParams()
+    // u.append('index', index)
+  }
 
-  if(safe_mode === 'daring')
-    url = 'http://localhost:8888/daring'
-
-  var index = +safe_mode || 1
-  // var u = new URLSearchParams()
-  // u.append('index', index)
-  var u = "?index=" + index
-
-  fetch(url + u, {
+  fetch(url, {
     method: 'get'
   }).then(function(response) {
     return response.json()
   }).then(function(data) {
-    if(data[index])
+    if(safe_mode !== 'daring' && data[index])
       cb(data[index])
+    else {
+      // unpack data
+      var v = Object.keys(data.V).map(function(id) { return data.V[id] })
+      var e = Object.keys(data.E).map(function(id) { return data.E[id] })
+      cb({V: v, E: e})
+    }
   }).catch(function(err) {
     console.log('lalalal', err)
   })
