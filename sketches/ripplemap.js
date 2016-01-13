@@ -525,42 +525,53 @@ document.addEventListener('keypress', function(ev) {
     return true
 
   var key = ev.keyCode || ev.which
-  var f = 102
-  var n = 110
-  var p = 112
-  var a = 97
-  var s = 115
-  var l = 108
+
+  // var key_a = 97
+  var key_e = 101
+  var key_f = 102
+  var key_l = 108
+  var key_n = 110
+  var key_p = 112
+  // var key_s = 115
   var tilde = 126
+  // var larro = 37
+  // var rarro = 39
+  var langl = 60
+  var rangl = 62
 
-  if(key === n) {
-    if(current_year >= my_maxyear) return false
-    current_year++
-    render()
-  }
-
-  if(key === p) {
+  if(key === key_p || key === langl) {
     if(current_year <= my_minyear) return false
     current_year--
     render()
   }
 
-  if(key === f) {
+  if(key === key_n || key === rangl) {
+    if(current_year >= my_maxyear) return false
+    current_year++
+    render()
+  }
+
+  if(key === key_f) {
     filter_sentences = !filter_sentences
     render()
   }
 
-  if(key === a) {
-    all_edges = true
+  if(key === key_e) {
+    all_edges = !all_edges
     render()
   }
 
-  if(key === s) {
-    all_edges = false
-    render()
-  }
+  // if(key === key_a) {
+  //   all_edges = true
+  //   render()
+  // }
 
-  if(key === l) {
+  // if(key === key_s) {
+  //   all_edges = false
+  //   render()
+  // }
+
+  if(key === key_l) {
     show_labels = !show_labels
     render()
   }
