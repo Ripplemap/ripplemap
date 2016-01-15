@@ -715,12 +715,12 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 // TODO: fix these globals
 
 var safe_mode        = false // okay whatever
-var all_edges        = true  // awkward... :(
+var all_edges        = false  // awkward... :(
 var admin_mode       = false // yep another hack w00t
 var my_maxyear       = 2015  // total hackery...
 var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
-var current_year     = 2015  // more hacks
+var current_year     = 2009  // more hacks
 var filter_sentences = true  // awkward... :(
 
 function build_pipelines() {
@@ -902,7 +902,7 @@ function set_coords(env) {
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 4 + Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
+    node.r = 4 + 2*Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -1078,7 +1078,7 @@ function add_ring_labels(env) {
   var labels = []
 
   env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
+    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc', font: "18px Raleway" }
     labels.push(label)
   })
 
@@ -1095,7 +1095,7 @@ function copy_edges(env) {
     var color = str_to_color(label)
 
     // function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
-    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')' }
+    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',30%,40%,0.' + (show_labels?'3':'7') + ')' }
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1107,8 +1107,35 @@ function copy_edges(env) {
 
 function copy_nodes(env) {
   env.shapes = env.shapes.concat(env.data.V.map(function(node) {
-    var this_year = all_edges || node.year === current_year
-    var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+    // HACK: move this elsewhere
+    if(!all_edges) {
+      var ghost = !node._in.concat(node._out)
+                       .map(e => [e._in.year, e._out.year])
+                       .reduce((acc, t) => acc.concat(t), [])
+                       .filter(y => y === current_year).length
+      if(ghost)
+        return []
+    }
+
+    // var this_year = all_edges || node.year === current_year
+    // var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+
+    // Person: Blue
+    // Org: Green
+    // Event: Magenta
+    // Outcome: Orange
+    // Concept: Purple
+    // Labels should be black
+    // Connections should be grey
+    var hues = { outcome: '40'
+               // , action '20'
+               , person: '240'
+               , event: '320'
+               , org: '100'
+               }
+
+    var color = 'hsla(' + hues[node.type] + ',80%,50%,0.99)'
+
     var shape = { shape: 'circle'
                 , x: node.x
                 , y: node.y
@@ -1127,7 +1154,7 @@ function add_node_labels(env) {
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
     var str = truncate(shape.name, 50)
-    var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
+    var label = {shape: 'text', str: str, x: shape.x + 15, y: shape.y + 5}
     labels.push(label)
   })
 
@@ -1211,8 +1238,8 @@ function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
 }
 
 function draw_text(ctx, x, y, str, font, fill_color) {
-  ctx.fillStyle = fill_color || '#337'
-  ctx.font = font || "14px sans-serif"
+  ctx.fillStyle = fill_color || '#000'
+  ctx.font = font || "14px Raleway"
   if(isNaN(x)) return false
   x = x || 0
   y = y || 0
@@ -1234,28 +1261,28 @@ function draw_angle_text(ctx, x1, y1, x2, y2, str, font, fill_color) {
   var x = x1
   var y = y1
 
-	var textToDraw = str;
+	var textToDraw = str
 	if (ctx.measureText && ctx.measureText(textToDraw).width > avail){
-		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1);
-		textToDraw += "…";
+		while (textToDraw && ctx.measureText(textToDraw+"…").width > avail) textToDraw = textToDraw.slice(0,-1)
+		textToDraw += "…"
 	}
 
 	// Keep text upright
-	var angle = Math.atan2(dy,dx);
+	var angle = Math.atan2(dy,dx)
 	if (angle < -Math.PI/2 || angle > Math.PI/2){
 		x = x2
     y = y2
-		dx *= -1;
-		dy *= -1;
-		angle -= Math.PI;
+		dx *= -1
+		dy *= -1
+		angle -= Math.PI
 	}
 
   ctx.save()
-	ctx.textAlign = 'center';
+	ctx.textAlign = 'center'
 	ctx.translate(x+dx*pad, y+dy*pad)
-	ctx.rotate(angle);
-	ctx.fillText(textToDraw,0,-3);
-	ctx.restore();
+	ctx.rotate(angle)
+	ctx.fillText(textToDraw, 0, -3)
+	ctx.restore()
 }
 
 
@@ -1270,8 +1297,12 @@ function get_actions(env) {
 
 function filter_actions(env) {
   if(!filter_sentences) return env
-  env.params.actions = env.params.actions.filter(function(action) {
-    return new Date(action.time+100000000).getFullYear() === current_year
+  env.params.actions = env.params.actions.map(function(action) {
+    action.year = new Date(action.time+100000000).getFullYear()
+    return action
+  })
+  .filter(function(action) {
+    return action.year === current_year
   })
 
   return env
@@ -1292,14 +1323,28 @@ function construct(action) {
     edges = [edges[1], edges[0]]
   function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
   list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
+  list.year = action.year
   return list
 }
 
 function write_sentences(env) {
   RM.el_sentences.innerHTML = ''
-  env.params.sentences.forEach(function(list) {
+  var oldyear = 1
 
-    var sentence = '<p>'
+  env.params.sentences.sort(function(a, b) {
+    return a.year - b.year
+  })
+
+
+  env.params.sentences.forEach(function(list) {
+    var sentence = ''
+
+    if(list.year !== oldyear) {
+      sentence = '<h2>' + list.year + '</h2>'
+      oldyear = list.year
+    }
+
+    sentence += '<p>'
     list.forEach(function(thing) {
       var data
       var word = thing.name || thing.label
