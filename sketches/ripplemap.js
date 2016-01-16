@@ -395,11 +395,12 @@ new_action_type('pass',      {aliases: []})
 new_action_type('join',      {aliases: []})
 new_action_type('leave',     {aliases: []})
 new_action_type('create',    {aliases: []})
-new_action_type('attend',    {aliases: []})
-new_action_type('manage',    {aliases: ['run', 'lead', 'facilitate', 'coordinate']})
+new_action_type('attend',    {aliases: ['participate in']})
+new_action_type('manage',    {aliases: ['run', 'lead', 'facilitate', 'coordinate', 'organize']})
 new_action_type('assist',    {aliases: ['help', 'host', 'fund', 'contribute']})
 new_action_type('present',   {aliases: []})
 new_action_type('represent', {aliases: []})
+new_action_type('fund',      {aliases: []})
 
 new_effect_type('inspire',   {aliases: ['influenced']})
 new_effect_type('convince',  {aliases: ['ask']})
@@ -1335,7 +1336,6 @@ function write_sentences(env) {
     return a.year - b.year
   })
 
-
   env.params.sentences.forEach(function(list) {
     var sentence = ''
 
@@ -1485,7 +1485,7 @@ function render_conversation(conversation) {
     $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
   })
 
-  $('#' + slot.key).focus()
+  // $('#' + slot.key).focus()
 
   return false
 
@@ -1498,7 +1498,9 @@ function render_conversation(conversation) {
       return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
     if(cat === 'action') {
       text += '<select id="verb" name="verb">'
-      var options = ['facilitate','coordinate','contribute','create','attend','manage','assist','present','join','leave']
+
+      var options = ['participate in', 'lead', 'fund', 'organize']
+      // var options = ['facilitate','coordinate','contribute','create','attend','manage','assist','present','join','leave']
       options.forEach(function(option) {
         text += '<option>' + option + '</option>'
       })
