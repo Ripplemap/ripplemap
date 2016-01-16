@@ -1451,9 +1451,9 @@ function render_conversation(conversation) {
   // special case the first step
   var sentence = conversation.current
 
-  sentence.filled.forEach(function(slot) {
+  sentence.filled.forEach(function(slot, i) {
     // display the filled slot
-    prelude += inject_value(slot, slot.value) + ' '
+    prelude += inject_value(slot, slot.value, i) + ' '
     // if(slot.type === 'word') {
     //   prelude += inject_value(slot, slot.value) + ' '
     // }
@@ -1530,12 +1530,16 @@ function render_conversation(conversation) {
     return str
   }
 
-  function inject_value(slot, value) {
+  function inject_value(slot, value, index) { // HACK: index is a huge hack, remove it.
     var text = ''
 
     if(slot.key === 'subject') {
-      text += 'This is a story about how '
-      text += value + ' '
+      if(slot.value) {
+        text += '<p><b>' + slot.value + '</b></p>'
+      } else {
+        text += "Okay, let's fill in the blanks. Tell us about "
+        text += value + ' '
+      }
     }
     else if(slot.key === 'verb') {
       text += ' did '
@@ -1546,13 +1550,20 @@ function render_conversation(conversation) {
       text += value + ' '
     }
     else if(slot.type === 'gettype') {
-      text += ' (which is a'
-      text += mayben(value) + ' '
-      text += value
-      text += ') '
+      if(index === 1) {
+        text += ' is a'
+        text += mayben(value) + ' '
+        text += value + ' '
+        if(slot.value)
+          text += slot.value === 'person' ? 'who ' : 'which '
+      } else {
+        text += ' (a'
+        text += mayben(value) + ' '
+        text += value + ') '
+      }
     }
     else if(slot.type === 'date') {
-      text += ' on approximately '
+      text += ' in/on '
       text += value + ' '
     }
     else {
