@@ -422,19 +422,24 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 // MODEL HELPERS
 
 var email = 'bz@dann.bz' // TODO: fix this
+var loading = true // TODO: fix this
 
 function publish(type, item) {
   if(type === 'node') {
     RM.G.addVertex(item)
-    send_data_to_server('addnode', item, email, function(id) {
-      item._id = id // FIXME: is this wise???
-    })
+    if(!loading) {
+      send_data_to_server('addnode', item, email, function(id) {
+        item._id = id // FIXME: is this wise???
+      })
+    }
     // persist()
   }
 
   if(type === 'edge') {
     RM.G.addEdge(item)
-    send_data_to_server('addedge', item, email)
+    if(!loading) {
+      send_data_to_server('addedge', item, email)
+    }
     // persist()
   }
 
@@ -1764,6 +1769,7 @@ function init() {
   var cb = function() {
     render()
     render_conversation(RM.conversation)
+    loading = false
   }
 
   add_data(cb)
