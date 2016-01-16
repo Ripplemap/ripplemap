@@ -1068,7 +1068,7 @@ function filter_by_year(env) {
 
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
-    var color = '#ccc'
+    var color = i === current_year ? '#999' : '#ccc'
     var radius = 50 * (i - env.params.my_minyear + 1)
     env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
   }
@@ -1079,7 +1079,8 @@ function add_ring_labels(env) {
   var labels = []
 
   env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc', font: "18px Raleway" }
+    var fill = shape.year === current_year ? '#999' : '#ccc'
+    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: fill, font: "18px Raleway" }
     labels.push(label)
   })
 
