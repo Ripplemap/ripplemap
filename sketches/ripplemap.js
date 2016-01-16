@@ -395,11 +395,12 @@ new_action_type('pass',      {aliases: []})
 new_action_type('join',      {aliases: []})
 new_action_type('leave',     {aliases: []})
 new_action_type('create',    {aliases: []})
-new_action_type('attend',    {aliases: []})
-new_action_type('manage',    {aliases: ['run', 'lead', 'facilitate', 'coordinate']})
-new_action_type('assist',    {aliases: ['help', 'host', 'fund', 'contribute']})
+new_action_type('attend',    {aliases: ['participate in']})
+new_action_type('manage',    {aliases: ['run', 'lead', 'facilitate', 'coordinate', 'organize']})
+new_action_type('assist',    {aliases: ['help', 'host', 'contribute']})
 new_action_type('present',   {aliases: []})
 new_action_type('represent', {aliases: []})
+new_action_type('fund',      {aliases: []})
 
 new_effect_type('inspire',   {aliases: ['influenced']})
 new_effect_type('convince',  {aliases: ['ask']})
@@ -552,7 +553,7 @@ function convert_props(props) {
 
 // INTERACTIONS
 
-document.addEventListener('keypress', function(ev) {
+document.addEventListener('keydown', function(ev) {
   // TODO: clean this up (prevent span hijacking)
   if( ev.target.tagName === 'SPAN'
    || ev.target.tagName === 'INPUT'
@@ -562,42 +563,55 @@ document.addEventListener('keypress', function(ev) {
     return true
 
   var key = ev.keyCode || ev.which
-  var f = 102
-  var n = 110
-  var p = 112
-  var a = 97
-  var s = 115
-  var l = 108
+
+  // var key_a = 97
+  var key_e = 69
+  var key_f = 70
+  var key_l = 76
+  // var key_n = 110
+  // var key_p = 112
+  // var key_s = 115
   var tilde = 126
+  var larro = 37
+  var rarro = 39
+  // var langl = 60
+  // var rangl = 62
 
-  if(key === n) {
-    if(current_year >= my_maxyear) return false
-    current_year++
-    render()
-  }
-
-  if(key === p) {
+  if(key === larro) {
     if(current_year <= my_minyear) return false
     current_year--
     render()
+    ev.preventDefault()
   }
 
-  if(key === f) {
+  if(key === rarro) {
+    if(current_year >= my_maxyear) return false
+    current_year++
+    render()
+    ev.preventDefault()
+  }
+
+  if(key === key_f) {
     filter_sentences = !filter_sentences
     render()
   }
 
-  if(key === a) {
-    all_edges = true
+  if(key === key_e) {
+    all_edges = !all_edges
     render()
   }
 
-  if(key === s) {
-    all_edges = false
-    render()
-  }
+  // if(key === key_a) {
+  //   all_edges = true
+  //   render()
+  // }
 
-  if(key === l) {
+  // if(key === key_s) {
+  //   all_edges = false
+  //   render()
+  // }
+
+  if(key === key_l) {
     show_labels = !show_labels
     render()
   }
@@ -741,13 +755,14 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 // TODO: fix these globals
 
 var safe_mode        = false // okay whatever
-var all_edges        = true  // awkward... :(
+var all_edges        = false // awkward... :(
 var admin_mode       = false // yep another hack w00t
-var my_maxyear       = 2015  // total hackery...
+var my_maxyear       = 2016  // total hackery...
 var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
-var current_year     = 2015  // more hacks
+var current_year     = 2009  // more hacks
 var filter_sentences = true  // awkward... :(
+var ring_radius      = 45    // lalala
 
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
@@ -910,7 +925,7 @@ function set_coords(env) {
     if(node.x) return node
 
     var offset = node.year - env.params.my_minyear + 1
-    var radius = offset * 50 // HACK: remove this!
+    var radius = offset * ring_radius // HACK: remove this!
 
     var nabes = years[node.year]
     // var gnode = G.vertexIndex[node._id]
@@ -928,7 +943,7 @@ function set_coords(env) {
     node.shape = 'circle'
     node.x = cx
     node.y = cy
-    node.r = 4 + Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
+    node.r = 4 + 2*Math.min(5, edge_count / 2) //Math.floor(node.name.charCodeAt(0)/20)
 
     return node
   })
@@ -1093,8 +1108,8 @@ function filter_by_year(env) {
 
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
-    var color = '#ccc'
-    var radius = 50 * (i - env.params.my_minyear + 1)
+    var color = i === current_year ? '#999' : '#ccc'
+    var radius = ring_radius * (i - env.params.my_minyear + 1)
     env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
   }
   return env
@@ -1104,7 +1119,8 @@ function add_ring_labels(env) {
   var labels = []
 
   env.shapes.filter(eq('type', 'ring')).forEach(function(shape) {
-    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: '#ccc' }
+    var fill = shape.year === current_year ? '#999' : '#ccc'
+    var label = {shape: 'text', str: shape.year, x: -15, y: -shape.r - 5, fill: fill, font: "18px Raleway" }
     labels.push(label)
   })
 
@@ -1121,7 +1137,7 @@ function copy_edges(env) {
     var color = str_to_color(label)
 
     // function str_to_color(str) { return 'hsl' + (show_labels?'a':'') + '(' + str_to_num(str) + ',100%,40%' + (show_labels?',0.3':'') + ')';}
-    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',100%,40%,0.' + (show_labels?'3':'7') + ')' }
+    function str_to_color(str) { return 'hsla' + '(' + str_to_num(str) + ',30%,40%,0.' + (show_labels?'3':'7') + ')' }
     function str_to_num(str) { return char_to_num(str, 0) + char_to_num(str, 1) + char_to_num(str, 2) }
     function char_to_num(char, index) { return (char.charCodeAt(index) % 20) * 20 }
 
@@ -1133,8 +1149,35 @@ function copy_edges(env) {
 
 function copy_nodes(env) {
   env.shapes = env.shapes.concat(env.data.V.map(function(node) {
-    var this_year = all_edges || node.year === current_year
-    var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+    // HACK: move this elsewhere
+    if(!all_edges) {
+      var ghost = !node._in.concat(node._out)
+                       .map(e => [e._in.year, e._out.year])
+                       .reduce((acc, t) => acc.concat(t), [])
+                       .filter(y => y === current_year).length
+      if(ghost)
+        return []
+    }
+
+    // var this_year = all_edges || node.year === current_year
+    // var color =  'hsla(0,0%,20%,0.' + (this_year ? '99' : '3') + ')'
+
+    // Person: Blue
+    // Org: Green
+    // Event: Magenta
+    // Outcome: Orange
+    // Concept: Purple
+    // Labels should be black
+    // Connections should be grey
+    var hues = { outcome: '40'
+               // , action '20'
+               , person: '240'
+               , event: '320'
+               , org: '100'
+               }
+
+    var color = 'hsla(' + hues[node.type] + ',80%,50%,0.99)'
+
     var shape = { shape: 'circle'
                 , x: node.x
                 , y: node.y
@@ -1153,7 +1196,7 @@ function add_node_labels(env) {
   env.shapes.forEach(function(shape) {
     if(!shape.name) return false
     var str = truncate(shape.name, 50)
-    var label = {shape: 'text', str: str, x: shape.x + 10, y: shape.y + 5}
+    var label = {shape: 'text', str: str, x: shape.x + 15, y: shape.y + 5}
     labels.push(label)
   })
 
@@ -1237,8 +1280,8 @@ function draw_line(ctx, fromx, fromy, tox, toy, stroke_color, line_width) {
 }
 
 function draw_text(ctx, x, y, str, font, fill_color) {
-  ctx.fillStyle = fill_color || '#337'
-  ctx.font = font || "14px sans-serif"
+  ctx.fillStyle = fill_color || '#000'
+  ctx.font = font || "14px Raleway"
   if(isNaN(x)) return false
   x = x || 0
   y = y || 0
@@ -1296,8 +1339,12 @@ function get_actions(env) {
 
 function filter_actions(env) {
   if(!filter_sentences) return env
-  env.params.actions = env.params.actions.filter(function(action) {
-    return new Date(action.time+100000000).getFullYear() === current_year
+  env.params.actions = env.params.actions.map(function(action) {
+    action.year = new Date(action.time+100000000).getFullYear()
+    return action
+  })
+  .filter(function(action) {
+    return action.year === current_year
   })
 
   return env
@@ -1318,14 +1365,27 @@ function construct(action) {
     edges = [edges[1], edges[0]]
   function notme(id, edge) { return edge._in._id === id ? edge._out : edge._in }
   list.push(notme(action._id, edges[0]), edges[0], action, edges[1], notme(action._id, edges[1]))
+  list.year = action.year
   return list
 }
 
 function write_sentences(env) {
   RM.el_sentences.innerHTML = ''
-  env.params.sentences.forEach(function(list) {
+  var oldyear = 1
 
-    var sentence = '<p>'
+  env.params.sentences.sort(function(a, b) {
+    return a.year - b.year
+  })
+
+  env.params.sentences.forEach(function(list) {
+    var sentence = ''
+
+    if(list.year !== oldyear) {
+      sentence = '<h2>' + list.year + '</h2>'
+      oldyear = list.year
+    }
+
+    sentence += '<p>'
     list.forEach(function(thing) {
       var data
       var word = thing.name || thing.label
@@ -1428,9 +1488,9 @@ function render_conversation(conversation) {
   // special case the first step
   var sentence = conversation.current
 
-  sentence.filled.forEach(function(slot) {
+  sentence.filled.forEach(function(slot, i) {
     // display the filled slot
-    prelude += inject_value(slot, slot.value) + ' '
+    prelude += inject_value(slot, slot.value, i) + ' '
     // if(slot.type === 'word') {
     //   prelude += inject_value(slot, slot.value) + ' '
     // }
@@ -1466,7 +1526,8 @@ function render_conversation(conversation) {
     $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
   })
 
-  $('#' + slot.key).focus()
+  if(sentence.filled.length)
+    $('#' + slot.key).focus()
 
   return false
 
@@ -1479,7 +1540,8 @@ function render_conversation(conversation) {
       return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
     if(cat === 'action') {
       text += '<select id="verb" name="verb">'
-      var options = ['facilitate', 'coordinate', 'contribute', 'create', 'attend', 'manage', 'assist', 'present', 'join', 'leave']
+      var options = ['participate in', 'lead', 'fund', 'organize']
+      // var options = ['facilitate', 'coordinate', 'contribute', 'create', 'attend', 'manage', 'assist', 'present', 'join', 'leave']
       options.forEach(function(option) {
         text += '<option>' + option + '</option>'
       })
@@ -1504,12 +1566,16 @@ function render_conversation(conversation) {
     return str
   }
 
-  function inject_value(slot, value) {
+  function inject_value(slot, value, index) { // HACK: index is a huge hack, remove it.
     var text = ''
 
     if(slot.key === 'subject') {
-      text += 'This is a story about how '
-      text += value + ' '
+      if(slot.value) {
+        text += '<p><b>' + slot.value + '</b></p>'
+      } else {
+        text += "Okay, let's fill in the blanks. Tell us about "
+        text += value + ' '
+      }
     }
     else if(slot.key === 'verb') {
       text += ' did '
@@ -1520,13 +1586,20 @@ function render_conversation(conversation) {
       text += value + ' '
     }
     else if(slot.type === 'gettype') {
-      text += ' (which is a'
-      text += mayben(value) + ' '
-      text += value
-      text += ') '
+      if(index === 1) {
+        text += ' is a'
+        text += mayben(value) + ' '
+        text += value + ' '
+        if(slot.value)
+          text += slot.value === 'person' ? 'who ' : 'which '
+      } else {
+        text += ' (a'
+        text += mayben(value) + ' '
+        text += value + ') '
+      }
     }
     else if(slot.type === 'date') {
-      text += ' on approximately '
+      text += ' in/on '
       text += value + ' '
     }
     else {
@@ -1589,7 +1662,7 @@ function fulfill_desire(conversation, value) {
         object = slot.word
       }
       else if(slot.key === 'verb') {
-        verb = slot.word.type
+        verb = (slot.word||{}).type || slot.value
       }
     })
 
@@ -1694,6 +1767,10 @@ function init() {
   }
 
   add_data(cb)
+
+  setTimeout(function() {
+    render()
+  }, 111)
 }
 
 init()

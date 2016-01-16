@@ -5,16 +5,20 @@
     <meta charset="UTF-8">
 
     <link rel="stylesheet" href="css/example.css">
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
 
     <style type="text/css">
       @import url(css/style.css);
 
+      #storytime {
+        background-color: #efd8ff;
+      }
+
       #the-conversation {
-        font-size: 28px;
+        font-size: 20px;
         line-height: 30px;
-        padding: 30px 0px;
-        margin: 15px 0px;
-        background-color: aliceblue;
+        /* padding: 30px 0px; */
+        /* margin: 15px 0px; */
       }
 
       #the-conversation select {
@@ -22,9 +26,13 @@
         font-size: inherit;
       }
 
+       #header {
+        margin-bottom: 2em;
+      }
+
       h1 {
-        font-size: 20px;
-        color: purple;
+        font-size: 40px;
+        color: #9900ff;
       }
 
       .background {
@@ -34,21 +42,23 @@
       }
 
       canvas {
-        border: 1px solid black;
+      /*  border: 1px solid black; */
       }
 
       #legend {
-        /*         float: left; */
+        position: absolute;
+        top: 0px;
+        left: 11px;
         padding: 10px;
         font-size: 14px;
       }
 
       #newaction {
-        float: right;
+        /* float: right; */
       }
 
       #sentences, h3 {
-        font-size: 26px;
+        font-size: 16px;
       }
 
       .word:active, .word:focus, .word:hover {
@@ -76,96 +86,130 @@
       .edge:active, .edge:focus, .edge:hover {
         background-color: #eee;
       }
+
+      /* column styles */
+
+      #left {
+        width: 400px;
+        float: left;
+        background-color: #efd8ff;
+        padding: 1em;
+      }
+
+      #right {
+        position: relative;
+        margin-left: 420px;
+        padding-left: 19px;
+      }
+
+      .clear {
+        clear: both;
+      }
+
     </style>
   </head>
   <body>
 
-    <!-- <h1> Welcome to ripplemapping </h1> -->
-    <!--     <h1> Digital Justice and the AMC </h1> -->
-    <h1>The ripple effect of 'A Healthy Digital Ecology: Creating a Community Vision for Federal Funding' at AMC 2009</h1>
-
-    <form id="the-conversation"></form>
-
-    <legend><em>Use Tab to autocomplete and Return to proceed. Reload the page to fix a mistake.</em></legend>
-
-    <canvas id="ripples" width="900" height="900"></canvas>
-
-    <div style="display:none">
-      <p>
-        min year:
-        <span id="minyear"></span>
-        max year:
-        <span id="maxyear"></span>
-      </p>
+    <div id="header">
+      <!-- <h1> Welcome to ripplemapping </h1> -->
+      <h1>The ripple effect of 'A Healthy Digital Ecology: Creating a Community Vision for Federal Funding' at AMC 2009</h1>
     </div>
 
+    <div id="main">
+      <div id="left">
 
-    <div id="legend">
-      <strong>Keys: </strong> <br />
-      'p' for previous year <br />
-      'n' for next year <br />
-      'a' for all connections <br />
-      's' for show most recent connections <br />
-      'f' for filter stories by year <br />
-      'l' for legend edges <br />
+        <div id="storytime">
+          <h3>Want to add something to the map?</h3>
+          <form id="the-conversation"></form>
+          <p><em>Use <em>Tab</em> to autocomplete and <em>Return</em> to proceed. Reload the page to fix a mistake.</em></p>
+        </div>
+
+        <form id="newaction" style="display:none">
+          <p>
+            <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
+            <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
+            <select id="thing1type" name="thing1type">
+              <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
+              <option value="person">person</option>
+              <option value="org">org</option>
+              <option value="event">event</option>
+              <option value="outcome">outcome</option>
+              <!--           <option value="place">place</option> -->
+            </select>
+          </p>
+          <p>
+            <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
+            <select id="actiontype" name="actiontype">
+              <option value="" selected="selected" disabled="disabled">who... (choose one)</option>
+              <option value="facilitate">facilitated</option>
+              <option value="coordinate">coordinated</option>
+              <option value="contribute">contributed</option>
+              <option value="create">created</option>
+              <option value="attend">attended</option>
+              <option value="manage">managed</option>
+              <option value="assist">assisted</option>
+              <option value="present">presented</option>
+              <option value="join">joined</option>
+              <option value="leave">left</option>
+            </select>
+          </p>
+          <p>
+            <input id="thing2name" name="thing2name" type="text" value="" size="40" /> <br />
+            <!--         <input id="thing2type" name="thing2type" type="text" value="person" /> (person, org, event, outcome, place) -->
+            <select id="thing2type" name="thing2type">
+              <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
+              <option value="person">person</option>
+              <option value="org">org</option>
+              <option value="event">event</option>
+              <option value="outcome">outcome</option>
+              <!--           <option value="place">place</option> -->
+            </select>
+          </p>
+          <p>
+            on
+            <input id="actiondate" name="actiondate" type="date" value="2010-01-01" />
+            (approximate)
+          </p>
+          <p>
+            <input id="addaction" name="addaction" type="button" value="Go!" />
+          </p>
+        </form>
+
+        <hr style="clear:both" />
+
+        <h3>Click any story to edit</h3>
+
+        <div id="sentences"> </div>
+      </div>
+
+
+
+      <div id="right">
+
+        <canvas id="ripples" width="900" height="900"></canvas>
+
+        <div id="legend">
+          <strong>Keys: </strong> <br />
+          '&lt;' for previous year <br />
+          '&gt;' for next year <br />
+          'e' toggles recent connections <br />
+          'f' toggles filter stories by year <br />
+          'l' for legend edges <br />
+
+          <p style="display:none">
+            min year:
+            <span id="minyear"></span>
+            max year:
+            <span id="maxyear"></span>
+          </p>
+        </div>
+
+      </div>
+
+      <div class="clear"></div>
     </div>
 
-    <form id="newaction" style="display:none">
-      <p>
-        <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
-        <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
-        <select id="thing1type" name="thing1type">
-          <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
-          <option value="person">person</option>
-          <option value="org">org</option>
-          <option value="event">event</option>
-          <option value="outcome">outcome</option>
-          <!--           <option value="place">place</option> -->
-        </select>
-      </p>
-      <p>
-        <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
-        <select id="actiontype" name="actiontype">
-          <option value="" selected="selected" disabled="disabled">who... (choose one)</option>
-          <option value="facilitate">facilitated</option>
-          <option value="coordinate">coordinated</option>
-          <option value="contribute">contributed</option>
-          <option value="create">created</option>
-          <option value="attend">attended</option>
-          <option value="manage">managed</option>
-          <option value="assist">assisted</option>
-          <option value="present">presented</option>
-          <option value="join">joined</option>
-          <option value="leave">left</option>
-        </select>
-      </p>
-      <p>
-        <input id="thing2name" name="thing2name" type="text" value="" size="40" /> <br />
-        <!--         <input id="thing2type" name="thing2type" type="text" value="person" /> (person, org, event, outcome, place) -->
-        <select id="thing2type" name="thing2type">
-          <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
-          <option value="person">person</option>
-          <option value="org">org</option>
-          <option value="event">event</option>
-          <option value="outcome">outcome</option>
-          <!--           <option value="place">place</option> -->
-        </select>
-      </p>
-      <p>
-        on
-        <input id="actiondate" name="actiondate" type="date" value="2010-01-01" />
-        (approximate)
-      </p>
-      <p>
-        <input id="addaction" name="addaction" type="button" value="Go!" />
-      </p>
-    </form>
-
-    <hr style="clear:both" />
-
-    <h3>Click any story to edit</h3>
-
-    <div id="sentences"> </div>
+    <!-- scripts! -->
 
     <!--     this is just here for the autocomplete :/ -->
     <script type="text/javascript" src="js/jquery.js"></script>
