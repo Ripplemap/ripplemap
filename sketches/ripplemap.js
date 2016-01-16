@@ -1715,6 +1715,10 @@ function init() {
   }
 
   add_data(cb)
+
+  setTimeout(function() {
+    render()
+  }, 111)
 }
 
 init()
