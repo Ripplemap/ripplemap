@@ -516,7 +516,7 @@ function convert_props(props) {
 
 // INTERACTIONS
 
-document.addEventListener('keypress', function(ev) {
+document.addEventListener('keydown', function(ev) {
   // TODO: clean this up (prevent span hijacking)
   if( ev.target.tagName === 'SPAN'
    || ev.target.tagName === 'INPUT'
@@ -528,28 +528,30 @@ document.addEventListener('keypress', function(ev) {
   var key = ev.keyCode || ev.which
 
   // var key_a = 97
-  var key_e = 101
-  var key_f = 102
-  var key_l = 108
-  var key_n = 110
-  var key_p = 112
+  var key_e = 69
+  var key_f = 70
+  var key_l = 76
+  // var key_n = 110
+  // var key_p = 112
   // var key_s = 115
   var tilde = 126
-  // var larro = 37
-  // var rarro = 39
-  var langl = 60
-  var rangl = 62
+  var larro = 37
+  var rarro = 39
+  // var langl = 60
+  // var rangl = 62
 
-  if(key === key_p || key === langl) {
+  if(key === larro) {
     if(current_year <= my_minyear) return false
     current_year--
     render()
+    ev.preventDefault()
   }
 
-  if(key === key_n || key === rangl) {
+  if(key === rarro) {
     if(current_year >= my_maxyear) return false
     current_year++
     render()
+    ev.preventDefault()
   }
 
   if(key === key_f) {
@@ -716,13 +718,14 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 // TODO: fix these globals
 
 var safe_mode        = false // okay whatever
-var all_edges        = false  // awkward... :(
+var all_edges        = false // awkward... :(
 var admin_mode       = false // yep another hack w00t
-var my_maxyear       = 2015  // total hackery...
+var my_maxyear       = 2016  // total hackery...
 var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
 var current_year     = 2009  // more hacks
 var filter_sentences = true  // awkward... :(
+var ring_radius      = 50    // lalala
 
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
@@ -885,7 +888,7 @@ function set_coords(env) {
     if(node.x) return node
 
     var offset = node.year - env.params.my_minyear + 1
-    var radius = offset * 50 // HACK: remove this!
+    var radius = offset * ring_radius // HACK: remove this!
 
     var nabes = years[node.year]
     // var gnode = G.vertexIndex[node._id]
@@ -1069,7 +1072,7 @@ function filter_by_year(env) {
 function add_rings(env) {
   for(var i = env.params.minyear; i <= env.params.maxyear; i++) {
     var color = i === current_year ? '#999' : '#ccc'
-    var radius = 50 * (i - env.params.my_minyear + 1)
+    var radius = ring_radius * (i - env.params.my_minyear + 1)
     env.shapes.unshift({shape: 'circle', x: 0, y: 0, r: radius, stroke: color, fill: 'white', line: 1, type: 'ring', year: i})
   }
   return env
@@ -1486,7 +1489,8 @@ function render_conversation(conversation) {
     $('.'+cat+'-input').typeahead(typeahead_params, typeahead_source(cat))
   })
 
-  // $('#' + slot.key).focus()
+  if(sentence.filled.length)
+    $('#' + slot.key).focus()
 
   return false
 
