@@ -397,7 +397,7 @@ new_action_type('leave',     {aliases: []})
 new_action_type('create',    {aliases: []})
 new_action_type('attend',    {aliases: ['participate in']})
 new_action_type('manage',    {aliases: ['run', 'lead', 'facilitate', 'coordinate', 'organize']})
-new_action_type('assist',    {aliases: ['help', 'host', 'fund', 'contribute']})
+new_action_type('assist',    {aliases: ['help', 'host', 'contribute']})
 new_action_type('present',   {aliases: []})
 new_action_type('represent', {aliases: []})
 new_action_type('fund',      {aliases: []})
@@ -725,7 +725,7 @@ var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
 var current_year     = 2009  // more hacks
 var filter_sentences = true  // awkward... :(
-var ring_radius      = 50    // lalala
+var ring_radius      = 45    // lalala
 
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
@@ -1615,7 +1615,7 @@ function fulfill_desire(conversation, value) {
         object = slot.word
       }
       else if(slot.key === 'verb') {
-        verb = slot.word.type
+        verb = (slot.word||{}).type || slot.value
       }
     })
 
