@@ -461,6 +461,12 @@ function add_to_server_facts(type, live_item) {
     item._in  = live_item._in._id
   }
 
+  // FIXME: limit display to particular tags
+  // FIXME: allow dynamic email addresses
+  // FIXME: present splash page of some kind
+  // FIXME: add the 'inspire' action
+
+
   var fact = { email: email
              , action: 'add'
              , type: type
@@ -1730,7 +1736,7 @@ function fulfill_desire(conversation, value) {
     })
 
     if(subject && verb && object) {
-      verb = add_action(verb, {time: new Date(date).getTime() })
+      verb = add_action(verb, {time: new Date(date).getTime() }, true)
       add_edge('the', verb._id, object._id, 0, true)
       add_edge('did', subject._id, verb._id, 0, true)
     }
