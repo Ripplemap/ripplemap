@@ -638,23 +638,25 @@ document.addEventListener('keydown', function(ev) {
   var key_e = 69
   var key_f = 70
   var key_l = 76
-  // var key_n = 110
-  // var key_p = 112
+  var key_n = 78
+  var key_p = 80
   // var key_s = 115
   var tilde = 126
   var larro = 37
+  var uarro = 38
   var rarro = 39
+  var darro = 40
   // var langl = 60
   // var rangl = 62
 
-  if(key === larro) {
+  if(key === larro || key === darro || key === key_p) {
     if(current_year <= my_minyear) return false
     current_year--
     render()
     ev.preventDefault()
   }
 
-  if(key === rarro) {
+  if(key === rarro || key === uarro || key === key_n) {
     if(current_year >= my_maxyear) return false
     current_year++
     render()
