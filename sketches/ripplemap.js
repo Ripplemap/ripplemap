@@ -1880,6 +1880,8 @@ function add_data(cb) {
 
      */
 
+    var edgefacts = []
+
     if(!Array.isArray(facts))
       facts = Object.keys(facts).map(k => facts[k])
 
@@ -1895,10 +1897,13 @@ function add_data(cb) {
           fun(node.type, node)
         }
         else if(fact.type === 'edge') {
-          var edge = fact.data
-          add_edge(edge.type, edge._out, edge._in, edge)
+          edgefacts.push(fact.data)
         }
       }
+    })
+
+    edgefacts.forEach(function(edge) { // we need to delay these so the nodes are all in place (sometimes the facts get added in weird orders)
+      add_edge(edge.type, edge._out, edge._in, edge)
     })
   }
 
