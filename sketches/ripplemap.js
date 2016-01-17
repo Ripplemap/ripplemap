@@ -1502,6 +1502,7 @@ function write_sentences(env) {
 
   env.params.sentences.forEach(function(list) {
     var sentence = ''
+    var innerwords = ''
     var highlight_count = 0
 
     if(list.year !== oldyear) {
@@ -1526,7 +1527,6 @@ function write_sentences(env) {
 
       if(thing.highlight)
         highlight_count++
-        // classes.push('highlight')
 
       if(type !== 'edge')
         data = {id: thing._id||''}
@@ -1534,14 +1534,14 @@ function write_sentences(env) {
         data = {id1: thing._in._id, id2: thing._out._id}
 
       if(!admin_mode)
-        sentence += template(classes, data, word)
+        innerwords += template(classes, data, word)
       else
-        sentence += admin_template(thing, type, cat, word)
+        innerwords += admin_template(thing, type, cat, word)
     })
 
     var sentence_classes = 'sentence'
-    sentence_classes += highlight_count === 3 ? ' highlight' : '' // TODO: weird that it's 2 instead of 3
-    sentence = '<p class="' + sentence_classes + '">' + sentence + '.</p>'
+    sentence_classes += highlight_count === 3 ? ' highlight' : ''
+    sentence = '<p class="' + sentence_classes + '">' + innerwords + '.</p>'
 
     RM.el_sentences.innerHTML += sentence
   })
