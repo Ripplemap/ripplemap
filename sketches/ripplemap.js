@@ -632,6 +632,8 @@ document.addEventListener('keydown', function(ev) {
     )
     return true
 
+  ev.preventDefault()
+
   var key = ev.keyCode || ev.which
 
   // var key_a = 97
@@ -653,14 +655,12 @@ document.addEventListener('keydown', function(ev) {
     if(current_year <= my_minyear) return false
     current_year--
     render()
-    ev.preventDefault()
   }
 
   if(key === rarro || key === uarro || key === key_n) {
     if(current_year >= my_maxyear) return false
     current_year++
     render()
-    ev.preventDefault()
   }
 
   if(key === key_f) {
