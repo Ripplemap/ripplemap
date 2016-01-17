@@ -431,7 +431,8 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
-var tags = ['net_neutrality'] // FIXME: fix this
+// var tags = ['net_neutrality']
+var tags = ['plain']
 
 function add_to_server_facts(type, live_item) {
   if(loading)
@@ -463,7 +464,6 @@ function add_to_server_facts(type, live_item) {
     item._in  = live_item._in._id
   }
 
-  // FIXME: limit display to particular tags
   // FIXME: allow dynamic email addresses
   // FIXME: present splash page of some kind
 
@@ -833,6 +833,7 @@ var show_labels      = false // yup
 var current_year     = 2009  // more hacks
 var filter_sentences = true  // awkward... :(
 var ring_radius      = 45    // lalala
+var query            = {}    // vroom vroom
 
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
@@ -1824,7 +1825,8 @@ function add_data(cb) {
       facts = Object.keys(facts).map(k => facts[k])
 
     facts.forEach(function(fact) {
-      // TODO: add tag support
+      if(fact.tags[0] != tags[0]) // TODO: this isn't the right way to check these
+        return false
 
       if(fact.action === 'add') {
         if(fact.type === 'node') {
@@ -1860,11 +1862,21 @@ function add_data(cb) {
 
 
 function init() {
-  if(location.host === "127.0.0.1") {
-    if(location.hash)
-      safe_mode = location.hash.slice(1)
+  if(window.location.host === "127.0.0.1") {
+    if(window.location.hash)
+      safe_mode = window.location.hash.slice(1)
     else
       safe_mode = true
+  }
+
+  if(window.location.search) {
+    query = window.location.search.substr(1).split('&').reduce(function(acc, pair) {
+      var p = pair.split('=')
+      acc[p[0]] = p[1]
+      return acc
+    }, {})
+    if(query.tag)
+      tags = [query.tag]
   }
 
   RM.G = Dagoba.graph()
