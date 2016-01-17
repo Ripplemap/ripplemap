@@ -130,8 +130,8 @@ function handler (req, res) {
       res.end(JSON.stringify({id: new_id}))
     }
 
-    function reserr(res, str) {
-      error(res, post)
+    function reserr(str) {
+      error(str, post)
       res.writeHead(400, 'OK', appjson)
       res.end(status('Invalid POST request'))
     }
@@ -201,8 +201,9 @@ function parse(json) {
 }
 
 function email_into_id(email, cb) {
-  find('users', {email: email}, function(row) {
-    cb(row._id)
+  find('users', {email: email}, function(rows) {
+    var keys = Object.keys(rows)
+    cb(keys[0])
   })
 }
 
