@@ -1694,7 +1694,7 @@ function render_conversation(conversation) {
   }
 
   function make_date_input(key) {
-    var str = '<input id="' +key+ '" type="date" name="' +key+ '" value="2010-01-01" />'
+    var str = '<input id="' +key+ '" type="date" name="' +key+ '" value="2016-01-01" />'
     return str
   }
 
