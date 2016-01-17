@@ -1461,12 +1461,14 @@ function get_actions(env) {
 }
 
 function filter_actions(env) {
-  if(!filter_sentences) return env
   env.params.actions = env.params.actions.map(function(action) {
     action.year = new Date(action.time+100000000).getFullYear()
     return action
   })
-  .filter(function(action) {
+
+  if(!filter_sentences) return env
+
+  env.params.actions = env.params.actions.filter(function(action) {
     return action.year === current_year
   })
 
@@ -1541,7 +1543,7 @@ function write_sentences(env) {
 
     var sentence_classes = 'sentence'
     sentence_classes += highlight_count === 3 ? ' highlight' : ''
-    sentence = '<p class="' + sentence_classes + '">' + innerwords + '.</p>'
+    sentence += '<p class="' + sentence_classes + '">' + innerwords + '.</p>'
 
     RM.el_sentences.innerHTML += sentence
   })
