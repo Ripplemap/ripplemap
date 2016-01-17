@@ -85,6 +85,42 @@ RM.pipelines = []
 RM.conversation = new_conversation()
 
 
+// SOME HIGHLIGHTING OR SOMETHING
+
+var highlight_fun, highlight_target
+
+RM.el_sentences.addEventListener('mouseover', activate_highlighter)
+RM.el_sentences.addEventListener('mouseout', deactivate_highlighter)
+
+function activate_highlighter() {
+  highlight_fun = RM.el_sentences.addEventListener('mousemove', highlighter)
+}
+
+function deactivate_highlighter() {
+  RM.el_sentences.removeEventListener('mousemove', highlight_fun)
+}
+
+function highlighter(e) {
+  for(var t=e.target; t && t.matches; t = t.parentNode) {
+    if(t.matches('.sentence')) {
+      if(highlight_target === t)
+        return false
+
+      var current = RM.G.v({highlight: true}).run()
+      current.forEach(function(node) {
+        node.highlight = false
+      })
+
+      highlight_target = t
+      var ids = [].slice.call(t.children).map(node => node.dataset.id).filter(Boolean)
+      ids.forEach(id => RM.G.v(id).run()[0].highlight = true)
+      render()
+      return false
+    }
+  }
+}
+
+
 /* INTERFACES FOR RIPPLE MODEL
  *
  * There are four categories: Thing, Action, Effect, and Happening
@@ -632,8 +668,6 @@ document.addEventListener('keydown', function(ev) {
     )
     return true
 
-  ev.preventDefault()
-
   var key = ev.keyCode || ev.which
 
   // var key_a = 97
@@ -652,12 +686,14 @@ document.addEventListener('keydown', function(ev) {
   // var rangl = 62
 
   if(key === larro || key === darro || key === key_p) {
+    ev.preventDefault()
     if(current_year <= my_minyear) return false
     current_year--
     render()
   }
 
   if(key === rarro || key === uarro || key === key_n) {
+    ev.preventDefault()
     if(current_year >= my_maxyear) return false
     current_year++
     render()
@@ -1466,13 +1502,13 @@ function write_sentences(env) {
 
   env.params.sentences.forEach(function(list) {
     var sentence = ''
+    var highlight_count = 0
 
     if(list.year !== oldyear) {
       sentence = '<h2>' + list.year + '</h2>'
       oldyear = list.year
     }
 
-    sentence += '<p>'
     list.forEach(function(thing) {
       var data
       var word = thing.name || thing.label
@@ -1488,6 +1524,10 @@ function write_sentences(env) {
         classes.push('node-' +  thing._in._id + '-' + thing._out._id)
       }
 
+      if(thing.highlight)
+        highlight_count++
+        // classes.push('highlight')
+
       if(type !== 'edge')
         data = {id: thing._id||''}
       else
@@ -1498,7 +1538,10 @@ function write_sentences(env) {
       else
         sentence += admin_template(thing, type, cat, word)
     })
-    sentence += '.</p>'
+
+    var sentence_classes = 'sentence'
+    sentence_classes += highlight_count === 3 ? ' highlight' : '' // TODO: weird that it's 2 instead of 3
+    sentence = '<p class="' + sentence_classes + '">' + sentence + '.</p>'
 
     RM.el_sentences.innerHTML += sentence
   })
