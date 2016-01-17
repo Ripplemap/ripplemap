@@ -407,6 +407,8 @@ new_action_type('assist',    {aliases: ['help', 'host', 'contribute']})
 new_action_type('present',   {aliases: []})
 new_action_type('represent', {aliases: []})
 new_action_type('fund',      {aliases: []})
+new_action_type('inspire',   {aliases: []})
+new_action_type('invite',    {aliases: []})
 
 new_effect_type('inspire',   {aliases: ['influenced']})
 new_effect_type('convince',  {aliases: ['ask']})
@@ -464,7 +466,6 @@ function add_to_server_facts(type, live_item) {
   // FIXME: limit display to particular tags
   // FIXME: allow dynamic email addresses
   // FIXME: present splash page of some kind
-  // FIXME: add the 'inspire' action
 
 
   var fact = { email: email
@@ -1611,7 +1612,7 @@ function render_conversation(conversation) {
       return '<input class="typeahead ' +cat+ '-input" type="text" placeholder="A' +mayben(cat)+ ' ' +cat+ '" id="' +key+ '">'
     if(cat === 'action') {
       text += '<select id="verb" name="verb">'
-      var options = ['participate in', 'lead', 'fund', 'organize']
+      var options = ['participate in', 'lead', 'fund', 'organize', 'inspire', 'invite']
       // var options = ['facilitate', 'coordinate', 'contribute', 'create', 'attend', 'manage', 'assist', 'present', 'join', 'leave']
       options.forEach(function(option) {
         text += '<option>' + option + '</option>'
