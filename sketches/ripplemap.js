@@ -863,13 +863,13 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 // TODO: fix these globals
 
 var safe_mode        = false // okay whatever
-var all_edges        = false // awkward... :(
+var all_edges        = true  // awkward... :(
 var admin_mode       = false // yep another hack w00t
 var my_maxyear       = 2016  // total hackery...
 var my_minyear       = 2008  // hack hack hack
 var show_labels      = false // yup
-var current_year     = 2009  // more hacks
-var filter_sentences = true  // awkward... :(
+var current_year     = 2016  // more hacks
+var filter_sentences = false // awkward... :(
 var ring_radius      = 45    // lalala
 var query            = {}    // vroom vroom
 
