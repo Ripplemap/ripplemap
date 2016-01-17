@@ -145,19 +145,20 @@ function add_alias(catstr, typestr, alias) {
 }
 
 
-function add_thing(type, props) {
+function add_thing(type, props, persist) {
   var node = get_node('thing', type, props)
   if(!node) return false
 
   node.priority = 1 // bbq???
 
-  // publish in dagoba + persist
-  publish('node', node)
+  add_to_graph('node', node)
+  if(persist)
+    send_to_server('node', node)
 
   return node
 }
 
-function add_action(type, props) {
+function add_action(type, props, persist) {
   var node = get_node('action', type, props)
   if(!node) return false
 
@@ -165,30 +166,33 @@ function add_action(type, props) {
 
   // TODO: check props against type (what does this mean?)
 
-  // publish in dagoba + persist
-  publish('node', node)
+  add_to_graph('node', node)
+  if(persist)
+    send_to_server('node', node)
 
   return node
 }
 
-function add_effect(type, props) {
+function add_effect(type, props, persist) {
   var node = get_node('effect', type, props)
   if(!node) return false
 
   node.priority = 0.5 // bbq???
 
-  // publish in dagoba + persist
-  publish('node', node)
+  add_to_graph('node', node)
+  if(persist)
+    send_to_server('node', node)
 }
 
-function add_happening(type, props) {
+function add_happening(type, props, persist) {
   var node = get_node('happening', type, props)
   if(!node) return false
 
   node.priority = 0.4
 
-  // publish in dagoba + persist
-  publish('node', node)
+  add_to_graph('node', node)
+  if(persist)
+    send_to_server('node', node)
 }
 
 
@@ -343,7 +347,7 @@ function new_edge_type(type, properties) {
   // what properties do edges have?
 }
 
-function add_edge(type, from, to, props) {
+function add_edge(type, from, to, props, persist) {
   var edge = {}
 
   // check from and to
@@ -356,7 +360,9 @@ function add_edge(type, from, to, props) {
   edge.type = type
   edge.label = type
 
-  publish('edge', edge)
+  add_to_graph('edge', edge)
+  if(persist)
+    send_to_server('edge', edge)
 }
 
 function import_graph(V, E) {
@@ -424,26 +430,36 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
 
-function publish(type, item) {
+function send_to_server(type, item) {
   if(type === 'node') {
-    RM.G.addVertex(item)
     if(!loading) {
+      var node = { name: item.name
+                 , cat: item.cat
+                 , type: item.type
+                 }
       send_data_to_server('addnode', item, email, function(id) {
         item._id = id // FIXME: is this wise???
       })
     }
-    // persist()
+  }
+
+  if(type === 'edge') {
+    if(!loading) {
+      send_data_to_server('addedge', item, email, function(item) {
+        // THINK: erm what?
+      })
+    }
+  }
+}
+
+function add_to_graph(type, item) {
+  if(type === 'node') {
+    RM.G.addVertex(item)
   }
 
   if(type === 'edge') {
     RM.G.addEdge(item)
-    if(!loading) {
-      send_data_to_server('addedge', item, email)
-    }
-    // persist()
   }
-
-  // TODO: persist itemized changes
 }
 
 function persist() {
@@ -483,7 +499,7 @@ function send_data_to_server(method, data, email, cb) {
   var url = ''
 
   if(safe_mode === 'daring') {
-    url = 'http://localhost:8888?mode=daring'
+    url = 'http://localhost:8888'
   }
   else if(safe_mode) {
     return console.log(RM.G)
@@ -498,12 +514,13 @@ function send_data_to_server(method, data, email, cb) {
                , data: data
                }
 
-  fetch(url, {
-    method: 'post', body: packet
+  fetch(url, { method: 'post'
+             , body: JSON.stringify(packet)
   }).then(function(response) {
     return response.json()
   }).then(function(result) {
     // now you have the id or something
+    // FIXME: make mongo-like ids automatically for each new node
     if(cb)
       cb(result)
   })
@@ -517,7 +534,7 @@ function get_data_from_server_no_questions_asked_okay(cb) {
     return cb(JSON.parse(localStorage['DAGOBA::ripmapdata']))
 
   if(safe_mode === 'daring') {
-    url = 'http://localhost:8888?mode=daring'
+    url = 'http://localhost:8888'
   }
   else {
     var index = +safe_mode || 1
@@ -531,14 +548,15 @@ function get_data_from_server_no_questions_asked_okay(cb) {
   }).then(function(response) {
     return response.json()
   }).then(function(data) {
-    if(safe_mode !== 'daring' && data[index])
-      cb(data[index])
-    else {
-      // unpack data
-      var v = Object.keys(data.V).map(function(id) { return data.V[id] })
-      var e = Object.keys(data.E).map(function(id) { return data.E[id] })
-      cb({V: v, E: e})
-    }
+    cb(data)
+    // if(safe_mode !== 'daring' && data[index])
+    //   cb(data[index])
+    // else {
+    //   // unpack data
+    //   var v = Object.keys(data.V).map(function(id) { return data.V[id] })
+    //   var e = Object.keys(data.E).map(function(id) { return data.E[id] })
+    //   cb({V: v, E: e})
+    // }
   }).catch(function(err) {
     console.log('lalalal', err)
   })
@@ -724,12 +742,12 @@ RM.el_gobutton.addEventListener('click', function(ev) {
   // check for thing1
   var thing1 = RM.G.v({name: thing1name, type: thing1type}).run()[0]
   if(!thing1) {
-    thing1 = add_thing(thing1type, {name: thing1name})
+    thing1 = add_thing(thing1type, {name: thing1name}, true)
   }
 
   var thing2 = RM.G.v({name: thing2name, type: thing2type}).run()[0]
   if(!thing2) {
-    thing2 = add_thing(thing2type, {name: thing2name})
+    thing2 = add_thing(thing2type, {name: thing2name}, true)
   }
 
   var action = add_action(actiontype, {time: new Date(actiondate).getTime() })
@@ -740,8 +758,8 @@ RM.el_gobutton.addEventListener('click', function(ev) {
 
   RM.el_newaction.reset()
 
-  add_edge('the', action._id, thing2._id)
-  add_edge('did', thing1._id, action._id)
+  add_edge('the', action._id, thing2._id, 0, true)
+  add_edge('did', thing1._id, action._id, 0, true)
 
   render()
 })
@@ -1653,7 +1671,7 @@ function fulfill_desire(conversation, value) {
     var subject, verb, object, date
     sentence.filled.forEach(function(slot) {
       if(slot.type === 'gettype') {
-        var thing = add_thing(slot.value, {name: slot.name})
+        var thing = add_thing(slot.value, {name: slot.name}, true)
         if(slot.oldkey === 'subject') subject = thing
         if(slot.oldkey === 'object' ) object  = thing
       }
@@ -1673,11 +1691,12 @@ function fulfill_desire(conversation, value) {
 
     if(subject && verb && object) {
       verb = add_action(verb, {time: new Date(date).getTime() })
-      add_edge('the', verb._id, object._id)
-      add_edge('did', subject._id, verb._id)
+      add_edge('the', verb._id, object._id, 0, true)
+      add_edge('did', subject._id, verb._id, 0, true)
     }
 
     // start over
+    // TODO: show the sentence
     conversation = new_conversation()
     render() // THINK: this should queue or something... rAF?
   }
@@ -1731,10 +1750,47 @@ function add_data(cb) {
   get_data_from_server_no_questions_asked_okay(function(data) {
     // G = Dagoba.graph()
     // RM.clear()
-    var local_data = load_data(data.V, data.E)
+    // var local_data = load_data(data.V, data.E)
+    var local_data = load_facts(data)
 
     cb(local_data)
   })
+
+  function load_facts(facts) {
+    /*
+
+     data model:
+     user: id
+     action: add/remove/edit
+     type: node/edge
+     tags: [...]
+     [maybe other stats can live here?]
+     data:
+       node: {id, name, type, cat...}
+       edge: {_in, _out, type, label}
+
+     */
+
+    if(!Array.isArray(facts))
+      facts = Object.keys(facts).map(k => facts[k])
+
+    facts.forEach(function(fact) {
+      // TODO: add tag support
+
+      if(fact.action === 'add') {
+        if(fact.type === 'node') {
+          var node = fact.data
+          var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
+          if(!fun) return false
+          fun(node.type, node)
+        }
+        else if(fact.type === 'edge') {
+          var edge = fact.data
+          add_edge(edge.type, edge._out, edge._in, edge)
+        }
+      }
+    })
+  }
 
   function load_data(nodes, edges) {
     nodes.forEach(function(node) {

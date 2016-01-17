@@ -42,52 +42,111 @@ function handler (req, res) {
 
   req.on('end', function() {
 
-    if(mode === 'daring') {
+    // if(mode === 'daring') {
 
-      find('nodes', {}, function(nodes) {
-        find('edges', {}, function(edges) {
-          res.end(JSON.stringify({V: nodes, E: edges}))
-        })
-      })
+    //   find('nodes', {}, function(nodes) {
+    //     find('edges', {}, function(edges) {
+    //       res.end(JSON.stringify({V: nodes, E: edges}))
+    //     })
+    //   })
 
-      return false
-    }
+    //   return false
+    // }
 
     if(req.method === 'GET') {
 
-      find('rmdata', {_id: index}, function(item) {
+      find('facts', {}, function(item) {
         res.end(JSON.stringify(item))
       })
 
+      // find('nodes', {}, function(nodes) {
+      //   find('edges', {}, function(edges) {
+      //     res.end(JSON.stringify({V: nodes, E: edges}))
+      //   })
+      // })
+
+      // find('rmdata', {_id: index}, function(item) {
+      //   res.end(JSON.stringify(item))
+      // })
+
       return false
     }
 
-    var post = JSON.parse(body)
+    var post = parse(body)
+
+    log('yoyoyo', mode, post, body)
+
 
     if(!post) {
-      error('Invalid request', post)
-      res.writeHead(400, 'OK', appjson)
-      res.end(status('Invalid POST request'))
+      reserr('Invalid POST request')
       return false
     }
+
+    /*
+
+    data model:
+     user: id
+     action: add/remove/edit
+     type: node/edge
+     tags: [...]
+     [maybe other stats can live here?]
+     data:
+       node: {id, name, type, cat...}
+       edge: {_in, _out, type, label}
+
+     */
+
+    if(['add', 'remove', 'edit'].indexOf(post.action) === -1)
+      return reserr('Bad action')
+
+    if(['node', 'edge'].indexOf(post.type) === -1)
+      return reserr('Bad type')
+
+    // TODO: check tags
+    // TODO: check data
+    // TODO: if it's an add:node, make sure the id doesn't conflict
+
+    email_into_id(post.email, function(user_id) {
+      if(!user_id)
+        return reserr('Bad email address')
+
+      // FIXME: Add new email addresses dynamically!
+
+      var entry = { user: user_id
+                  , action: post.method
+                  , type: post.type
+                  , tags: post.tags
+                  , data: post.data
+                  }
+
+      add('facts', entry, cb)
+    })
+
+    return false
+
+// laksdjflaskjdf;alsdjkfa;sldkfj
+
+
 
     if(post.method === 'addnode') {
       // change email address into user id
       // remove _id if there is one
       // add it
-      var node = post.node
-      email_to_user(post.email, function(user_id) {
+      var node = post.data
+      email_into_id(post.email, function(user_id) {
         node.user = user_id
         delete node._id
+        delete node._in
+        delete node._out
         add('nodes', node, cb)
       })
     }
 
     if(post.method === 'addedge') {
-      var node = post.node
-      email_to_user(post.email, function(user_id) {
-        node.user = user_id
-        add('nodes', node, cb)
+      var edge = post.data
+      email_into_id(post.email, function(user_id) {
+        edge.user = user_id
+        add('edges', edge, cb)
       })
     }
 
@@ -107,7 +166,17 @@ function handler (req, res) {
 
     }
 
-    function cb() {}
+    function cb() {
+      var new_id = Math.random() // FIXME: this is ridonk
+      res.writeHead(200, 'OK', appjson)
+      res.end(JSON.stringify({id: new_id}))
+    }
+
+    function reserr(res, str) {
+      error(res, post)
+      res.writeHead(400, 'OK', appjson)
+      res.end(status('Invalid POST request'))
+    }
 
     // function cb() {
     //   post['_id'] = 1
@@ -122,8 +191,19 @@ function handler (req, res) {
   })
 }
 
-function email_to_user(email, cb) {
-  find('users', {email: email}, function(row) { cb(row._id) })
+function parse(json) {
+  try {
+    return JSON.parse(json)
+  } catch(e) {
+    log('JSON parse error!', json)
+    return []
+  }
+}
+
+function email_into_id(email, cb) {
+  find('users', {email: email}, function(row) {
+    cb(row._id)
+  })
 }
 
 function edit_the_data_okay(collection, item) {
