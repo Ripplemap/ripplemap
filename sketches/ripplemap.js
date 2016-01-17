@@ -1223,7 +1223,7 @@ function copy_edges(env) {
 }
 
 function copy_nodes(env) {
-  env.shapes = env.shapes.concat(env.data.V.map(function(node) {
+  env.shapes = env.shapes.concat.apply(env.shapes, env.data.V.map(function(node) {
     // HACK: move this elsewhere
     if(!all_edges) {
       var ghost = !node._in.concat(node._out)
@@ -1260,7 +1260,19 @@ function copy_nodes(env) {
                 , name: node.name
                 , fill: color
                 }
-    return shape
+
+    if(!node.highlight)
+      return shape
+
+    var highlight = { shape: 'circle'
+                    , x: node.x
+                    , y: node.y
+                    , r: node.r + 12
+                    , line: 0.01
+                    , fill: 'hsla(0, 80%, 50%, 0.20)'
+                    }
+
+    return [highlight, shape]
   }))
   return env
 }
