@@ -431,7 +431,7 @@ var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
 var tags = ['net_neutrality'] // FIXME: fix this
 
-function add_to_server_facts(type, item) {
+function add_to_server_facts(type, live_item) {
   if(loading)
     return false
 
@@ -448,6 +448,18 @@ function add_to_server_facts(type, item) {
      edge: {_in, _out, type, label}
 
    */
+
+  // var item = JSON.parse(JSON.stringify(live_item))
+  var item = Object.keys(live_item).reduce(function(acc, key) {
+        if(['_in', '_out'].indexOf(key) !== -1) return acc
+        acc[key] = live_item[key]
+        return acc
+      }, {})
+
+  if(type === 'edge') {
+    item._out = live_item._out._id
+    item._in  = live_item._in._id
+  }
 
   var fact = { email: email
              , action: 'add'
@@ -477,12 +489,20 @@ function add_to_server_facts(type, item) {
 
 function add_to_graph(type, item) {
   if(type === 'node') {
+    // TODO: this is kind of a hack, but also kind of not
+    if(!item._id)
+      item._id = get_new_id()
     RM.G.addVertex(item)
   }
 
   if(type === 'edge') {
     RM.G.addEdge(item)
   }
+}
+
+function get_new_id() {
+  // TODO: swap this out for maybe a mongo_id implementation
+  return "" + Math.random()
 }
 
 function persist() {
