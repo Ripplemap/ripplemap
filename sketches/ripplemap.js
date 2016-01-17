@@ -952,8 +952,10 @@ function set_year(env) {
     return node
   })
 
-  env.params.minyear = minyear
-  env.params.maxyear = maxyear
+  // env.params.minyear = minyear
+  // env.params.maxyear = maxyear
+  env.params.minyear = my_minyear
+  env.params.maxyear = my_maxyear
 
   return env
 }
