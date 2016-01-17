@@ -153,7 +153,7 @@ function add_thing(type, props, persist) {
 
   add_to_graph('node', node)
   if(persist)
-    send_to_server('node', node)
+    add_to_server_facts('node', node)
 
   return node
 }
@@ -168,7 +168,7 @@ function add_action(type, props, persist) {
 
   add_to_graph('node', node)
   if(persist)
-    send_to_server('node', node)
+    add_to_server_facts('node', node)
 
   return node
 }
@@ -181,7 +181,7 @@ function add_effect(type, props, persist) {
 
   add_to_graph('node', node)
   if(persist)
-    send_to_server('node', node)
+    add_to_server_facts('node', node)
 }
 
 function add_happening(type, props, persist) {
@@ -192,7 +192,7 @@ function add_happening(type, props, persist) {
 
   add_to_graph('node', node)
   if(persist)
-    send_to_server('node', node)
+    add_to_server_facts('node', node)
 }
 
 
@@ -362,7 +362,7 @@ function add_edge(type, from, to, props, persist) {
 
   add_to_graph('edge', edge)
   if(persist)
-    send_to_server('edge', edge)
+    add_to_server_facts('edge', edge)
 }
 
 function import_graph(V, E) {
@@ -429,27 +429,50 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
+var tags = ['net_neutrality'] // FIXME: fix this
 
-function send_to_server(type, item) {
-  if(type === 'node') {
-    if(!loading) {
-      var node = { name: item.name
-                 , cat: item.cat
-                 , type: item.type
-                 }
-      send_data_to_server('addnode', item, email, function(id) {
-        item._id = id // FIXME: is this wise???
-      })
-    }
-  }
+function add_to_server_facts(type, item) {
+  if(loading)
+    return false
 
-  if(type === 'edge') {
-    if(!loading) {
-      send_data_to_server('addedge', item, email, function(item) {
-        // THINK: erm what?
-      })
-    }
-  }
+  /*
+
+   data model:
+   user: id
+   action: add/remove/edit
+   type: node/edge
+   tags: [...]
+   [maybe other stats can live here?]
+   data:
+     node: {id, name, type, cat...}
+     edge: {_in, _out, type, label}
+
+   */
+
+  var fact = { email: email
+             , action: 'add'
+             , type: type
+             , tags: tags
+             , data: item
+             }
+
+  send_data_to_server(fact)
+
+  // if(type === 'node') {
+  //   var node = { name: item.name
+  //              , cat: item.cat
+  //              , type: item.type
+  //              }
+  //   send_data_to_server('addnode', item, email, function(id) {
+  //     item._id = id // FIXME: is this wise???
+  //   })
+  // }
+
+  // if(type === 'edge') {
+  //   send_data_to_server('addedge', item, email, function(item) {
+  //     // THINK: erm what?
+  //   })
+  // }
 }
 
 function add_to_graph(type, item) {
@@ -495,8 +518,8 @@ function debounce(func, wait, immediate) {
   }
 }
 
-function send_data_to_server(method, data, email, cb) {
-  var url = ''
+function send_data_to_server(data, cb) {
+  var url = 'http://ripplemap.io:8888'
 
   if(safe_mode === 'daring') {
     url = 'http://localhost:8888'
@@ -504,18 +527,15 @@ function send_data_to_server(method, data, email, cb) {
   else if(safe_mode) {
     return console.log(RM.G)
   }
-  else {
-    url = 'http://ripplemap.io:8888'
-  }
 
   // var json = Dagoba.jsonify(RM.G)
-  var packet = { method: method
-               , email: email
-               , data: data
-               }
+  // var packet = { method: method
+  //              , email: email
+  //              , data: data
+  //              }
 
   fetch(url, { method: 'post'
-             , body: JSON.stringify(packet)
+             , body: JSON.stringify(data)
   }).then(function(response) {
     return response.json()
   }).then(function(result) {

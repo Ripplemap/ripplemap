@@ -113,7 +113,7 @@ function handler (req, res) {
       // FIXME: Add new email addresses dynamically!
 
       var entry = { user: user_id
-                  , action: post.method
+                  , action: post.action
                   , type: post.type
                   , tags: post.tags
                   , data: post.data
@@ -123,48 +123,6 @@ function handler (req, res) {
     })
 
     return false
-
-// laksdjflaskjdf;alsdjkfa;sldkfj
-
-
-
-    if(post.method === 'addnode') {
-      // change email address into user id
-      // remove _id if there is one
-      // add it
-      var node = post.data
-      email_into_id(post.email, function(user_id) {
-        node.user = user_id
-        delete node._id
-        delete node._in
-        delete node._out
-        add('nodes', node, cb)
-      })
-    }
-
-    if(post.method === 'addedge') {
-      var edge = post.data
-      email_into_id(post.email, function(user_id) {
-        edge.user = user_id
-        add('edges', edge, cb)
-      })
-    }
-
-    if(post.method === 'editnode') {
-
-    }
-
-    if(post.method === 'editedge') {
-
-    }
-
-    if(post.method === 'removenode') {
-
-    }
-
-    if(post.method === 'removeedge') {
-
-    }
 
     function cb() {
       var new_id = Math.random() // FIXME: this is ridonk
@@ -177,6 +135,48 @@ function handler (req, res) {
       res.writeHead(400, 'OK', appjson)
       res.end(status('Invalid POST request'))
     }
+
+// laksdjflaskjdf;alsdjkfa;sldkfj
+
+
+
+    // if(post.method === 'addnode') {
+    //   // change email address into user id
+    //   // remove _id if there is one
+    //   // add it
+    //   var node = post.data
+    //   email_into_id(post.email, function(user_id) {
+    //     node.user = user_id
+    //     delete node._id
+    //     delete node._in
+    //     delete node._out
+    //     add('nodes', node, cb)
+    //   })
+    // }
+
+    // if(post.method === 'addedge') {
+    //   var edge = post.data
+    //   email_into_id(post.email, function(user_id) {
+    //     edge.user = user_id
+    //     add('edges', edge, cb)
+    //   })
+    // }
+
+    // if(post.method === 'editnode') {
+
+    // }
+
+    // if(post.method === 'editedge') {
+
+    // }
+
+    // if(post.method === 'removenode') {
+
+    // }
+
+    // if(post.method === 'removeedge') {
+
+    // }
 
     // function cb() {
     //   post['_id'] = 1
