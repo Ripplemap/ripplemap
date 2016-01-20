@@ -542,7 +542,7 @@ function add_to_graph(type, item) {
 
 function get_new_id() {
   // TODO: swap this out for maybe a mongo_id implementation
-  return "" + Math.random()
+  return ("" + Math.random()).slice(2)
 }
 
 function persist() {
