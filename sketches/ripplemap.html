@@ -14,8 +14,18 @@
         background-color: #ffff66;
       }
 
+      #signup {
+        background-color: #eeddff;
+        font-size: 20px;
+        line-height: 30px;
+      }
+
       #storytime {
         background-color: #efd8ff;
+      }
+
+      .hide {
+        display: none;
       }
 
       #the-conversation {
@@ -117,13 +127,22 @@
     <div id="header">
       <!-- <h1> Welcome to ripplemapping </h1> -->
       <!-- <h1>The ripple effect of 'A Healthy Digital Ecology: Creating a Community Vision for Federal Funding' at AMC 2009</h1> -->
-      <h1>Welcome to the Ripple Map</h1>
+      <h1>Welcome to the <span class="orgname">AMC</span> Ripple Map</h1>
     </div>
 
     <div id="main">
       <div id="left">
 
-        <div id="storytime">
+        <div id="signup">
+          <form id="login">
+            <p>
+              We'd love to hear your stories! Let's start with your contact info:
+            </p>
+            <input name="email" id="email" type="text" placeholder="email" class="typeahead" />
+          </form>
+        </div>
+
+        <div id="storytime" class="hide">
           <h3>Want to add something to the map?</h3>
           <form id="the-conversation"></form>
           <p><em>Use <em>Tab</em> to autocomplete and <em>Return</em> to proceed. Reload the page to fix a mistake.</em></p>

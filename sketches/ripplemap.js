@@ -75,15 +75,27 @@ var qs = document.querySelectorAll.bind(document)
 
 var RM = {}
 
+RM.el_login = el('login')
+RM.el_email = el('email')
 RM.el_gobutton = el('addaction')
 RM.el_sentences = el('sentences')
 RM.el_newaction = el('newaction')
+RM.el_storytime = el('storytime')
 RM.el_conversation = el('the-conversation')
 
 RM.ctx = el('ripples').getContext('2d')
 RM.pipelines = []
 RM.conversation = new_conversation()
 
+
+// LOGIN/ORG/TAG STUFF
+
+RM.el_login.addEventListener('submit', function(e) {
+  e.preventDefault()
+  RM.email = RM.el_email.value
+  RM.el_login.classList.add('hide')
+  RM.el_storytime.classList.remove('hide')
+})
 
 // SOME HIGHLIGHTING OR SOMETHING
 
@@ -465,7 +477,7 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 
 // MODEL HELPERS
 
-var email = 'bz@dann.bz' // TODO: fix this
+// var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
 // var tags = ['net_neutrality']
 var tags = ['plain']
@@ -504,7 +516,7 @@ function add_to_server_facts(type, live_item) {
   // FIXME: present splash page of some kind
 
 
-  var fact = { email: email
+  var fact = { email: RM.email
              , action: 'add'
              , type: type
              , tags: tags
@@ -655,6 +667,8 @@ function convert_props(props) {
   return clone(props)
 }
 
+
+// TODO: build new user interfaces
 
 // TODO: test new user functionality
 // TODO: partition incoming bleep bloops by action
