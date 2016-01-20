@@ -1,5 +1,10 @@
 /*global Dagoba */
 
+// THE BEGINNING
+
+var RM = {}
+RM.tags = [] // THINK: default to ['plain']?
+
 // TODO: fix these globals
 
 var safe_mode        = false // okay whatever
@@ -12,6 +17,19 @@ var current_year     = 2016  // more hacks
 var filter_sentences = false // awkward... :(
 var ring_radius      = 45    // lalala
 var query            = {}    // vroom vroom
+
+var el = document.getElementById.bind(document)
+var qs = document.querySelectorAll.bind(document)
+
+RM.el_login = el('login')
+RM.el_email = el('email')
+RM.el_sentences = el('sentences')
+RM.el_storytime = el('storytime')
+RM.el_conversation = el('the-conversation')
+
+RM.ctx = el('ripples').getContext('2d')
+RM.pipelines = []
+RM.conversation = new_conversation()
 
 
 // HELPERS
@@ -80,24 +98,6 @@ function pipe() {
 function error(mess) {
   console.log(arguments, mess)
 }
-
-var el = document.getElementById.bind(document)
-var qs = document.querySelectorAll.bind(document)
-
-
-// THE BEGINNING
-
-var RM = {}
-
-RM.el_login = el('login')
-RM.el_email = el('email')
-RM.el_sentences = el('sentences')
-RM.el_storytime = el('storytime')
-RM.el_conversation = el('the-conversation')
-
-RM.ctx = el('ripples').getContext('2d')
-RM.pipelines = []
-RM.conversation = new_conversation()
 
 
 // LOGIN/ORG/TAG STUFF
@@ -483,7 +483,6 @@ new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']}
 // MODEL HELPERS
 
 var loading = true // TODO: fix this
-var tags = ['plain'] // TODO: fix this
 
 function add_to_server_facts(type, live_item) {
   if(loading)
@@ -520,7 +519,7 @@ function add_to_server_facts(type, live_item) {
   var fact = { email: RM.email
              , action: 'add'
              , type: type
-             , tags: tags
+             , tags: RM.tags
              , data: item
              }
 
@@ -1760,6 +1759,7 @@ function add_data(cb) {
      action: add/remove/edit
      type: node/edge
      tags: [...]
+     org: id
      [maybe other stats can live here?]
      data:
        node: {id, name, type, cat...}
@@ -1767,27 +1767,48 @@ function add_data(cb) {
 
      */
 
-    var edgefacts = []
+    var tree = factor_facts(filter_facts(facts))
 
-    facts.forEach(function(fact) {
-      if(fact.tags[0] !== tags[0]) // TODO: this isn't the right way to check these
-        return false
-
-      if(fact.action === 'add') {
-        if(fact.type === 'node') {
-          var node = fact.data
-          var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
-          if(!fun) return false
-          fun(node.type, node)
-        }
-        else if(fact.type === 'edge') {
-          edgefacts.push(fact.data)
-        }
-      }
+    tree.nodes.add.forEach(function(node) {
+      var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
+      if(!fun) return false
+      fun(node.type, node)
     })
 
-    edgefacts.forEach(function(edge) { // we need to delay these so the nodes are all in place (sometimes the facts get added in weird orders)
+    tree.edges.add.forEach(function(edge) { // we need to delay these so the nodes are all in place (sometimes the facts get added in weird orders)
       add_edge(edge.type, edge._out, edge._in, edge)
+    })
+  }
+
+  function filter_facts(facts) {
+    facts = facts.filter(function(fact) {
+      return !!set_intersect(fact.tags, RM.tags).length // THINK: this implies no empty tag arrays (so 'plain' as default?)
+    })
+
+    return facts
+  }
+
+  function factor_facts(facts) {
+    var tree = {nodes: {}, edges: {}}
+    facts.forEach(function(fact) {
+      var branch = tree[fact.type+'s']
+      var list = branch[fact.action] || []
+      if(!branch[fact.action])
+        branch[fact.action] = list
+
+      // var item = clone(fact.data)
+      var item = fact.data // THINK: is mutating here okay?
+      item.org = fact.org
+      item.user = fact.user
+      item.tags = fact.tags
+      list.push(item)
+    })
+    return tree
+  }
+
+  function set_intersect(xs, ys) {
+    return xs.filter(function(x) {
+      return ys.indexOf(x) !== -1
     })
   }
 }
@@ -1808,7 +1829,7 @@ function init() {
       return acc
     }, {})
     if(query.tag)
-      tags = [query.tag]
+      RM.tags = [query.tag]
   }
 
   RM.G = Dagoba.graph()
