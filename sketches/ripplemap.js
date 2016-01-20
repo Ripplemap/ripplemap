@@ -656,6 +656,19 @@ function convert_props(props) {
 }
 
 
+// TODO: test new user functionality
+// TODO: partition incoming bleep bloops by action
+// TODO: build edit functions
+// TODO: build remove functions
+// TODO: ask user for email address
+// TODO: show current tags
+// TODO: allow changing of tags
+// TODO: allow multitag views
+// TODO: add all tags on server
+// TODO: try to get an additional compaction in
+
+
+
 
 // INTERACTIONS
 
@@ -1882,6 +1895,7 @@ function add_data(cb) {
 
     var edgefacts = []
 
+    // THINK: we might be able to remove this now, it just stripped off the _id=>obj wrapper
     if(!Array.isArray(facts))
       facts = Object.keys(facts).map(k => facts[k])
 

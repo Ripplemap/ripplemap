@@ -8,7 +8,7 @@ var db = new mongo.Db( config.mongo.db
                      , new mongo.Server( config.mongo.host
                                        , 27017
                                        , {auto_reconnect: true} )
-                     , {w: 0} )                             // TODO: change safety params!
+                     , {w: 0} )        // TODO: change safety params!
 
 
 function wrapper(req, res) {
@@ -23,9 +23,9 @@ function handler (req, res) {
   var body = ''
   var appjson = {'Content-Type': 'application/json'}
   var status = function(str) {return JSON.stringify({'status': str})}
-  var params = qs.parse(req.url.replace(/^.*\?/, ''))
-  var index = +params.index || 1
-  var mode = params.mode || ""
+  // var params = qs.parse(req.url.replace(/^.*\?/, ''))
+  // var index = +params.index || 1
+  // var mode = params.mode || ""
 
   // yuck make this less horrible
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -42,40 +42,19 @@ function handler (req, res) {
 
   req.on('end', function() {
 
-    // if(mode === 'daring') {
-
-    //   find('nodes', {}, function(nodes) {
-    //     find('edges', {}, function(edges) {
-    //       res.end(JSON.stringify({V: nodes, E: edges}))
-    //     })
-    //   })
-
-    //   return false
-    // }
-
     if(req.method === 'GET') {
 
-      find('facts', {}, function(item) {
+      // TODO: require the user to have logged in (probably via email link: examine token-based approach) [otherwise show public?]
+      // TODO: limit facts by the user's org
+
+      findlist('facts', {}, function(item) {
         res.end(JSON.stringify(item))
       })
-
-      // find('nodes', {}, function(nodes) {
-      //   find('edges', {}, function(edges) {
-      //     res.end(JSON.stringify({V: nodes, E: edges}))
-      //   })
-      // })
-
-      // find('rmdata', {_id: index}, function(item) {
-      //   res.end(JSON.stringify(item))
-      // })
 
       return false
     }
 
     var post = parse(body)
-
-    log('yoyoyo', mode, post, body)
-
 
     if(!post) {
       reserr('Invalid POST request')
@@ -106,17 +85,18 @@ function handler (req, res) {
     // TODO: check data
     // TODO: if it's an add:node, make sure the id doesn't conflict
 
-    email_into_id(post.email, function(user_id) {
-      if(!user_id)
+    email_into_user(post.email, function(user) {
+      if(!user)
         return reserr('Bad email address')
 
       // FIXME: Add new email addresses dynamically!
 
-      var entry = { user: user_id
-                  , action: post.action
+      var entry = { user: user._id
                   , type: post.type
                   , tags: post.tags
                   , data: post.data
+                  , org:  user.org  // TODO: allow public data (org 0?) in addition to data from the user's org silo
+                  , action: post.action
                   }
 
       add('facts', entry, cb)
@@ -136,58 +116,6 @@ function handler (req, res) {
       res.end(status('Invalid POST request'))
     }
 
-// laksdjflaskjdf;alsdjkfa;sldkfj
-
-
-
-    // if(post.method === 'addnode') {
-    //   // change email address into user id
-    //   // remove _id if there is one
-    //   // add it
-    //   var node = post.data
-    //   email_into_id(post.email, function(user_id) {
-    //     node.user = user_id
-    //     delete node._id
-    //     delete node._in
-    //     delete node._out
-    //     add('nodes', node, cb)
-    //   })
-    // }
-
-    // if(post.method === 'addedge') {
-    //   var edge = post.data
-    //   email_into_id(post.email, function(user_id) {
-    //     edge.user = user_id
-    //     add('edges', edge, cb)
-    //   })
-    // }
-
-    // if(post.method === 'editnode') {
-
-    // }
-
-    // if(post.method === 'editedge') {
-
-    // }
-
-    // if(post.method === 'removenode') {
-
-    // }
-
-    // if(post.method === 'removeedge') {
-
-    // }
-
-    // function cb() {
-    //   post['_id'] = 1
-    //   edit_the_data_okay('rmdata', post)
-
-    //   res.writeHead(200, 'OK', appjson)
-    //   res.end()
-    // }
-
-    // add('rmhistory', post, cb)
-
   })
 }
 
@@ -200,27 +128,27 @@ function parse(json) {
   }
 }
 
-function email_into_id(email, cb) {
-  find('users', {email: email}, function(rows) {
-    var keys = Object.keys(rows)
-    cb(keys[0])
+function email_into_user(email, cb) {
+  findlist('users', {email: email}, function(rows) {
+    if(rows.length) {
+      // found an existing user
+      userfun(rows[0])
+    }
+    else {
+      // dynamically add new users
+      var newuser = { email: email   // THINK: should we use numeric _ids to prevent date leaking?
+                    , org: 1         // THINK: how do we find the right org?
+                    }
+      add('users', newuser, userfun)
+    }
+
+    function userfun(user) {
+      cb(user)
+    }
   })
 }
 
-function edit_the_data_okay(collection, item) {
-  try {
-    db.collection(collection, function(err, c) {
-
-      c.save(item)
-
-    })
-  } catch (err) {
-    error('Edit error', err)
-  }
-}
-
-function find(collection, query, cb) {
-  // log('find: ', collection, query)
+function findlist(collection, query, cb) {
   var result
 
   try {
@@ -228,9 +156,9 @@ function find(collection, query, cb) {
 
       c.find(query).toArray(function(err, items) {
         result = items.reduce(function(acc, value) {
-          acc[value['_id']] = value
+          acc.push(value)
           return acc
-        }, {})
+        }, [])
 
         return cb(result)
       })
