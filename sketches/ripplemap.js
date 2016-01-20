@@ -1,5 +1,19 @@
 /*global Dagoba */
 
+// TODO: fix these globals
+
+var safe_mode        = false // okay whatever
+var all_edges        = true  // awkward... :(
+var admin_mode       = false // yep another hack w00t
+var my_maxyear       = 2016  // total hackery...
+var my_minyear       = 2008  // hack hack hack
+var show_labels      = false // yup
+var current_year     = 2016  // more hacks
+var filter_sentences = false // awkward... :(
+var ring_radius      = 45    // lalala
+var query            = {}    // vroom vroom
+
+
 // HELPERS
 
 function noop() {}
@@ -77,9 +91,7 @@ var RM = {}
 
 RM.el_login = el('login')
 RM.el_email = el('email')
-RM.el_gobutton = el('addaction')
 RM.el_sentences = el('sentences')
-RM.el_newaction = el('newaction')
 RM.el_storytime = el('storytime')
 RM.el_conversation = el('the-conversation')
 
@@ -466,21 +478,12 @@ new_happening_type('conversation', {aliases: []})
 new_happening_type('experience',   {aliases: ['see', 'hear', 'watch', 'attend']})
 
 
-// next steps: write out all the connections between words
-// institute real edge conditions
-// get it out the other end
-// stick it into the input
-
-
-
 
 
 // MODEL HELPERS
 
-// var email = 'bz@dann.bz' // TODO: fix this
 var loading = true // TODO: fix this
-// var tags = ['net_neutrality']
-var tags = ['plain']
+var tags = ['plain'] // TODO: fix this
 
 function add_to_server_facts(type, live_item) {
   if(loading)
@@ -512,9 +515,7 @@ function add_to_server_facts(type, live_item) {
     item._in  = live_item._in._id
   }
 
-  // FIXME: allow dynamic email addresses
   // FIXME: present splash page of some kind
-
 
   var fact = { email: RM.email
              , action: 'add'
@@ -524,22 +525,6 @@ function add_to_server_facts(type, live_item) {
              }
 
   send_data_to_server(fact)
-
-  // if(type === 'node') {
-  //   var node = { name: item.name
-  //              , cat: item.cat
-  //              , type: item.type
-  //              }
-  //   send_data_to_server('addnode', item, email, function(id) {
-  //     item._id = id // FIXME: is this wise???
-  //   })
-  // }
-
-  // if(type === 'edge') {
-  //   send_data_to_server('addedge', item, email, function(item) {
-  //     // THINK: erm what?
-  //   })
-  // }
 }
 
 function add_to_graph(type, item) {
@@ -561,13 +546,8 @@ function get_new_id() {
 }
 
 function persist() {
-  // TODO: persist itemized changes
-
-  // localstorage
+  // THINK: do we still need localstorage caching?
   Dagoba.persist(RM.G, 'rripplemap')
-
-  // hit the server
-  // send_data_to_server_no_questions_asked_okay()
 }
 
 persist = debounce(persist, 1000)
@@ -603,25 +583,17 @@ function send_data_to_server(data, cb) {
     return console.log(RM.G)
   }
 
-  // var json = Dagoba.jsonify(RM.G)
-  // var packet = { method: method
-  //              , email: email
-  //              , data: data
-  //              }
-
   fetch(url, { method: 'post'
              , body: JSON.stringify(data)
   }).then(function(response) {
     return response.json()
   }).then(function(result) {
-    // now you have the id or something
-    // FIXME: make mongo-like ids automatically for each new node
     if(cb)
       cb(result)
   })
 }
 
-function get_data_from_server_no_questions_asked_okay(cb) {
+function get_facts_from_server(cb) {
   var url = 'http://ripplemap.io:8888'
 
   // local shunt for airplane mode
@@ -631,12 +603,6 @@ function get_data_from_server_no_questions_asked_okay(cb) {
   if(safe_mode === 'daring') {
     url = 'http://localhost:8888'
   }
-  else {
-    var index = +safe_mode || 1
-    url += "?index=" + index
-    // var u = new URLSearchParams()
-    // u.append('index', index)
-  }
 
   fetch(url, {
     method: 'get'
@@ -644,14 +610,6 @@ function get_data_from_server_no_questions_asked_okay(cb) {
     return response.json()
   }).then(function(data) {
     cb(data)
-    // if(safe_mode !== 'daring' && data[index])
-    //   cb(data[index])
-    // else {
-    //   // unpack data
-    //   var v = Object.keys(data.V).map(function(id) { return data.V[id] })
-    //   var e = Object.keys(data.E).map(function(id) { return data.E[id] })
-    //   cb({V: v, E: e})
-    // }
   }).catch(function(err) {
     console.log('lalalal', err)
   })
@@ -668,9 +626,6 @@ function convert_props(props) {
 }
 
 
-// TODO: build new user interfaces
-
-// TODO: test new user functionality
 // TODO: partition incoming bleep bloops by action
 // TODO: build edit functions
 // TODO: build remove functions
@@ -736,16 +691,6 @@ document.addEventListener('keydown', function(ev) {
     render()
   }
 
-  // if(key === key_a) {
-  //   all_edges = true
-  //   render()
-  // }
-
-  // if(key === key_s) {
-  //   all_edges = false
-  //   render()
-  // }
-
   if(key === key_l) {
     show_labels = !show_labels
     render()
@@ -758,9 +703,8 @@ document.addEventListener('keydown', function(ev) {
 })
 
 RM.el_sentences.addEventListener('keyup', function(ev) {
-  var key = ev.keyCode || ev.which
+  // var key = ev.keyCode || ev.which
   var span = ev.target
-  var id = span.id
   var type = span.classList.contains('edge') ? 'edge' : 'cat'
   var val = span.textContent
   var id = span.getAttribute('data-id')
@@ -789,8 +733,8 @@ RM.el_sentences.addEventListener('keyup', function(ev) {
     var edges = node1._in.concat(node1._out)
     var edge = edges.filter
       (function(edge)
-        {return ( edge._in._id == id1 && edge._out._id == id2 )
-             || ( edge._in._id == id2 && edge._out._id == id1 ) })[0]
+        {return ( edge._in._id === id1 && edge._out._id === id2 )
+             || ( edge._in._id === id2 && edge._out._id === id1 ) })[0]
 
     if(!edge) return false
 
@@ -842,40 +786,6 @@ RM.el_sentences.addEventListener('click', function(ev) {
   render()
 })
 
-RM.el_gobutton.addEventListener('click', function(ev) {
-  var thing1name = el('thing1name').value
-  var thing1type = el('thing1type').value
-  var thing2name = el('thing2name').value
-  var thing2type = el('thing2type').value
-
-  var actiontype = el('actiontype').value
-  var actiondate = el('actiondate').value
-
-  // check for thing1
-  var thing1 = RM.G.v({name: thing1name, type: thing1type}).run()[0]
-  if(!thing1) {
-    thing1 = add_thing(thing1type, {name: thing1name}, true)
-  }
-
-  var thing2 = RM.G.v({name: thing2name, type: thing2type}).run()[0]
-  if(!thing2) {
-    thing2 = add_thing(thing2type, {name: thing2name}, true)
-  }
-
-  var action = add_action(actiontype, {time: new Date(actiondate).getTime() })
-
-  // did everything go okay?
-  if(!thing1 || !thing2 || !action)
-    return false
-
-  RM.el_newaction.reset()
-
-  add_edge('the', action._id, thing2._id, 0, true)
-  add_edge('did', thing1._id, action._id, 0, true)
-
-  render()
-})
-
 RM.el_conversation.addEventListener('submit', function(ev) {
   ev.preventDefault()
 
@@ -886,19 +796,6 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 
 
 // RENDER PIPELINE
-
-// TODO: fix these globals
-
-var safe_mode        = false // okay whatever
-var all_edges        = true  // awkward... :(
-var admin_mode       = false // yep another hack w00t
-var my_maxyear       = 2016  // total hackery...
-var my_minyear       = 2008  // hack hack hack
-var show_labels      = false // yup
-var current_year     = 2016  // more hacks
-var filter_sentences = false // awkward... :(
-var ring_radius      = 45    // lalala
-var query            = {}    // vroom vroom
 
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
@@ -984,14 +881,6 @@ function sg_compact(graph) {
 
 
 // LAYOUT
-
-function wrap(env, prop) {
-  return function(data) {
-    var foo = clone(env)
-    foo[prop] = data
-    return foo
-  }
-}
 
 function mod(prop, fun) {
   return function(env) {
@@ -1184,12 +1073,10 @@ function unique_y_pos(env) {
       node.y = coords.y
       ys.push(coords.y)
 
-      ys.sort(function(a,b) {return a - b}) // OPT: just insert coords.y in place
-
+      ys.sort(function(a, b) {return a - b}) // OPT: just insert coords.y in place
     })
   })
 
-  gys = ys // TODO: remove this smelly global that was put here for debugging
   return env
 
   function modify_coords(node, da) {
@@ -1614,7 +1501,6 @@ function whatsnext(graph, conversation) {
   // TODO: incorporate graph knowledge (graph is the whole world, or the relevant subgraph)
   // THINK: what is a conversation?
   // are we currently in a sentence? then find the highest weighted unfilled 'port'
-  //
 
   render_conversation(conversation)
 }
@@ -1632,10 +1518,6 @@ function get_cat_dat(cat, q) {
   return nodes
 }
 
-function get_thing_by_name(name) {
-  return RM.G.vertices.filter(function(node) {return node.name === name}) || {}
-}
-
 function render_conversation(conversation) {
   var typeahead_params = {hint: true, highlight: true, minLength: 1}
   function typeahead_source(cat) {return {name: 'states', source: function(q, cb) {cb(get_cat_dat(cat, q))}}}
@@ -1648,16 +1530,7 @@ function render_conversation(conversation) {
   var sentence = conversation.current
 
   sentence.filled.forEach(function(slot, i) {
-    // display the filled slot
     prelude += inject_value(slot, slot.value, i) + ' '
-    // if(slot.type === 'word') {
-    //   prelude += inject_value(slot, slot.value) + ' '
-    // }
-    // else if(slot.type === 'gettype') {
-    //   prelude += ' (which is a '
-    //   prelude += slot.value
-    //   prelude += ') '
-    // }
   })
 
   // display the unfilled slot
@@ -1875,24 +1748,11 @@ function give_word(sentence, value) {
 // INIT
 
 function add_data(cb) {
-  // if(localStorage["DAGOBA::rripplemap"]) {
-  //   var data = JSON.parse(localStorage["DAGOBA::rripplemap"])
-  //   load_data(data.V, data.E)
-  // }
-  // else if(typeof nodes === 'object' && typeof edges === 'object') {
-  //   load_data(nodes, edges)
-  // }
-
-  get_data_from_server_no_questions_asked_okay(function(data) {
-    // G = Dagoba.graph()
-    // RM.clear()
-    // var local_data = load_data(data.V, data.E)
-    var local_data = load_facts(data)
-
-    cb(local_data)
+  get_facts_from_server(function(facts) {
+    cb(import_facts(facts))
   })
 
-  function load_facts(facts) {
+  function import_facts(facts) {
     /*
 
      data model:
@@ -1909,12 +1769,8 @@ function add_data(cb) {
 
     var edgefacts = []
 
-    // THINK: we might be able to remove this now, it just stripped off the _id=>obj wrapper
-    if(!Array.isArray(facts))
-      facts = Object.keys(facts).map(k => facts[k])
-
     facts.forEach(function(fact) {
-      if(fact.tags[0] != tags[0]) // TODO: this isn't the right way to check these
+      if(fact.tags[0] !== tags[0]) // TODO: this isn't the right way to check these
         return false
 
       if(fact.action === 'add') {
@@ -1934,22 +1790,6 @@ function add_data(cb) {
       add_edge(edge.type, edge._out, edge._in, edge)
     })
   }
-
-  function load_data(nodes, edges) {
-    nodes.forEach(function(node) {
-      var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
-
-      if(!fun) return false
-
-      // fun(node.type, node.name, {_id: node._id})
-      fun(node.type, node)
-    })
-
-    edges.forEach(function(edge) {
-      add_edge(edge.type, edge._out, edge._in, edge)
-    })
-  }
-
 }
 
 
@@ -1978,7 +1818,7 @@ function init() {
   var cb = function() {
     render()
     render_conversation(RM.conversation)
-    loading = false
+    loading = false // TODO: get rid of this somehow
   }
 
   add_data(cb)

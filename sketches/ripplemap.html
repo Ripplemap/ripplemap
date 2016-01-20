@@ -67,10 +67,6 @@
         font-size: 14px;
       }
 
-      #newaction {
-        /* float: right; */
-      }
-
       #sentences, h3 {
         font-size: 16px;
       }
@@ -125,9 +121,7 @@
   <body>
 
     <div id="header">
-      <!-- <h1> Welcome to ripplemapping </h1> -->
-      <!-- <h1>The ripple effect of 'A Healthy Digital Ecology: Creating a Community Vision for Federal Funding' at AMC 2009</h1> -->
-      <h1>Welcome to the <span class="orgname">AMC</span> Ripple Map</h1>
+      <h1>Welcome to the <span class="orgname">AMC</span> Ripple Map <span id="tags"></span></h1>
     </div>
 
     <div id="main">
@@ -148,64 +142,12 @@
           <p><em>Use <em>Tab</em> to autocomplete and <em>Return</em> to proceed. Reload the page to fix a mistake.</em></p>
         </div>
 
-        <form id="newaction" style="display:none">
-          <p>
-            <input id="thing1name" name="thing1name" type="text" value="" size="40" /> <br />
-            <!--         <input id="thing1type" name="thing1type" type="text" value="person" /> (person, org, event, outcome, place) -->
-            <select id="thing1type" name="thing1type">
-              <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
-              <option value="person">person</option>
-              <option value="org">org</option>
-              <option value="event">event</option>
-              <option value="outcome">outcome</option>
-              <!--           <option value="place">place</option> -->
-            </select>
-          </p>
-          <p>
-            <!--         <input id="actiontype" name="actiontype" type="text" value="manage" /> (create, attend, manage, assist, join, leave) <br /> -->
-            <select id="actiontype" name="actiontype">
-              <option value="" selected="selected" disabled="disabled">who... (choose one)</option>
-              <option value="facilitate">facilitated</option>
-              <option value="coordinate">coordinated</option>
-              <option value="contribute">contributed</option>
-              <option value="create">created</option>
-              <option value="attend">attended</option>
-              <option value="manage">managed</option>
-              <option value="assist">assisted</option>
-              <option value="present">presented</option>
-              <option value="join">joined</option>
-              <option value="leave">left</option>
-            </select>
-          </p>
-          <p>
-            <input id="thing2name" name="thing2name" type="text" value="" size="40" /> <br />
-            <!--         <input id="thing2type" name="thing2type" type="text" value="person" /> (person, org, event, outcome, place) -->
-            <select id="thing2type" name="thing2type">
-              <option value="" selected="selected" disabled="disabled">is a... (choose one)</option>
-              <option value="person">person</option>
-              <option value="org">org</option>
-              <option value="event">event</option>
-              <option value="outcome">outcome</option>
-              <!--           <option value="place">place</option> -->
-            </select>
-          </p>
-          <p>
-            on
-            <input id="actiondate" name="actiondate" type="date" value="2010-01-01" />
-            (approximate)
-          </p>
-          <p>
-            <input id="addaction" name="addaction" type="button" value="Go!" />
-          </p>
-        </form>
-
         <hr style="clear:both" />
 
         <h3>Click any story to edit</h3>
 
         <div id="sentences"> </div>
       </div>
-
 
 
       <div id="right">
