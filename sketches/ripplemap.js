@@ -135,22 +135,39 @@ function highlighter(e) {
       if(highlight_target === t)
         return false
 
-      var current = RM.G.v({highlight: true}).run()
-      current.forEach(function(node) {
-        node.highlight = false
-      })
-
       highlight_target = t
       var ids = [].slice.call(t.children).map(node => node.dataset.id).filter(Boolean)
-      ids.forEach(id => RM.G.v(id).run()[0].highlight = true)
-      render()
+      var fun = function(v) {return ~ids.indexOf(v._id)}
+      // ids.forEach(id => RM.G.v(id).run()[0].highlight = true)
+      // render()
+      highlight(fun)
       return false
     }
   }
 }
 
 function highlight(o_or_f) {
+  var current = RM.G.v({highlight: true}).run()
+  current.forEach(function(node) {
+    node.highlight = false
+  })
 
+  if(!o_or_f) {
+    render()
+    return false
+  }
+
+  if(typeof o_or_f === 'function') {
+    current = RM.G.v().filter(o_or_f).run()
+  } else {
+    current = RM.G.v(o_or_f).run()
+  }
+
+  current.forEach(function(node) {
+    node.highlight = true
+  })
+
+  render()
 }
 
 
@@ -662,11 +679,22 @@ RM.el_tagnames.addEventListener('click', function(ev) {
 RM.el_tagnames.addEventListener('mouseover', function(ev) {
   var target = ev.target
   var tag = target.innerText
-  if(!tag) return false
+
+  if(!tag)
+    return false
+
+  if(highlight_target === tag)
+    return false
+
+  highlight_target = tag
   highlight(function(v) { return ~v.tags.indexOf(tag) })
 })
 
 RM.el_tagnames.addEventListener('mouseout', function(ev) {
+  if(!highlight_target)
+    return false
+
+  highlight_target = false
   highlight()
 })
 
