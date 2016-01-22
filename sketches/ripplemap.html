@@ -28,6 +28,10 @@
         display: none;
       }
 
+      .tag {
+        cursor: not-allowed;
+      }
+
       #the-conversation {
         font-size: 20px;
         line-height: 30px;
@@ -140,6 +144,21 @@
           <h3>Want to add something to the map?</h3>
           <form id="the-conversation"></form>
           <p><em>Use <em>Tab</em> to autocomplete and <em>Return</em> to proceed. Reload the page to fix a mistake.</em></p>
+        </div>
+
+        <hr style="clear:both" />
+
+        <div id="controls">
+          <p>
+            Currently viewing tags: <span id="tagnames"></span>
+          </p>
+          <p>
+            Add a tag:
+            <form id="addtag" action="">
+              <select id="othertags" id="" name=""></select>
+              <input name="" type="submit" value="Go!" />
+            </form>
+          </p>
         </div>
 
         <hr style="clear:both" />

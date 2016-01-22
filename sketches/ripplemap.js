@@ -3,7 +3,9 @@
 // THE BEGINNING
 
 var RM = {}
+RM.facts = []
 RM.tags = [] // THINK: default to ['plain']?
+RM.tagkeys = {}
 
 // TODO: fix these globals
 
@@ -26,6 +28,9 @@ RM.el_email = el('email')
 RM.el_sentences = el('sentences')
 RM.el_storytime = el('storytime')
 RM.el_conversation = el('the-conversation')
+RM.el_addtag = el('addtag')
+RM.el_othertags = el('othertags')
+RM.el_tagnames = el('tagnames')
 
 RM.ctx = el('ripples').getContext('2d')
 RM.pipelines = []
@@ -142,6 +147,10 @@ function highlighter(e) {
       return false
     }
   }
+}
+
+function highlight(o_or_f) {
+
 }
 
 
@@ -420,6 +429,8 @@ function add_edge(type, from, to, props, persist) {
   edge.type = type
   edge.label = type
 
+  // THINK: if Dagoba supported proper subgraphs, we could have RM.facts and RM.G and keep them fully in sync, instead of limiting RM.G to just the "viewable" facts. we'll need a new RM.GG or something for the currently viewable subgraph. this would also help with all the duplicate node warning messages, cut down on allocations, and allow a pipeline based around building new graphs (or extending/syncing the main graph from the factbase). so facts_to_graph would take a graph and some facts and put them together, or something. or as you add new facts they're automatically ramified into the graph. or fizzlemorts.
+
   add_to_graph('edge', edge)
   if(persist)
     add_to_server_facts('edge', edge)
@@ -638,7 +649,26 @@ function convert_props(props) {
 
 
 
-// INTERACTIONS
+// INTERACTIONS & DOM BINDINGS
+
+RM.el_tagnames.addEventListener('click', function(ev) {
+  ev.preventDefault()
+  var target = ev.target
+  var tag = target.innerText
+  if(!tag) return false
+  removetag(tag)
+})
+
+RM.el_tagnames.addEventListener('mouseover', function(ev) {
+  var target = ev.target
+  var tag = target.innerText
+  if(!tag) return false
+  highlight(function(v) { return ~v.tags.indexOf(tag) })
+})
+
+RM.el_tagnames.addEventListener('mouseout', function(ev) {
+  highlight()
+})
 
 document.addEventListener('keydown', function(ev) {
   // TODO: clean this up (prevent span hijacking)
@@ -699,6 +729,11 @@ document.addEventListener('keydown', function(ev) {
     admin_mode = !admin_mode
     render()
   }
+})
+
+RM.el_addtag.addEventListener('submit', function(ev) {
+  ev.preventDefault()
+  addtag(RM.el_othertags.value)
 })
 
 RM.el_sentences.addEventListener('keyup', function(ev) {
@@ -1744,73 +1779,137 @@ function give_word(sentence, value) {
 }
 
 
+function render_all() {
+  render()
+  render_conversation(RM.conversation)
+  showtags()
+}
+
 // INIT
 
 function add_data(cb) {
   get_facts_from_server(function(facts) {
-    cb(import_facts(facts))
+    cb(fact_to_graph(capture_facts(facts)))
+  })
+}
+
+function capture_facts(facts) {
+  RM.facts = facts
+  return facts
+}
+
+function fact_to_graph(facts) {
+  /*
+
+   data model:
+   user: id
+   action: add/remove/edit
+   type: node/edge
+   tags: [...]
+   org: id
+   [maybe other stats can live here?]
+   data:
+   node: {id, name, type, cat...}
+   edge: {_in, _out, type, label}
+
+   */
+
+  var tree = factor_facts(filter_facts(facts))
+  RM.tagkeys = get_tagkeys(facts)
+
+  tree.nodes.add.forEach(function(node) {
+    var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
+    if(!fun) return false
+    fun(node.type, node)
   })
 
-  function import_facts(facts) {
-    /*
+  tree.edges.add.forEach(function(edge) { // we need to delay these so the nodes are all in place (sometimes the facts get added in weird orders)
+    add_edge(edge.type, edge._out, edge._in, edge)
+  })
 
-     data model:
-     user: id
-     action: add/remove/edit
-     type: node/edge
-     tags: [...]
-     org: id
-     [maybe other stats can live here?]
-     data:
-       node: {id, name, type, cat...}
-       edge: {_in, _out, type, label}
+  tree.nodes.edit.forEach(function(node) {
+    RM.graph.edit(node) //////
+  })
+}
 
-     */
-
-    var tree = factor_facts(filter_facts(facts))
-
-    tree.nodes.add.forEach(function(node) {
-      var fun = window['add_' + node.cat] // FIXME: ugh erk yuck poo
-      if(!fun) return false
-      fun(node.type, node)
+function get_tagkeys(facts) {
+  var keys = {}
+  facts.forEach(function(fact) {
+    ~(fact.tags||[]).forEach(function(tag) {
+      keys[tag] = true
     })
+  })
+  return keys
+}
 
-    tree.edges.add.forEach(function(edge) { // we need to delay these so the nodes are all in place (sometimes the facts get added in weird orders)
-      add_edge(edge.type, edge._out, edge._in, edge)
-    })
-  }
+function filter_facts(facts) {
+  facts = facts.filter(function(fact) {
+    return !!set_intersect(fact.tags, RM.tags).length // THINK: this implies no empty tag arrays (so 'plain' as default?)
+  })
 
-  function filter_facts(facts) {
-    facts = facts.filter(function(fact) {
-      return !!set_intersect(fact.tags, RM.tags).length // THINK: this implies no empty tag arrays (so 'plain' as default?)
-    })
+  return facts
+}
 
-    return facts
-  }
+function factor_facts(facts) {
+  var tree = {nodes: {add: [], edit: [], remove: []}, edges: {add: [], edit: [], remove: []}}
+  facts.forEach(function(fact) {
+    // var branch = tree[fact.type+'s']
+    // var list = branch[fact.action] || []
+    // if(!branch[fact.action])
+    //   branch[fact.action] = list
+    var list = tree[fact.type+'s'][fact.action] // TODO: error handling
 
-  function factor_facts(facts) {
-    var tree = {nodes: {}, edges: {}}
-    facts.forEach(function(fact) {
-      var branch = tree[fact.type+'s']
-      var list = branch[fact.action] || []
-      if(!branch[fact.action])
-        branch[fact.action] = list
+    // var item = clone(fact.data)
+    var item = fact.data // THINK: is mutating here okay?
+    item.org = fact.org
+    item.user = fact.user
+    item.tags = fact.tags
+    list.push(item)
+  })
+  return tree
+}
 
-      // var item = clone(fact.data)
-      var item = fact.data // THINK: is mutating here okay?
-      item.org = fact.org
-      item.user = fact.user
-      item.tags = fact.tags
-      list.push(item)
-    })
-    return tree
-  }
+function set_intersect(xs, ys) {
+  return xs.filter(function(x) {
+    return ys.indexOf(x) !== -1
+  })
+}
 
-  function set_intersect(xs, ys) {
-    return xs.filter(function(x) {
-      return ys.indexOf(x) !== -1
-    })
-  }
+function set_minus(xs, ys) {
+  return xs.filter(function(x) {
+    return ys.indexOf(x) === -1
+  })
+}
+
+function addtag(tag) {
+  RM.tags.push(tag)
+  RM.G = Dagoba.graph()
+  fact_to_graph(RM.facts)
+  render_all()
+}
+
+function removetag(tag) {
+  var index = RM.tags.indexOf(tag)
+  if(index === -1)
+    return false
+
+  RM.tags.splice(index, 1)
+  RM.G = Dagoba.graph()
+  fact_to_graph(RM.facts)
+  render_all()
+}
+
+function showtags() {
+  // generate current tags
+  // hoverable span for highlight, plus clickable for remove
+  var tagwrapper = ['<span class="tag">', '</span>']
+  var tagstr = RM.tags.map(function(tag) { return tagwrapper[0] + tag + tagwrapper[1] }).join(', ')
+  RM.el_tagnames.innerHTML = tagstr
+
+  // generate select box
+  var unused = set_minus(Object.keys(RM.tagkeys), RM.tags).sort()
+  var optionstr = '<option>' + unused.join('</option><option>') + '</option>'
+  RM.el_othertags.innerHTML = optionstr
 }
 
 
@@ -1830,15 +1929,16 @@ function init() {
     }, {})
     if(query.tag)
       RM.tags = [query.tag]
+    else if(query.tags)
+      RM.tags = query.tags.split('|')
   }
 
   RM.G = Dagoba.graph()
 
   build_pipelines()
 
-  var cb = function() {
-    render()
-    render_conversation(RM.conversation)
+  function cb() {
+    render_all()
     loading = false // TODO: get rid of this somehow
   }
 
