@@ -149,7 +149,8 @@ function highlighter(e) {
 function highlight(o_or_f) {
   var current = RM.G.v({highlight: true}).run()
   current.forEach(function(node) {
-    node.highlight = false
+    // node.highlight = false
+    delete node.highlight // better when collapsing
   })
 
   if(!o_or_f) {
@@ -867,7 +868,7 @@ function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
   RM.pipelines[0] = pipe( mod('data', sg_compact)
                         , mod('data', likenamed)
-                        , mod('data', flatten)
+                        , mod('data', Dagoba.cloneflat)
                           // layout:
                         , set_year
                         , data_to_graph
@@ -912,18 +913,12 @@ function render(n) {
 
 // COMPACTIONS
 
-function sg_compact(graph) {
-  // so... this is pretty silly i guess or something
-  // var g = Dagoba.graph(graph.V, graph.E)
-  var oldgdata = JSON.parse(Dagoba.jsonify(graph))
-  var g = Dagoba.graph(oldgdata.V, oldgdata.E)
-  // var vertex_ids = g.v().property('_id').run()
+function sg_compact(g) {
+  // so... this is pretty silly i guess or something. use subgraphs instead.
   var newg = Dagoba.graph()
   var edges = []
 
-  // vertex_ids.forEach(function(id) {
   g.v().run().forEach(function(node) {
-    // var node = g.v(id).run()[0]
     if(node.time)
       return false
 
@@ -946,47 +941,30 @@ function sg_compact(graph) {
     newg.addEdge(edge)
   })
 
-  return newg // JSON.parse(Dagoba.jsonify(newg))
+  return newg
 }
 
-function likenamed(graph) {
-  var oldgdata = JSON.parse(Dagoba.jsonify(graph))
-  var g = Dagoba.graph(oldgdata.V, oldgdata.E)
-  var newg = Dagoba.graph()
-  var edges = []
-
+function likenamed(g) {
   var namemap = {}
-  var idmap = {}
 
   g.v().run().forEach(function(node) {
     if(!node.name)
       return false
 
-    if(!namemap(node.name)) {
-      namemap[node.name] = node
-      newg.addVertex(node)
+    if(!namemap[node.name]) {
+      namemap[node.name] = [node]
     }
     else {
-      idmap[node._id] = namemap[node.name]._id
+      namemap[node.name].push(node)
     }
   })
 
-  idmap.forEach(function(node) {
-    node._in.forEach(function(edge) {
-
-    })
+  Object.keys(namemap).forEach(function(name) {
+    if(namemap[name].length > 1)
+      g.mergeVertices(namemap[name])
   })
 
-
-  edges.forEach(function(edge) {
-    newg.addEdge(edge)
-  })
-
-  return newg
-}
-
-function flatten(graph) {
-  return JSON.parse(Dagoba.jsonify(graph))
+  return g
 }
 
 
