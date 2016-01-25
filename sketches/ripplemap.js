@@ -868,6 +868,7 @@ function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
   RM.pipelines[0] = pipe( mod('data', sg_compact)
                         , mod('data', likenamed)
+                        , mod('data', clusters)
                         , mod('data', Dagoba.cloneflat)
                           // layout:
                         , set_year
@@ -967,6 +968,21 @@ function likenamed(g) {
   return g
 }
 
+RM.clusters = [ ['AMC', 'amc', 'Allied Media Conference', 'allied media conference', 'Allied media Conference']
+              , ['AMP', 'amp', 'Allied Media Projects', 'allied media projects']
+              , ['AMC2016 Coordinators Weekend', 'AMC 2016 Coordinators Meeting']
+              , ['jayy dodd', 'jayy']
+              ]
+
+function clusters(g) {
+  RM.clusters.map(function(names) {
+    return names.reduce(function(acc, name) {
+      return acc.concat(g.v({name: name}).run())
+    }, [])
+  }).forEach(g.mergeVertices.bind(g))
+
+  return g
+}
 
 // LAYOUT
 
