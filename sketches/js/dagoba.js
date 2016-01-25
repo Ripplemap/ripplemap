@@ -108,12 +108,14 @@ Dagoba.G.mergeVertices = function(vertices) {                     // props are m
   vertices.forEach(function(n) {
     // add in edges to node
     n._in.forEach(function(e) {
-      self.addEdge({_in: node._id, _out: e._out._id})
+      var newe = Dagoba.extend({_in: node._id, _out: e._out._id}, e)
+      self.addEdge(newe)
     })
 
     // add out edges to node
     n._out.forEach(function(e) {
-      self.addEdge({_out: node._id, _in: e._in._id})
+      var newe = Dagoba.extend({_out: node._id, _in: e._in._id}, e)
+      self.addEdge(newe)
     })
 
     // transfer properties
