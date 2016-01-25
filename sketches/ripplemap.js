@@ -663,6 +663,10 @@ function convert_props(props) {
 // TODO: add all tags on server
 // TODO: try to get an additional compaction in
 
+// TODO: consolidate like-named nodes
+// TODO: consolidate email addresses on server
+// TODO: copy tags into url
+
 
 
 
@@ -862,6 +866,8 @@ RM.el_conversation.addEventListener('submit', function(ev) {
 function build_pipelines() {
   // TODO: consider a workflow for managing this tripartite pipeline, so we can auto-cache etc
   RM.pipelines[0] = pipe( mod('data', sg_compact)
+                        , mod('data', likenamed)
+                        , mod('data', flatten)
                           // layout:
                         , set_year
                         , data_to_graph
@@ -909,17 +915,19 @@ function render(n) {
 function sg_compact(graph) {
   // so... this is pretty silly i guess or something
   // var g = Dagoba.graph(graph.V, graph.E)
-  var g = graph
-  var vertex_ids = g.v().property('_id').run()
+  var oldgdata = JSON.parse(Dagoba.jsonify(graph))
+  var g = Dagoba.graph(oldgdata.V, oldgdata.E)
+  // var vertex_ids = g.v().property('_id').run()
   var newg = Dagoba.graph()
   var edges = []
 
-  vertex_ids.forEach(function(id) {
-    var node = g.v(id).run()[0]
+  // vertex_ids.forEach(function(id) {
+  g.v().run().forEach(function(node) {
+    // var node = g.v(id).run()[0]
     if(node.time)
       return false
 
-    var others = g.v(id).both().run()
+    var others = g.v(node._id).both().run()
     others.forEach(function(other) {
       if(other.time)
         node.time = Math.min(node.time||Infinity, other.time)
@@ -938,7 +946,47 @@ function sg_compact(graph) {
     newg.addEdge(edge)
   })
 
-  return JSON.parse(Dagoba.jsonify(newg))
+  return newg // JSON.parse(Dagoba.jsonify(newg))
+}
+
+function likenamed(graph) {
+  var oldgdata = JSON.parse(Dagoba.jsonify(graph))
+  var g = Dagoba.graph(oldgdata.V, oldgdata.E)
+  var newg = Dagoba.graph()
+  var edges = []
+
+  var namemap = {}
+  var idmap = {}
+
+  g.v().run().forEach(function(node) {
+    if(!node.name)
+      return false
+
+    if(!namemap(node.name)) {
+      namemap[node.name] = node
+      newg.addVertex(node)
+    }
+    else {
+      idmap[node._id] = namemap[node.name]._id
+    }
+  })
+
+  idmap.forEach(function(node) {
+    node._in.forEach(function(edge) {
+
+    })
+  })
+
+
+  edges.forEach(function(edge) {
+    newg.addEdge(edge)
+  })
+
+  return newg
+}
+
+function flatten(graph) {
+  return JSON.parse(Dagoba.jsonify(graph))
 }
 
 
