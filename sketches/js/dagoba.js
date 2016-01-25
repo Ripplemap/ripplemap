@@ -90,7 +90,7 @@ Dagoba.G.addVertices = function(vertices) { vertices.forEach(this.addVertex.bind
 Dagoba.G.addEdges    = function(edges)    { edges   .forEach(this.addEdge  .bind(this)) }
 
 Dagoba.G.removeVertex = function(vertex) {
-  vertex._in .slice().forEach(Dagoba.G.removeEdge.bind(this))
+  vertex._in .slice().forEach(Dagoba.G.removeEdge.bind(this))     // OPT: concat?
   vertex._out.slice().forEach(Dagoba.G.removeEdge.bind(this))
   Dagoba.remove(this.vertices, vertex)
   delete this.vertexIndex[vertex._id]
@@ -100,6 +100,27 @@ Dagoba.G.removeEdge = function(edge) {
   Dagoba.remove(edge._in._in, edge)
   Dagoba.remove(edge._out._out, edge)
   Dagoba.remove(this.edges, edge)
+}
+
+Dagoba.G.mergeVertices = function(vertices) {                     // props are merged in list order
+  var node = vertices.shift()
+  var self = this
+  vertices.forEach(function(n) {
+    // add in edges to node
+    n._in.forEach(function(e) {
+      self.addEdge({_in: node._id, _out: e._out._id})
+    })
+
+    // add out edges to node
+    n._out.forEach(function(e) {
+      self.addEdge({_out: node._id, _in: e._in._id})
+    })
+
+    // transfer properties
+    Dagoba.extend(node, n)
+
+    self.removeVertex(n)
+  })
 }
 
 Dagoba.G.findVertices = function(args) {                          // our general vertex finding function
